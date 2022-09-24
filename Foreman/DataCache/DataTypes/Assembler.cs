@@ -34,6 +34,8 @@ namespace Foreman
 				foreach (Module module in modules.Where(m => m != null))
 					finalSpeed += module.SpeedBonus * this.Speed;
 			finalSpeed += beaconBonus * this.Speed;
+			// fix #33, bringing the lowest possible speed, after all speed penalties and bonuses, to 0.2
+			finalSpeed = (double)(Math.Max(finalSpeed, 0.2));
 
 			double craftingTime = recipe.Time / finalSpeed;
 			craftingTime = (double)(Math.Ceiling(craftingTime * 60d) / 60d); //Machines have to wait for a new tick before starting a new item, so round up to the nearest tick

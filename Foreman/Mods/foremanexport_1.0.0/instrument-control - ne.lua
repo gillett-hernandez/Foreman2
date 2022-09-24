@@ -23,10 +23,10 @@ end
 
 local function ExportModList()
 	tmods = {}
-	table.insert(tmods, {['name'] = 'core', ['version'] = '1.0'})
-	
+	table.insert(tmods, { ['name'] = 'core', ['version'] = '1.0' })
+
 	for name, version in pairs(game.active_mods) do
-		table.insert(tmods, {['name'] = name, ['version'] = version})
+		table.insert(tmods, { ['name'] = name, ['version'] = version })
 	end
 	etable['mods'] = tmods
 end
@@ -36,18 +36,18 @@ local function ExportResearch()
 	for _, tech in pairs(game.technology_prototypes) do
 		ttech = {}
 		ttech['name'] = tech.name
-		ttech['icon_name'] = 'icon.t.'..tech.name
+		ttech['icon_name'] = 'icon.t.' .. tech.name
 		ttech['enabled'] = tech.enabled
 		ttech['hidden'] = tech.hidden
-		
+
 		ttech['prerequisites'] = {}
 		for pname, _ in pairs(tech.prerequisites) do
 			table.insert(ttech['prerequisites'], pname)
 		end
-		
+
 		ttech['recipes'] = {}
 		for _, effect in pairs(tech.effects) do
-			if(effect.type == 'unlock-recipe') then
+			if (effect.type == 'unlock-recipe') then
 				table.insert(ttech['recipes'], effect.recipe)
 			end
 		end
@@ -61,7 +61,7 @@ local function ExportResearch()
 		end
 		ttech['research_unit_count'] = tech.research_unit_count
 
-		ttech['lid'] = '$'..localindex
+		ttech['lid'] = '$' .. localindex
 		ExportLocalisedString(tech.localised_name, localindex)
 		localindex = localindex + 1
 
@@ -75,11 +75,11 @@ local function ExportRecipes()
 	for _, recipe in pairs(game.recipe_prototypes) do
 		trecipe = {}
 		trecipe['name'] = recipe.name
-		trecipe['icon_name'] = 'icon.r.'..recipe.name
+		trecipe['icon_name'] = 'icon.r.' .. recipe.name
 		if recipe.products[1] then
-			trecipe["icon_alt_name"] = 'icon.i.'..recipe.products[1].name
+			trecipe["icon_alt_name"] = 'icon.i.' .. recipe.products[1].name
 		else
-			trecipe["icon_alt_name"] = 'icon.r.'..recipe.name
+			trecipe["icon_alt_name"] = 'icon.r.' .. recipe.name
 		end
 
 		trecipe['enabled'] = recipe.enabled
@@ -109,7 +109,7 @@ local function ExportRecipes()
 			tproduct['name'] = product.name
 			tproduct['type'] = product.type
 
-			amount = (product.amount == nil) and ((product.amount_max + product.amount_min)/2) or product.amount
+			amount = (product.amount == nil) and ((product.amount_max + product.amount_min) / 2) or product.amount
 			amount = amount * product.probability
 
 			tproduct['amount'] = amount
@@ -120,10 +120,11 @@ local function ExportRecipes()
 				if product.amount ~= nil then
 					tproduct['p_amount'] = product.amount - math.max(0, math.min(product.amount, product.catalyst_amount))
 				elseif product.catalyst_amount <= product.amount_min then
-					tproduct['p_amount'] = ((product.amount_max + product.amount_min)/2) - math.max(0, product.catalyst_amount)
+					tproduct['p_amount'] = ((product.amount_max + product.amount_min) / 2) - math.max(0, product.catalyst_amount)
 				else
 					catalyst_amount = math.min(product.amount_max, product.catalyst_amount)
-					tproduct['p_amount'] = ((product.amount_max - catalyst_amount) * (product.amount_max + 1 - catalyst_amount) / 2) / (product.amount_max + 1 - product.amount_min)
+					tproduct['p_amount'] = ((product.amount_max - catalyst_amount) * (product.amount_max + 1 - catalyst_amount) / 2) /
+						(product.amount_max + 1 - product.amount_min)
 				end
 
 				tproduct['p_amount'] = tproduct['p_amount'] * product.probability
@@ -142,7 +143,7 @@ local function ExportRecipes()
 			table.insert(trecipe['products'], tproduct)
 		end
 
-		trecipe['lid'] = '$'..localindex		
+		trecipe['lid'] = '$' .. localindex
 		ExportLocalisedString(recipe.localised_name, localindex)
 		localindex = localindex + 1
 
@@ -156,7 +157,7 @@ local function ExportItems()
 	for _, item in pairs(game.item_prototypes) do
 		titem = {}
 		titem['name'] = item.name
-		titem['icon_name'] = 'icon.i.'..item.name
+		titem['icon_name'] = 'icon.i.' .. item.name
 		titem['order'] = item.order
 		titem['subgroup'] = item.subgroup.name
 		titem["stack"] = item.stackable and item.stack_size or 1
@@ -178,8 +179,8 @@ local function ExportItems()
 				tproduct['name'] = product.name
 				tproduct['type'] = product.type
 
-				amount = (product.amount == nil) and ((product.amount_max + product.amount_min)/2) or product.amount
-				amount = amount * ( (product.probability == nil) and 1 or product.probability)
+				amount = (product.amount == nil) and ((product.amount_max + product.amount_min) / 2) or product.amount
+				amount = amount * ((product.probability == nil) and 1 or product.probability)
 
 				tproduct['amount'] = amount
 
@@ -190,7 +191,7 @@ local function ExportItems()
 			end
 		end
 
-		titem['lid'] = '$'..localindex
+		titem['lid'] = '$' .. localindex
 		ExportLocalisedString(item.localised_name, localindex)
 		localindex = localindex + 1
 
@@ -204,19 +205,19 @@ local function ExportFluids()
 	for _, fluid in pairs(game.fluid_prototypes) do
 		tfluid = {}
 		tfluid['name'] = fluid.name
-		tfluid['icon_name'] = 'icon.i.'..fluid.name
+		tfluid['icon_name'] = 'icon.i.' .. fluid.name
 		tfluid['order'] = fluid.order
 		tfluid['subgroup'] = fluid.subgroup.name
 		tfluid['default_temperature'] = ProcessTemperature(fluid.default_temperature)
 		tfluid['max_temperature'] = ProcessTemperature(fluid.max_temperature)
 		tfluid['heat_capacity'] = fluid.heat_capacity == nil and 0 or fluid.heat_capacity
-		
+
 		if fluid.fuel_value ~= 0 then
 			tfluid['fuel_value'] = fluid.fuel_value
 			tfluid['pollution_multiplier'] = fluid.emissions_multiplier
 		end
 
-		tfluid['lid'] = '$'..localindex
+		tfluid['lid'] = '$' .. localindex
 		ExportLocalisedString(fluid.localised_name, localindex)
 		localindex = localindex + 1
 
@@ -225,30 +226,32 @@ local function ExportFluids()
 	etable['fluids'] = tfluids
 end
 
-
 local function ExportModules()
 	tmodules = {}
 	for _, module in pairs(game.item_prototypes) do
 		if module.module_effects ~= nil then
 			tmodule = {}
 			tmodule['name'] = module.name
-			tmodule['icon_name'] = 'icon.e.'..module.name
-			tmodule["icon_alt_name"] = 'icon.i.'..module.name
+			tmodule['icon_name'] = 'icon.e.' .. module.name
+			tmodule["icon_alt_name"] = 'icon.i.' .. module.name
 			tmodule['order'] = module.order
 			tmodule['category'] = module.category
 			tmodule['tier'] = module.tier
 
-			tmodule['module_effects_consumption'] = (module.module_effects.consumption == nil) and 0 or module.module_effects.consumption.bonus
+			tmodule['module_effects_consumption'] = (module.module_effects.consumption == nil) and 0 or
+				module.module_effects.consumption.bonus
 			tmodule['module_effects_speed'] = (module.module_effects.speed == nil) and 0 or module.module_effects.speed.bonus
-			tmodule['module_effects_productivity'] = (module.module_effects.productivity == nil) and 0 or module.module_effects.productivity.bonus
-			tmodule['module_effects_pollution'] = (module.module_effects.pollution == nil) and 0 or module.module_effects.pollution.bonus
+			tmodule['module_effects_productivity'] = (module.module_effects.productivity == nil) and 0 or
+				module.module_effects.productivity.bonus
+			tmodule['module_effects_pollution'] = (module.module_effects.pollution == nil) and 0 or
+				module.module_effects.pollution.bonus
 
 			tmodule['limitations'] = {}
 			for _, recipe in pairs(module.limitations) do
 				table.insert(tmodule['limitations'], recipe)
 			end
 
-			tmodule['lid'] = '$'..localindex
+			tmodule['lid'] = '$' .. localindex
 			ExportLocalisedString(module.localised_name, localindex)
 			localindex = localindex + 1
 
@@ -261,11 +264,14 @@ end
 local function ExportEntities()
 	tentities = {}
 	for _, entity in pairs(game.entity_prototypes) do --select any entity with an energy source (or fluid -> offshore pump). we will sort them out later. BONUS: also grab the 'character' entity - for those hand-crafts
-		if entity.type == 'boiler' or entity.type == 'generator' or entity.type == 'reactor' or entity.type == 'mining-drill' or entity.type == 'offshore-pump' or entity.type == 'furnace' or entity.type == 'assembling-machine' or entity.type == 'beacon' or entity.type == 'rocket-silo' or entity.type == 'burner-generator' or entity.type == "character" then
+		if entity.type == 'boiler' or entity.type == 'generator' or entity.type == 'reactor' or entity.type == 'mining-drill'
+			or entity.type == 'offshore-pump' or entity.type == 'furnace' or entity.type == 'assembling-machine' or
+			entity.type == 'beacon' or entity.type == 'rocket-silo' or entity.type == 'burner-generator' or
+			entity.type == "character" then
 			tentity = {}
 			tentity['name'] = entity.name
-			tentity['icon_name'] = 'icon.e.'..entity.name
-			tentity["icon_alt_name"] = 'icon.i.'..entity.name
+			tentity['icon_name'] = 'icon.e.' .. entity.name
+			tentity["icon_alt_name"] = 'icon.i.' .. entity.name
 			tentity['order'] = entity.order
 			tentity['type'] = entity.type
 
@@ -278,7 +284,7 @@ local function ExportEntities()
 			if entity.fluid ~= nil then tentity['fluid_product'] = entity.fluid.name end
 			if entity.fluid_usage_per_tick ~= nil then tentity['fluid_usage_per_tick'] = entity.fluid_usage_per_tick end
 
-			if entity.module_inventory_size ~= nil then tentity['module_inventory_size'] =  entity.module_inventory_size end
+			if entity.module_inventory_size ~= nil then tentity['module_inventory_size'] = entity.module_inventory_size end
 			if entity.base_productivity ~= nil then tentity['base_productivity'] = entity.base_productivity end
 			if entity.distribution_effectivity ~= nil then tentity['distribution_effectivity'] = entity.distribution_effectivity end
 			if entity.neighbour_bonus ~= nil then tentity['neighbour_bonus'] = entity.neighbour_bonus end
@@ -287,7 +293,7 @@ local function ExportEntities()
 			tentity['associated_items'] = {}
 			if entity.items_to_place_this ~= nil then
 				for _, item in pairs(entity.items_to_place_this) do
-					if(type(item) == 'string') then
+					if (type(item) == 'string') then
 						table.insert(tentity['associated_items'], item)
 					else
 						table.insert(tentity['associated_items'], item['name'])
@@ -399,12 +405,12 @@ local function ExportEntities()
 				tentity['drain'] = entity.electric_energy_source_prototype.drain
 				tentity['pollution'] = entity.electric_energy_source_prototype.emissions
 
-			elseif entity.heat_energy_source_prototype  then
+			elseif entity.heat_energy_source_prototype then
 				tentity['fuel_type'] = 'heat'
 				tentity['fuel_effectivity'] = 1
 				tentity['pollution'] = entity.heat_energy_source_prototype.emissions
 
-			elseif entity.void_energy_source_prototype  then
+			elseif entity.void_energy_source_prototype then
 				tentity['fuel_type'] = 'void'
 				tentity['fuel_effectivity'] = 1
 				tentity['pollution'] = entity.void_energy_source_prototype.emissions
@@ -414,7 +420,7 @@ local function ExportEntities()
 				tentity['pollution'] = 0
 			end
 
-			tentity['lid'] = '$'..localindex
+			tentity['lid'] = '$' .. localindex
 			ExportLocalisedString(entity.localised_name, localindex)
 			localindex = localindex + 1
 
@@ -439,22 +445,28 @@ local function ExportResources()
 			tresource['name'] = resource.name
 
 			tresource['products'] = {}
-			for _, product in pairs(resource.mineable_properties.products) do
-				tproduct = {}
-				tproduct['name'] = product.name
-				tproduct['type'] = product.type
 
-				amount = (product.amount == nil) and ((product.amount_max + product.amount_min)/2) or product.amount
-				amount = amount * ( (product.probability == nil) and 1 or product.probability)
-				tproduct['amount'] = amount
+			-- temporarily fix #40.
+			-- see https://github.com/pyanodon/pybugreports/issues/118
+			-- and https://lua-api.factorio.com/latest/LuaEntityPrototype.html#LuaEntityPrototype.mineable_properties
+			if resource.mineable_properties.products ~= nil then
+				for _, product in pairs(resource.mineable_properties.products) do
+					tproduct = {}
+					tproduct['name'] = product.name
+					tproduct['type'] = product.type
 
-				if product.type == 'fluid' and product.temperate ~= nil then
-					tproduct['temperature'] = ProcessTemperature(product.temperature)
+					amount = (product.amount == nil) and ((product.amount_max + product.amount_min) / 2) or product.amount
+					amount = amount * ((product.probability == nil) and 1 or product.probability)
+					tproduct['amount'] = amount
+
+					if product.type == 'fluid' and product.temperate ~= nil then
+						tproduct['temperature'] = ProcessTemperature(product.temperature)
+					end
+					table.insert(tresource['products'], tproduct)
 				end
-				table.insert(tresource['products'], tproduct)
 			end
 
-			tresource['lid'] = '$'..localindex
+			tresource['lid'] = '$' .. localindex
 			ExportLocalisedString(resource.localised_name, localindex)
 			localindex = localindex + 1
 
@@ -469,7 +481,7 @@ local function ExportGroups()
 	for _, group in pairs(game.item_group_prototypes) do
 		tgroup = {}
 		tgroup['name'] = group.name
-		tgroup['icon_name'] = 'icon.g.'..group.name
+		tgroup['icon_name'] = 'icon.g.' .. group.name
 		tgroup['order'] = group.order
 
 		tgroup['subgroups'] = {}
@@ -477,7 +489,7 @@ local function ExportGroups()
 			table.insert(tgroup['subgroups'], subgroup.name)
 		end
 
-		tgroup['lid'] = '$'..localindex
+		tgroup['lid'] = '$' .. localindex
 		ExportLocalisedString(group.localised_name, localindex)
 		localindex = localindex + 1
 
@@ -498,12 +510,12 @@ local function ExportSubGroups()
 	etable['subgroups'] = tsgroups
 end
 
-script.on_nth_tick(1, 	
+script.on_nth_tick(1,
 	function()
 
 		game.difficulty_settings.recipe_difficulty = defines.difficulty_settings.recipe_difficulty.normal
 		game.difficulty_settings.technology_difficulty = defines.difficulty_settings.technology_difficulty.expensive
-		etable['difficulty'] = {0,1}
+		etable['difficulty'] = { 0, 1 }
 
 		localised_print('<<<START-EXPORT-LN>>>')
 
