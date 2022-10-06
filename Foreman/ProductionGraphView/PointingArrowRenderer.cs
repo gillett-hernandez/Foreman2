@@ -28,23 +28,44 @@ namespace Foreman
 		public void Paint(Graphics graphics, ProductionGraph graph)
 		{
 			if (ShowErrorArrows)
+			{
 				foreach (Point errorPoint in graph.Nodes.Where(node => node.State == NodeState.Error).Select(node => Viewer.GraphToScreen(node.Location)))
+				{
 					DrawArrow(graphics, errorPoint, ErrorArrowPen);
+				}
+			}
+
 			if (ShowWarningArrows)
+			{
 				foreach (Point warningPoint in graph.Nodes.Where(node => node.State == NodeState.Warning).Select(node => Viewer.GraphToScreen(node.Location)))
+				{
 					DrawArrow(graphics, warningPoint, WarningArrowPen);
+				}
+			}
+
 			if (ShowDisconnectedArrows)
+			{
 				foreach (Point errorPoint in graph.Nodes.Where(node => node.State == NodeState.MissingLink).Select(node => Viewer.GraphToScreen(node.Location)))
+				{
 					DrawArrow(graphics, errorPoint, DisconnectedArrowPen);
+				}
+			}
+
 			if (ShowOUNodeArrows)
+			{
 				foreach (Point errorPoint in graph.Nodes.Where(node => node.IsOverproducing() || node.ManualRateNotMet()).Select(node => Viewer.GraphToScreen(node.Location)))
+				{
 					DrawArrow(graphics, errorPoint, OUNodeArrowPen);
+				}
+			}
 		}
 
 		private void DrawArrow(Graphics graphics, Point nodeOrigin, Pen arrowPen)
 		{
 			if (nodeOrigin.X > -Padding && nodeOrigin.X < Viewer.Width + Padding && nodeOrigin.Y > -Padding && nodeOrigin.Y < Viewer.Height + Padding) //roughly 'in bounds'
+			{
 				return;
+			}
 
 			Point center = new Point(Viewer.Width / 2, Viewer.Height / 2);
 			Point borderPoint;
@@ -103,9 +124,13 @@ namespace Foreman
 		private Point IntersectionPoint(Point a, Point b, int c, bool horizontal) //c is x if vertical line, and y if horizontal line
 		{
 			if (horizontal)
+			{
 				return new Point(a.X + ((b.X - a.X) * (c - a.Y) / (b.Y - a.Y)), c);
+			}
 			else
+			{
 				return new Point(c, a.Y + ((b.Y - a.Y) * (c - a.X) / (b.X - a.X)));
+			}
 		}
 	}
 }

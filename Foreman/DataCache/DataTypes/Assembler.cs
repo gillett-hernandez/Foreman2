@@ -31,8 +31,13 @@ namespace Foreman
 		{
 			double finalSpeed = this.Speed;
 			if (modules != null)
+			{
 				foreach (Module module in modules.Where(m => m != null))
+				{
 					finalSpeed += module.SpeedBonus * this.Speed;
+				}
+			}
+
 			finalSpeed += beaconBonus * this.Speed;
 			// fix #33, bringing the lowest possible speed, after all speed penalties and bonuses, to 0.2
 			finalSpeed = (double)(Math.Max(finalSpeed, 0.2));

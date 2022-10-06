@@ -39,13 +39,19 @@ namespace Foreman
 					if ((visibleGraphBounds.Width > CurrentGridUnit) && (viewScale * CurrentGridUnit) > minGridWidth)
 					{
 						for (int ix = visibleGraphBounds.X - (visibleGraphBounds.X % CurrentGridUnit); ix < visibleGraphBounds.X + visibleGraphBounds.Width; ix += CurrentGridUnit)
+						{
 							graphics.DrawLine(gridPen, ix, visibleGraphBounds.Y, ix, visibleGraphBounds.Y + visibleGraphBounds.Height);
+						}
 
 						for (int iy = visibleGraphBounds.Y - (visibleGraphBounds.Y % CurrentGridUnit); iy < visibleGraphBounds.Y + visibleGraphBounds.Height; iy += CurrentGridUnit)
+						{
 							graphics.DrawLine(gridPen, visibleGraphBounds.X, iy, visibleGraphBounds.X + visibleGraphBounds.Width, iy);
+						}
 					}
 					else
+					{
 						graphics.FillRectangle(gridBrush, visibleGraphBounds);
+					}
 				}
 
 				//major grid
@@ -54,10 +60,14 @@ namespace Foreman
 					if ((visibleGraphBounds.Width > CurrentMajorGridUnit) && (viewScale * CurrentMajorGridUnit) > minGridWidth)
 					{
 						for (int ix = visibleGraphBounds.X - (visibleGraphBounds.X % CurrentMajorGridUnit); ix < visibleGraphBounds.X + visibleGraphBounds.Width; ix += CurrentMajorGridUnit)
+						{
 							graphics.DrawLine(gridMPen, ix, visibleGraphBounds.Y, ix, visibleGraphBounds.Y + visibleGraphBounds.Height);
+						}
 
 						for (int iy = visibleGraphBounds.Y - (visibleGraphBounds.Y % CurrentMajorGridUnit); iy < visibleGraphBounds.Y + visibleGraphBounds.Height; iy += CurrentMajorGridUnit)
+						{
 							graphics.DrawLine(gridMPen, visibleGraphBounds.X, iy, visibleGraphBounds.X + visibleGraphBounds.Width, iy);
+						}
 					}
 				}
 
@@ -87,7 +97,9 @@ namespace Foreman
 		public int AlignToGrid(int original)
 		{
 			if (CurrentGridUnit < 1 || !ShowGrid)
+			{
 				return original;
+			}
 
 			original += Math.Sign(original) * CurrentGridUnit / 2;
 			original -= original % CurrentGridUnit;

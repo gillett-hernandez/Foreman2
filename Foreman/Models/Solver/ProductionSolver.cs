@@ -105,7 +105,9 @@ namespace Foreman
 		public Solution Solve()
 		{
 			if (nodes.Count == 0)
+			{
 				return new Solution(new Dictionary<BaseNode, double>(), new Dictionary<NodeLink, double>()); //no nodes mean empty solution (no errors)
+			}
 
 			objective.SetMinimization();
 
@@ -113,7 +115,9 @@ namespace Foreman
 			//ex: coal liquifaction produces more heavy oil than is required (25->90) -> solution will be found (if it is connected back to itself only), but there will be an over-production of heavy oil.
 			//    Kovarex enrichment produces less Uranium 238 than is required (5->2) -> solution will be 0 (if it is connected back to itself only), as there is no way to satisfy the inputs. In a more complicated case with multiple nodes (instead of one recipe looped back to itself), this can lead to a null-solution (error)
 			if (solver.Solve() != Solver.ResultStatus.OPTIMAL)
+			{
 				return null; //error solution -> sets all values to 0 and records the error
+			}
 
 			Dictionary<BaseNode, double> nodeSolutions = nodes
 				.ToDictionary(x => x, x => solutionFor(Tuple.Create(x, RateType.ACTUAL)));
@@ -149,7 +153,9 @@ namespace Foreman
 		public void AddOutputObjective(ConsumerNode node)
 		{
 			if(outputObjectiveCoefficient > 0)
+			{
 				objective.SetCoefficient(variableFor(node), -outputObjectiveCoefficient);
+			}
 		}
 
 		//set the node to be zero (used for passthrough nodes with no outputs)
@@ -225,7 +231,9 @@ namespace Foreman
 		private Variable variableFor(object key, string name)
 		{
 			if (allVariables.ContainsKey(key))
+			{
 				return allVariables[key];
+			}
 
 			Variable newVar = solver.MakeNumVar(0.0, double.PositiveInfinity, name + ":" + GetSequence());
 			allVariables[key] = newVar;
@@ -235,7 +243,10 @@ namespace Foreman
 		private double solutionFor(object key)
 		{
 			if (allVariables.ContainsKey(key))
+			{
 				return allVariables[key].SolutionValue();
+			}
+
 			return 0.0;
 		}
 

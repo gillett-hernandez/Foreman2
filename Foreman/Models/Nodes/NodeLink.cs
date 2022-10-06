@@ -72,7 +72,10 @@ namespace Foreman
 		public static NodeLinkController GetController(NodeLink link)
 		{
 			if (link.Controller != null)
+			{
 				return (NodeLinkController)link.Controller;
+			}
+
 			return new NodeLinkController(link);
 		}
 

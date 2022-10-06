@@ -111,9 +111,14 @@ namespace Foreman
 			Panel sPanel = sender as Panel;
 
 			if (e.Delta < 0 && LastScrollY[sender] < sPanel.Controls[0].Height - sPanel.Height + 5)
+			{
 				LastScrollY[sender] += sPanel.Height / 4;
+			}
 			else if (e.Delta > 0 && LastScrollY[sender] > 0)
+			{
 				LastScrollY[sender] -= sPanel.Height / 4;
+			}
+
 			sPanel.AutoScrollPosition = new Point(0, LastScrollY[sender]);
 		}
 
@@ -155,8 +160,9 @@ namespace Foreman
 		{
 			//assembler button colors
 			foreach (Button abutton in AssemblerOptions)
+			{
 				abutton.BackColor = ((Assembler)abutton.Tag == nodeData.SelectedAssembler) ? SelectedColor : (((Assembler)abutton.Tag).IsMissing || !((Assembler)abutton.Tag).Available) ? ErrorColor : AssemblerChoiceTable.BackColor;
-
+			}
 			//neighbour count panel
 			if (nodeData.SelectedAssembler.EntityType != EntityType.Reactor)
 			{
@@ -165,7 +171,7 @@ namespace Foreman
 			}
 
 			//extra productivity bonus panel
-			if(nodeData.SelectedAssembler.EntityType != EntityType.Miner && !myGraphViewer.Graph.EnableExtraProductivityForNonMiners)
+			if (nodeData.SelectedAssembler.EntityType != EntityType.Miner && !myGraphViewer.Graph.EnableExtraProductivityForNonMiners)
 			{
 				ExtraProductivityInput.Visible = false;
 				ExtraProductivityLabel.Visible = false;
@@ -215,8 +221,9 @@ namespace Foreman
 		private void UpdateFuel()
 		{
 			foreach (Button fbutton in FuelOptions)
+			{
 				fbutton.BackColor = ((Item)fbutton.Tag == nodeData.Fuel) ? SelectedColor : (((Item)fbutton.Tag).IsMissing || !((Item)fbutton.Tag).Available || !((Item)fbutton.Tag).ProductionRecipes.Any(r => r.Available && r.Assemblers.Any(a => a.Available))) ? ErrorColor : FuelOptionsTable.BackColor;
-
+			}
 			FuelTitle.Text = string.Format("Fuel: {0}", nodeData.Fuel == null ? "-none-" : nodeData.Fuel.FriendlyName);
 			SelectedFuelIcon.Image = nodeData.Fuel?.Icon;
 
@@ -233,7 +240,9 @@ namespace Foreman
 			{
 				Button button = InitializeBaseButton(moduleOptions[i]);
 				if (!moduleOptions[i].Available)
+				{
 					button.BackColor = ErrorColor;
+				}
 
 				button.MouseUp += new MouseEventHandler(AModuleOptionButton_Click);
 
@@ -247,7 +256,9 @@ namespace Foreman
 		private void UpdateAssemblerModules()
 		{
 			foreach (Button mbutton in AModuleOptions)
+			{
 				mbutton.Enabled = nodeData.AssemblerModules.Count < nodeData.SelectedAssembler.ModuleSlots;
+			}
 
 			List<Module> moduleOptions = nodeData.BaseRecipe.Modules.Intersect(nodeData.SelectedAssembler.Modules).OrderBy(m => m.LFriendlyName).ToList();
 
@@ -258,7 +269,10 @@ namespace Foreman
 			{
 				Button button = InitializeBaseButton(nodeData.AssemblerModules[i]);
 				if (nodeData.AssemblerModules[i].IsMissing || !nodeData.AssemblerModules[i].Available || !nodeData.AssemblerModules[i].Enabled || !moduleOptions.Contains(nodeData.AssemblerModules[i]) || i >= nodeData.SelectedAssembler.ModuleSlots)
+				{
 					button.BackColor = ErrorColor;
+				}
+
 				button.MouseUp += new MouseEventHandler(AModuleButton_Click);
 
 				SelectedAModulesTable.Controls.Add(button, AssemblerModules.Count % (SelectedAModulesTable.ColumnCount - 1), AssemblerModules.Count / (SelectedAModulesTable.ColumnCount - 1));
@@ -289,7 +303,9 @@ namespace Foreman
 		private void UpdateBeacon()
 		{
 			foreach (Button bbutton in BeaconOptions)
+			{
 				bbutton.BackColor = (((Beacon)bbutton.Tag) == nodeData.SelectedBeacon) ? SelectedColor : (((Beacon)bbutton.Tag).IsMissing || !((Beacon)bbutton.Tag).Available) ? ErrorColor : BeaconChoiceTable.BackColor;
+			}
 
 			//modules panel
 			List<Module> moduleOptions = nodeData.SelectedBeacon == null ? new List<Module>() : nodeData.BaseRecipe.Modules.Intersect(nodeData.SelectedAssembler.Modules).Intersect(nodeData.SelectedBeacon.Modules).OrderBy(m => m.LFriendlyName).ToList();
@@ -306,7 +322,9 @@ namespace Foreman
 
 			//beacon values
 			if (nodeData.SelectedBeacon != null)
+			{
 				SetBeaconValues(true);
+			}
 		}
 
 		private void SetupBeaconModuleOptions()
@@ -320,7 +338,9 @@ namespace Foreman
 			{
 				Button button = InitializeBaseButton(moduleOptions[i]);
 				if (!moduleOptions[i].Available)
+				{
 					button.BackColor = ErrorColor;
+				}
 
 				button.MouseUp += new MouseEventHandler(BModuleOptionButton_Click);
 
@@ -334,7 +354,9 @@ namespace Foreman
 		private void UpdateBeaconModules()
 		{
 			foreach (Button mbutton in BModuleOptions)
+			{
 				mbutton.Enabled = nodeData.BeaconModules.Count < nodeData.SelectedBeacon.ModuleSlots;
+			}
 
 			List<Module> moduleOptions = nodeData.SelectedBeacon == null ? new List<Module>() : nodeData.BaseRecipe.Modules.Intersect(nodeData.SelectedAssembler.Modules).Intersect(nodeData.SelectedBeacon.Modules).OrderBy(m => m.LFriendlyName).ToList();
 			int moduleSlots = nodeData.SelectedBeacon == null ? 0 : nodeData.SelectedBeacon.ModuleSlots;
@@ -346,7 +368,10 @@ namespace Foreman
 			{
 				Button button = InitializeBaseButton(nodeData.BeaconModules[i]);
 				if (nodeData.BeaconModules[i].IsMissing || !nodeData.BeaconModules[i].Available || !nodeData.BeaconModules[i].Enabled || !moduleOptions.Contains(nodeData.BeaconModules[i]) || i >= moduleSlots)
+				{
 					button.BackColor = ErrorColor;
+				}
+
 				button.MouseUp += new MouseEventHandler(BModuleButton_Click);
 
 				SelectedBModulesTable.Controls.Add(button, BeaconModules.Count % (SelectedBModulesTable.ColumnCount - 1), BeaconModules.Count / (SelectedBModulesTable.ColumnCount - 1));
@@ -384,23 +409,31 @@ namespace Foreman
 			AssemblerSpeedLabel.Text = string.Format("{0} ({1} crafts / {2})", nodeData.GetAssemblerSpeed().ToString("0.##"), nodeData.GetTotalCrafts().ToString("0.#"), RateName);
 
 			if (nodeData.SelectedAssembler.IsBurner && nodeData.Fuel != null)
+			{
 				AssemblerEnergyLabel.Text = string.Format("{0} ({1} fuel / {2})", GraphicsStuff.DoubleToEnergy(nodeData.GetAssemblerEnergyConsumption(), "W"), GraphicsStuff.DoubleToString(nodeData.GetTotalAssemblerFuelConsumption()), RateName);
+			}
 			else
+			{
 				AssemblerEnergyLabel.Text = GraphicsStuff.DoubleToEnergy(nodeData.GetAssemblerEnergyConsumption(), "W");
+			}
 
 			AssemblerPollutionLabel.Text = string.Format("{0} / min", (nodeData.GetAssemblerPollutionProduction() * 60).ToString("0.##"));
 
-			if(isGenerator)
+			if (isGenerator)
 			{
 				double minTemp = nodeData.GetGeneratorMinimumTemperature();
 				double maxTemp = nodeData.GetGeneratorMaximumTemperature();
 				double operationalTemp = nodeData.SelectedAssembler.OperationTemperature;
 				double effectivity = nodeData.GetGeneratorEffectivity();
 
-				if(double.IsInfinity(maxTemp))
+				if (double.IsInfinity(maxTemp))
+				{
 					GeneratorTemperatureRangeLabel.Text = string.Format("min {0}°c  (optimal: {1}°c)", Math.Round(minTemp, 1).ToString("0.#"), Math.Round(operationalTemp, 1).ToString("0.#"));
+				}
 				else
+				{
 					GeneratorTemperatureRangeLabel.Text = string.Format("{0}-{1}°c  (optimal: {2}°c)", Math.Round(minTemp, 1).ToString("0.#"), Math.Round(maxTemp, 1).ToString("0.#"), Math.Round(operationalTemp, 1).ToString("0.#"));
+				}
 
 				AssemblerEnergyLabel.Text = GraphicsStuff.DoubleToEnergy(nodeData.GetGeneratorElectricalProduction(), "W");
 				AssemblerEnergyPercentLabel.Text = effectivity.ToString("P0");
@@ -447,11 +480,20 @@ namespace Foreman
 		private void CleanTable(TableLayoutPanel table, int newCellCount)
 		{
 			while (table.Controls.Count > 0)
+			{
 				table.Controls[0].Dispose();
+			}
+
 			while (table.RowStyles.Count > 1)
+			{
 				table.RowStyles.RemoveAt(0);
+			}
+
 			for (int i = 0; i < (newCellCount - 1) / (table.ColumnCount - 1); i++)
+			{
 				table.RowStyles.Add(new RowStyle(table.RowStyles[0].SizeType, table.RowStyles[0].Height));
+			}
+
 			table.RowCount = table.RowStyles.Count;
 		}
 
@@ -459,7 +501,9 @@ namespace Foreman
 		{
 			int height = (table.Width - (table.RowStyles.Count > 2 ? 20 : 0)) / (table.ColumnCount - 1);
 			for (int i = 0; i < table.RowStyles.Count; i++)
+			{
 				table.RowStyles[i].Height = height;
+			}
 		}
 
 		private void UpdateFixedFlowInputDecimals(NumericUpDown nud, int max = 4)
@@ -488,18 +532,26 @@ namespace Foreman
 		}
 		private void AModuleButton_Click(object sender, MouseEventArgs e)
 		{
-			if (!new Rectangle(new Point(0,0),((Button)sender).Size).Contains(e.Location))
+			if (!new Rectangle(new Point(0, 0), ((Button)sender).Size).Contains(e.Location))
+			{
 				return;
+			}
 
 			ToolTip.Hide((Control)sender);
 			int index = AssemblerModules.IndexOf((Button)sender);
 
 			if (e.Button == MouseButtons.Left)
+			{
 				nodeController.RemoveAssemblerModule(index);
+			}
 			else if (e.Button == MouseButtons.Right)
+			{
 				nodeController.RemoveAssemblerModules(nodeData.AssemblerModules[index]);
+			}
 			else
+			{
 				return;
+			}
 
 			myGraphViewer.Graph.UpdateNodeValues();
 			UpdateAssemblerModules();
@@ -507,16 +559,24 @@ namespace Foreman
 		private void AModuleOptionButton_Click(object sender, MouseEventArgs e)
 		{
 			if (!new Rectangle(new Point(0, 0), ((Button)sender).Size).Contains(e.Location))
+			{
 				return;
+			}
 
 			Module newModule = ((Button)sender).Tag as Module;
 
 			if (e.Button == MouseButtons.Left)
+			{
 				nodeController.AddAssemblerModule(newModule);
+			}
 			else if (e.Button == MouseButtons.Right)
+			{
 				nodeController.AddAssemblerModules(newModule);
+			}
 			else
+			{
 				return;
+			}
 
 			myGraphViewer.Graph.UpdateNodeValues();
 			UpdateAssemblerModules();
@@ -525,26 +585,39 @@ namespace Foreman
 		{
 			Beacon newBeacon = ((Button)sender).Tag as Beacon;
 			if (nodeData.SelectedBeacon == newBeacon)
+			{
 				nodeController.SetBeacon(null);
+			}
 			else
+			{
 				nodeController.SetBeacon(newBeacon);
+			}
+
 			myGraphViewer.Graph.UpdateNodeValues();
 			UpdateBeacon();
 		}
 		private void BModuleButton_Click(object sender, MouseEventArgs e)
 		{
 			if (!new Rectangle(new Point(0, 0), ((Button)sender).Size).Contains(e.Location))
+			{
 				return;
+			}
 
 			ToolTip.Hide((Control)sender);
 			int index = BeaconModules.IndexOf((Button)sender);
 
 			if (e.Button == MouseButtons.Left)
+			{
 				nodeController.RemoveBeaconModule(index);
+			}
 			else if (e.Button == MouseButtons.Right)
+			{
 				nodeController.RemoveBeaconModules(nodeData.BeaconModules[index]);
+			}
 			else
+			{
 				return;
+			}
 
 			myGraphViewer.Graph.UpdateNodeValues();
 			UpdateBeaconModules();
@@ -552,16 +625,24 @@ namespace Foreman
 		private void BModuleOptionButton_Click(object sender, MouseEventArgs e)
 		{
 			if (!new Rectangle(new Point(0, 0), ((Button)sender).Size).Contains(e.Location))
+			{
 				return;
+			}
 
 			Module newModule = ((Button)sender).Tag as Module;
 
 			if (e.Button == MouseButtons.Left)
+			{
 				nodeController.AddBeaconModule(newModule);
+			}
 			else if (e.Button == MouseButtons.Right)
+			{
 				nodeController.AddBeaconModules(newModule);
+			}
 			else
+			{
 				return;
+			}
 
 			myGraphViewer.Graph.UpdateNodeValues();
 			UpdateBeaconModules();
@@ -572,7 +653,7 @@ namespace Foreman
 		private void Button_MouseHover(object sender, EventArgs e)
 		{
 			Control control = (Control)sender;
-			if(control.Tag is Item fuel)
+			if (control.Tag is Item fuel)
 			{
 				//the only items in this panel are fuels
 				ToolTip.SetText(fuel.FriendlyName + "\nFuel value: " + GraphicsStuff.DoubleToEnergy(fuel.FuelValue, "J"));
@@ -695,7 +776,9 @@ namespace Foreman
 				nodeController.SetBeaconsCont((double)ConstantBeaconInput.Value);
 
 				if (graphUpdateRequired)
+				{
 					myGraphViewer.Graph.UpdateNodeValues(); //only graph update worthy change is the # of beacons. the others arent as important
+				}
 
 				UpdateAssemblerInfo();
 				UpdateBeaconInfo();

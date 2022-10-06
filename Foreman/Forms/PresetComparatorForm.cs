@@ -96,15 +96,24 @@ namespace Foreman
 		{
 			List<string> existingPresetFiles = new List<string>();
 			foreach (string presetFile in Directory.GetFiles(Path.Combine(Application.StartupPath, "Presets"), "*.pjson"))
+			{
 				if (File.Exists(Path.ChangeExtension(presetFile, "dat")))
+				{
 					existingPresetFiles.Add(Path.GetFileNameWithoutExtension(presetFile));
+				}
+			}
+
 			existingPresetFiles.Sort();
 			List<Preset> Presets = new List<Preset>();
 			foreach (string presetFile in existingPresetFiles)
+			{
 				Presets.Add(new Preset(presetFile, false, false)); //we dont care about default or selected states here.
+			}
 
 			if (existingPresetFiles.Count < 2)
+			{
 				this.Close();
+			}
 
 			LeftPresetSelectionBox.Items.AddRange(Presets.ToArray());
 			RightPresetSelectionBox.Items.AddRange(Presets.ToArray());
@@ -144,21 +153,31 @@ namespace Foreman
 				foreach (var kvp in leftCacheDictionary.OrderByDescending(k => ((DataObjectBase)k.Value).Available).ThenBy(k => k.Key))
 				{
 					if (!rightCacheDictionary.ContainsKey(kvp.Key))
+					{
 						outputLists[0].Add(kvp.Value);
+					}
 					else
+					{
 						tempCenterSet.Add(new Tuple<T, T>(kvp.Value, rightCacheDictionary[kvp.Key]));
+					}
 				}
 				foreach (var kvp in rightCacheDictionary.OrderByDescending(k => ((DataObjectBase)k.Value).Available).ThenBy(k => k.Key))
 				{
 					if (!leftCacheDictionary.ContainsKey(kvp.Key))
+					{
 						outputLists[3].Add(kvp.Value);
+					}
 				}
 
 				//sort the combined center lists together (since they must align)
 				tempCenterSet.Sort(delegate (Tuple<T, T> a, Tuple<T, T> b)
 				{
 					int availableDiff = (a.Item1.Available || a.Item2.Available).CompareTo((b.Item1.Available || b.Item2.Available));
-					if (availableDiff != 0) return -availableDiff;
+					if (availableDiff != 0)
+					{
+						return -availableDiff;
+					}
+
 					return a.Item1.Name.CompareTo(b.Item1.Name);
 				});
 				foreach(Tuple<T,T> pair in tempCenterSet)
@@ -192,18 +211,29 @@ namespace Foreman
 			foreach (var kvp in LeftCache.IncludedMods)
 			{
 				if (RightCache.IncludedMods.ContainsKey(kvp.Key))
+				{
 					unfilteredModTabObjects[1].Add(kvp.Key + "_" + kvp.Value);
+				}
 				else
+				{
 					unfilteredModTabObjects[0].Add(kvp.Key + "_" + kvp.Value);
+				}
 			}
 			foreach (var kvp in RightCache.IncludedMods)
 			{
 				if (LeftCache.IncludedMods.ContainsKey(kvp.Key))
+				{
 					unfilteredModTabObjects[2].Add(kvp.Key + "_" + kvp.Value);
+				}
 				else
+				{
 					unfilteredModTabObjects[3].Add(kvp.Key + "_" + kvp.Value);
+				}
 			}
-			for (int i = 0; i < 4; i++) unfilteredModTabObjects[i].Sort(delegate (object a, object b) { return ((string)a).CompareTo((string)b); });
+			for (int i = 0; i < 4; i++)
+			{
+				unfilteredModTabObjects[i].Sort(delegate (object a, object b) { return ((string)a).CompareTo((string)b); });
+			}
 
 			//2.2: items, recipes, assemblers, miners, and modules
 			ProcessObject(LeftCache.Items, RightCache.Items, unfilteredItemTabObjects);
@@ -226,7 +256,9 @@ namespace Foreman
 			IconList.ImageSize = (ComparisonTabControl.SelectedIndex == 0 ? new Size(1, 1) : new Size(32, 32)); //0: mod list (no images)
 
 			if (DataCache.UnknownIcon != null)
+			{
 				IconList.Images.Add(DataCache.UnknownIcon);
+			}
 
 			for (int i = 0; i < 4; i++)
 			{
@@ -258,7 +290,9 @@ namespace Foreman
 							lvItem.ImageIndex = IconList.Images.Count - 1;
 						}
 						else
+						{
 							lvItem.ImageIndex = 0;
+						}
 
 						lvItem.ForeColor = doBase.Available ? AvailableTextColor : UnavailableTextColor;
 						lvItem.Font = doBase.Available ? AvailableTextFont : UnavailableTextFont;
@@ -362,9 +396,15 @@ namespace Foreman
 				filteredSelectedTabLVIs[i].Clear();
 
 				foreach (ListViewItem lvItem in unfilteredSelectedTabLVIs[i])
+				{
 					if (showUnavailable || !(lvItem.Tag is DataObjectBase dObj) || dObj.Available)
+					{
 						if (lvItem.Name.Contains(filter) || lvItem.Text.IndexOf(filter, StringComparison.OrdinalIgnoreCase) != -1)
+						{
 							filteredSelectedTabLVIs[i].Add(lvItem);
+						}
+					}
+				}
 			}
 
 			//complete filter for Left&Right sets (have to process at the same time, since if a name fits the filter in one (but not the other), both are still added to maintain parity)

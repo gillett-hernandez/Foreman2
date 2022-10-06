@@ -46,7 +46,9 @@ namespace Foreman
 		protected override void Draw(Graphics graphics, NodeDrawingStyle style)
 		{
 			if (DisplayedNode.SelectedBeacon == null || style == NodeDrawingStyle.IconsOnly || style == NodeDrawingStyle.Simple)
+			{
 				return;
+			}
 
 			Point trans = LocalToGraph(new Point(-Width / 2, -Height / 2));
 			//graphics.DrawRectangle(devPen, trans.X, trans.Y, Width, Height);
@@ -59,7 +61,9 @@ namespace Foreman
 			{
 
 				for (int i = 0; i < moduleLocations.Length && i < DisplayedNode.BeaconModules.Count; i++)
+				{
 					graphics.DrawImage(DisplayedNode.BeaconModules[i].Icon, trans.X + moduleLocations[i].X + moduleOffset.X, trans.Y + moduleLocations[i].Y + moduleOffset.Y, ModuleIconSize, ModuleIconSize);
+				}
 			}
 			else if(DisplayedNode.BeaconModules.Count <= 8 * 4) //resot to drawing circles for each module instead -> 8x4 set, so 32 max modules
 			{
@@ -106,9 +110,14 @@ namespace Foreman
 		public override List<TooltipInfo> GetToolTips(Point graph_point)
 		{
 			if (!Visible)
+			{
 				return null;
+			}
+
 			if (DisplayedNode.SelectedBeacon == null)
+			{
 				return null;
+			}
 
 			List<TooltipInfo> tooltips = new List<TooltipInfo>();
 
@@ -124,13 +133,20 @@ namespace Foreman
 				foreach (Module m in DisplayedNode.BeaconModules)
 				{
 					if (moduleCounter.ContainsKey(m))
+					{
 						moduleCounter[m]++;
+					}
 					else
+					{
 						moduleCounter.Add(m, 1);
+					}
 				}
 
 				foreach (Module m in moduleCounter.Keys.OrderBy(m => m.FriendlyName))
+				{
 					tti.Text += string.Format("\n   {0} :{1}", moduleCounter[m], m.FriendlyName);
+				}
+
 				tooltips.Add(tti);
 			}
 			else //over assembler

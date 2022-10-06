@@ -29,15 +29,24 @@ namespace Foreman
 			Properties.Settings.Default.ForemanVersion = 5;
 
 			if (!Enum.IsDefined(typeof(ProductionGraph.RateUnit), Properties.Settings.Default.DefaultRateUnit))
+			{
 				Properties.Settings.Default.DefaultRateUnit = (int)ProductionGraph.RateUnit.Per1Sec;
+			}
+
 			GraphViewer.Graph.SelectedRateUnit = (ProductionGraph.RateUnit)Properties.Settings.Default.DefaultRateUnit;
 
 			if (!Enum.IsDefined(typeof(ModuleSelector.Style), Properties.Settings.Default.DefaultModuleOption))
+			{
 				Properties.Settings.Default.DefaultModuleOption = (int)ModuleSelector.Style.None;
+			}
+
 			GraphViewer.Graph.ModuleSelector.DefaultSelectionStyle = (ModuleSelector.Style)Properties.Settings.Default.DefaultModuleOption;
 
 			if (!Enum.IsDefined(typeof(AssemblerSelector.Style), Properties.Settings.Default.DefaultAssemblerOption))
+			{
 				Properties.Settings.Default.DefaultAssemblerOption = (int)AssemblerSelector.Style.WorstNonBurner;
+			}
+
 			GraphViewer.Graph.AssemblerSelector.DefaultSelectionStyle = (AssemblerSelector.Style)Properties.Settings.Default.DefaultAssemblerOption;
 
 			GraphViewer.ArrowsOnLinks = Properties.Settings.Default.ArrowsOnLinks;
@@ -46,11 +55,17 @@ namespace Foreman
 			GraphViewer.LockedRecipeEditPanelPosition = Properties.Settings.Default.LockedRecipeEditorPosition;
 
 			if (!Enum.IsDefined(typeof(ProductionGraphViewer.LOD), Properties.Settings.Default.LevelOfDetail))
+			{
 				Properties.Settings.Default.LevelOfDetail = (int)ProductionGraphViewer.LOD.Medium;
+			}
+
 			GraphViewer.LevelOfDetail = (ProductionGraphViewer.LOD)Properties.Settings.Default.LevelOfDetail;
 
 			if (!Enum.IsDefined(typeof(NodeDirection), Properties.Settings.Default.DefaultNodeDirection))
+			{
 				Properties.Settings.Default.DefaultNodeDirection = (int)NodeDirection.Up;
+			}
+
 			GraphViewer.Graph.DefaultNodeDirection = (NodeDirection)Properties.Settings.Default.DefaultNodeDirection;
 
 			GraphViewer.SmartNodeDirection = Properties.Settings.Default.SmartNodeDirection;
@@ -74,8 +89,16 @@ namespace Foreman
 
 			GraphViewer.IconsOnly = Properties.Settings.Default.IconsOnlyView;
 			IconViewCheckBox.Checked = GraphViewer.IconsOnly;
-			if (Properties.Settings.Default.IconsSize < 8) Properties.Settings.Default.IconsSize = 8;
-			if (Properties.Settings.Default.IconsSize > 256) Properties.Settings.Default.IconsSize = 256;
+			if (Properties.Settings.Default.IconsSize < 8)
+			{
+				Properties.Settings.Default.IconsSize = 8;
+			}
+
+			if (Properties.Settings.Default.IconsSize > 256)
+			{
+				Properties.Settings.Default.IconsSize = 256;
+			}
+
 			GraphViewer.IconsSize = Properties.Settings.Default.IconsSize;
 
 			Properties.Settings.Default.Save();
@@ -94,7 +117,9 @@ namespace Foreman
 		private void SaveButton_Click(object sender, EventArgs e)
 		{
 			if (savefilePath == null || !SaveGraph(savefilePath))
+			{
 				SaveGraphAs();
+			}
 		}
 
 		private void SaveAsGraphButton_Click(object sender, EventArgs e)
@@ -128,13 +153,18 @@ namespace Foreman
 			dialog.DefaultExt = ".fjson";
 			dialog.Filter = "Foreman files (*.fjson)|*.fjson|All files|*.*";
 			if (!Directory.Exists(Path.Combine(Application.StartupPath, "Saved Graphs")))
+			{
 				Directory.CreateDirectory(Path.Combine(Application.StartupPath, "Saved Graphs"));
+			}
+
 			dialog.InitialDirectory = Path.Combine(Application.StartupPath, "Saved Graphs");
 			dialog.AddExtension = true;
 			dialog.OverwritePrompt = true;
 			dialog.FileName = "Flowchart.fjson";
 			if (dialog.ShowDialog() != DialogResult.OK)
+			{
 				return;
+			}
 
 			SaveGraph(dialog.FileName);
 		}
@@ -168,16 +198,23 @@ namespace Foreman
 		private void LoadGraph()
 		{
 			if (!TestGraphSavedStatus())
+			{
 				return;
+			}
 
 			OpenFileDialog dialog = new OpenFileDialog();
 			dialog.Filter = "Foreman files (*.fjson)|*.fjson|Old Foreman files (*.json)|*.json";
 			if (!Directory.Exists(Path.Combine(Application.StartupPath, "Saved Graphs")))
+			{
 				Directory.CreateDirectory(Path.Combine(Application.StartupPath, "Saved Graphs"));
+			}
+
 			dialog.InitialDirectory = Path.Combine(Application.StartupPath, "Saved Graphs");
 			dialog.CheckFileExists = true;
 			if (dialog.ShowDialog() != DialogResult.OK)
+			{
 				return;
+			}
 
 			LoadGraph(dialog.FileName);
 		}
@@ -213,7 +250,9 @@ namespace Foreman
 		private void NewGraph()
 		{
 			if (!TestGraphSavedStatus())
+			{
 				return;
+			}
 
 			GraphViewer.ClearGraph();
 			GraphViewer.Graph.LowPriorityPower = 2f;
@@ -241,11 +280,16 @@ namespace Foreman
 			OpenFileDialog dialog = new OpenFileDialog();
 			dialog.Filter = "Foreman files (*.fjson)|*.fjson|Old Foreman files (*.json)|*.json";
 			if (!Directory.Exists(Path.Combine(Application.StartupPath, "Saved Graphs")))
+			{
 				Directory.CreateDirectory(Path.Combine(Application.StartupPath, "Saved Graphs"));
+			}
+
 			dialog.InitialDirectory = Path.Combine(Application.StartupPath, "Saved Graphs");
 			dialog.CheckFileExists = true;
 			if (dialog.ShowDialog() != DialogResult.OK)
+			{
 				return;
+			}
 
 			ImportGraph(dialog.FileName);
 		}
@@ -269,13 +313,19 @@ namespace Foreman
 			if (savefilePath == null)
 			{
 				if (GraphViewer.Graph.Nodes.Any())
+				{
 					return MessageBox.Show("The current graph hasnt been saved!\nIf you continue, you will loose it forever!", "Are you sure?", MessageBoxButtons.OKCancel) == DialogResult.OK;
+				}
 				else
+				{
 					return true;
+				}
 			}
 
 			if (!File.Exists(savefilePath))
+			{
 				return MessageBox.Show("The current graph's save file has been deleted!\nIf you continue, you will loose it forever!", "Are you sure?", MessageBoxButtons.OKCancel) == DialogResult.OK;
+			}
 
 			StringBuilder stringBuilder = new StringBuilder();
 			var writer = new JsonTextWriter(new StringWriter(stringBuilder));
@@ -289,9 +339,14 @@ namespace Foreman
 			{
 				DialogResult result = MessageBox.Show("The current graph has been modified!\nDo you wish to save before continuing?", "Are you sure?", MessageBoxButtons.YesNoCancel);
 				if (result == DialogResult.Cancel)
+				{
 					return false;
+				}
+
 				if (result == DialogResult.OK)
+				{
 					SaveGraph(savefilePath);
+				}
 			}
 
 			return true;
@@ -304,8 +359,13 @@ namespace Foreman
 			List<Preset> presets = new List<Preset>();
 			List<string> existingPresetFiles = new List<string>();
 			foreach (string presetFile in Directory.GetFiles(Path.Combine(Application.StartupPath, "Presets"), "*.pjson"))
+			{
 				if (File.Exists(Path.ChangeExtension(presetFile, "dat")))
+				{
 					existingPresetFiles.Add(Path.GetFileNameWithoutExtension(presetFile));
+				}
+			}
+
 			existingPresetFiles.Sort();
 
 			if (!existingPresetFiles.Contains(Properties.Settings.Default.CurrentPresetName))
@@ -324,9 +384,14 @@ namespace Foreman
 
 			presets.Add(new Preset(Properties.Settings.Default.CurrentPresetName, true, Properties.Settings.Default.CurrentPresetName == DefaultPreset));
 			if (Properties.Settings.Default.CurrentPresetName != DefaultPreset)
+			{
 				presets.Add(new Preset(DefaultPreset, false, true));
+			}
+
 			foreach (string presetName in existingPresetFiles)
+			{
 				presets.Add(new Preset(presetName, false, false));
+			}
 
 			Properties.Settings.Default.Save();
 			return presets;
@@ -395,13 +460,25 @@ namespace Foreman
 					else //not loading a new preset -> update the enabled statuses
 					{
 						foreach (Recipe recipe in GraphViewer.DCache.Recipes.Values)
+						{
 							recipe.Enabled = options.EnabledObjects.Contains(recipe);
+						}
+
 						foreach (Assembler assembler in GraphViewer.DCache.Assemblers.Values)
+						{
 							assembler.Enabled = options.EnabledObjects.Contains(assembler);
+						}
+
 						foreach (Beacon beacon in GraphViewer.DCache.Beacons.Values)
+						{
 							beacon.Enabled = options.EnabledObjects.Contains(beacon);
+						}
+
 						foreach (Module module in GraphViewer.DCache.Modules.Values)
+						{
 							module.Enabled = options.EnabledObjects.Contains(module);
+						}
+
 						GraphViewer.DCache.RocketAssembler.Enabled = GraphViewer.DCache.Assemblers["rocket-silo"]?.Enabled?? false;
 					}
 
@@ -460,7 +537,9 @@ namespace Foreman
 					GraphViewer.Graph.UpdateNodeValues();
 
 					if (options.RequireReload)
+					{
 						SettingsButton_Click(this, EventArgs.Empty);
+					}
 				}
 			}
 		}
@@ -491,8 +570,12 @@ namespace Foreman
 		private void MainForm_KeyDown(object sender, KeyEventArgs e)
 		{
 			if(e.KeyCode == Keys.S && (Control.ModifierKeys & Keys.Control) == Keys.Control)
+			{
 				if (savefilePath == null || !SaveGraph(savefilePath))
+				{
 					SaveGraphAs();
+				}
+			}
 		}
 
 		//---------------------------------------------------------Production Graph properties
@@ -509,9 +592,13 @@ namespace Foreman
 		{
 			GraphViewer.Graph.PauseUpdates = PauseUpdatesCheckbox.Checked;
 			if (!GraphViewer.Graph.PauseUpdates)
+			{
 				GraphViewer.Graph.UpdateNodeValues();
+			}
 			else
+			{
 				GraphViewer.Invalidate();
+			}
 		}
 
 		private void IconViewCheckBox_CheckedChanged(object sender, EventArgs e)
@@ -541,7 +628,9 @@ namespace Foreman
 		{
 			int updatedGridUnit = 0;
 			if (MinorGridlinesDropDown.SelectedIndex > 0)
+			{
 				updatedGridUnit = 6 * (int)(Math.Pow(2, MinorGridlinesDropDown.SelectedIndex - 1));
+			}
 
 			if (GraphViewer.Grid.CurrentGridUnit != updatedGridUnit)
 			{
@@ -557,7 +646,9 @@ namespace Foreman
 		{
 			int updatedGridUnit = 0;
 			if (MajorGridlinesDropDown.SelectedIndex > 0)
+			{
 				updatedGridUnit = 6 * (int)(Math.Pow(2, MajorGridlinesDropDown.SelectedIndex - 1));
+			}
 
 			if (GraphViewer.Grid.CurrentMajorGridUnit != updatedGridUnit)
 			{
@@ -600,7 +691,10 @@ namespace Foreman
 		public static void SetDoubleBuffered(Control c)
 		{
 			if (SystemInformation.TerminalServerSession)
+			{
 				return;
+			}
+
 			System.Reflection.PropertyInfo aProp = typeof(Control).GetProperty("DoubleBuffered",
 				System.Reflection.BindingFlags.NonPublic |
 				System.Reflection.BindingFlags.Instance);

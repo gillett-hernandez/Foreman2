@@ -9,15 +9,22 @@ namespace Foreman
 		public static bool IsPossibleConnection(Item item, ReadOnlyBaseNode supplier, ReadOnlyBaseNode consumer)
 		{
 			if (!supplier.Outputs.Contains(item) || !consumer.Inputs.Contains(item))
+			{
 				return false;
+			}
 			if (!(item is Fluid fluid) || !fluid.IsTemperatureDependent)
+			{
 				return true;
+			}
+
 
 			fRange supplierTempRange = GetTemperatureRange(fluid, supplier, LinkType.Output, true);
 			fRange consumerTempRange = GetTemperatureRange(fluid, consumer, LinkType.Input, true);
 
 			if (supplierTempRange.Ignore || consumerTempRange.Ignore)
+			{
 				return true;
+			}
 
 			return consumerTempRange.Contains(supplierTempRange);
 		}
@@ -45,17 +52,27 @@ namespace Foreman
 			void Internal_GetMinMaxTempForNode(ReadOnlyBaseNode cNode)
 			{
 				if (visitedNodes.Contains(cNode))
+				{
 					return;
+				}
 				visitedNodes.Add(cNode);
 
 				if (cNode is ReadOnlyPassthroughNode || (cNode == node && !includeSelf))
 				{
 					if (direction == LinkType.Input)
+					{
 						foreach (ReadOnlyNodeLink link in cNode.OutputLinks.Where(n => n.Consumer is ReadOnlyRecipeNode || n.Consumer is ReadOnlyPassthroughNode))
-							Internal_GetMinMaxTempForNode(link.Consumer);
+						{
+							{ Internal_GetMinMaxTempForNode(link.Consumer); }
+						}
+					}
 					else //if(direction == LinkType.Output)
+					{
 						foreach (ReadOnlyNodeLink link in cNode.InputLinks.Where(n => n.Supplier is ReadOnlyRecipeNode || n.Supplier is ReadOnlyPassthroughNode))
+						{
 							Internal_GetMinMaxTempForNode(link.Supplier);
+						}
+					}
 				}
 				if (cNode is ReadOnlyRecipeNode && (cNode != node || includeSelf)) //RecipeNode
 				{
@@ -66,7 +83,7 @@ namespace Foreman
 						maxTemp = Math.Min(maxTemp, recipe.IngredientTemperatureMap[fluid].Max);
 						gotOne = true;
 					}
-					else if(direction == LinkType.Input && ((ReadOnlyRecipeNode)cNode).SelectedAssembler.IsTemperatureFluidBurner) //special case for fluid burner
+					else if (direction == LinkType.Input && ((ReadOnlyRecipeNode)cNode).SelectedAssembler.IsTemperatureFluidBurner) //special case for fluid burner
 					{
 						minTemp = Math.Max(minTemp, ((ReadOnlyRecipeNode)cNode).SelectedAssembler.FluidFuelTemperatureRange.Min);
 						maxTemp = Math.Min(maxTemp, ((ReadOnlyRecipeNode)cNode).SelectedAssembler.FluidFuelTemperatureRange.Max);
@@ -83,9 +100,13 @@ namespace Foreman
 
 			Internal_GetMinMaxTempForNode(node);
 			if (gotOne)
+			{
 				return new fRange(minTemp, maxTemp, false);
+			}
 			else
+			{
 				return new fRange(0, 0, true);
+			}
 		}
 	}
 }

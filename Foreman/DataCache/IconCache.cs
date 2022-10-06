@@ -37,7 +37,10 @@ namespace Foreman
 		public static Bitmap GetUnknownIcon()
 		{
 			if (unknownIcon == null)
+			{
 				unknownIcon = GetIcon(Path.Combine("Graphics", "UnknownIcon.png"), 32);
+			}
+
 			return unknownIcon;
 		}
 		public static Bitmap GetIcon(string path, int size)
@@ -48,7 +51,10 @@ namespace Foreman
 				{
 					Bitmap bmp = new Bitmap(size, size);
 					using (Graphics g = Graphics.FromImage(bmp))
+					{
 						g.DrawImage(image, new Rectangle(0, 0, (size * image.Width / image.Height), size));
+					}
+
 					return bmp;
 				}
 			}
@@ -66,9 +72,14 @@ namespace Foreman
 					tlPath.AddLine(0, size, size, 0);
 					tlPath.AddLine(size, 0, 0, 0);
 					if (diagonalSlice)
+					{
 						g.Clip = new Region(tlPath);
+					}
+
 					if (aIcon != null)
+					{
 						g.DrawImage(aIcon, 0, 0, size, size);
+					}
 				}
 
 				using (GraphicsPath trPath = new GraphicsPath())
@@ -77,9 +88,14 @@ namespace Foreman
 					trPath.AddLine(0, size, size, 0);
 					trPath.AddLine(size, 0, size, size);
 					if (diagonalSlice)
+					{
 						g.Clip = new Region(trPath);
+					}
+
 					if (bIcon != null)
+					{
 						g.DrawImage(bIcon, 0, 0, size, size);
+					}
 				}
 			}
 			return result;
@@ -91,10 +107,15 @@ namespace Foreman
 			IconBitmapCollection iCollection = new IconBitmapCollection();
 
 			foreach (KeyValuePair<string, IconColorPair> iconKVP in iconCache)
+			{
 				iCollection.Icons.Add(iconKVP.Key, iconKVP.Value);
+			}
 
 			if (File.Exists(path))
+			{
 				File.Delete(path);
+			}
+
 			using (Stream stream = File.Open(path, FileMode.Create, FileAccess.Write))
 			{
 				var binaryFormatter = new BinaryFormatter();

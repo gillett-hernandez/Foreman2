@@ -25,7 +25,10 @@ namespace Foreman
 			int totalColumnWidth = 0;
 			PresetSelectionListView.AutoResizeColumns(ColumnHeaderAutoResizeStyle.HeaderSize);
 			for (int i = 1; i < PresetSelectionListView.Columns.Count - 1; i++)
+			{
 				totalColumnWidth += PresetSelectionListView.Columns[i].Width;
+			}
+
 			PresetSelectionListView.Columns[0].Width = Math.Max(PresetSelectionListView.Width - totalColumnWidth - 32, PresetSelectionListView.Columns[0].Width);
 			PresetSelectionListView.Columns[PresetSelectionListView.Columns.Count - 1].Width = 1;
 

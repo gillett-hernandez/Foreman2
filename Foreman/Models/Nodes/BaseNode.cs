@@ -75,7 +75,9 @@ namespace Foreman
 			NodeState originalState = State;
 			State = AllLinksValid ? AllLinksConnected? NodeState.Clean : NodeState.MissingLink : NodeState.Error;
 			if (State != originalState)
+			{
 				OnNodeStateChanged();
+			}
 		}
 
 		protected virtual void OnNodeStateChanged() { NodeStateChanged?.Invoke(this, EventArgs.Empty); }
@@ -92,8 +94,13 @@ namespace Foreman
 		public bool IsOverproducing()
 		{
 			foreach (Item item in Outputs)
+			{
 				if (IsOverproducing(item))
+				{
 					return true;
+				}
+			}
+
 			return false;
 		}
 
@@ -107,9 +114,15 @@ namespace Foreman
 			double producedRate = GetSupplyRate(item);
 			double supplyUsedRate = GetSupplyUsedRate(item);
 			if ((producedRate == 0 && supplyUsedRate == 0) || (producedRate < 0.0001 && supplyUsedRate < 0.0001))
+			{
 				return false;
+			}
+
 			if (supplyUsedRate == 0 && producedRate != 0)
+			{
 				return true;
+			}
+
 			return ((producedRate - supplyUsedRate) / supplyUsedRate) > ((producedRate > 1 && supplyUsedRate > 1) ? 0.001f : 0.01f);
 		}
 
@@ -125,7 +138,9 @@ namespace Foreman
 			info.AddValue("RateType", RateType);
 			info.AddValue("Direction", NodeDirection);
 			if (KeyNode)
+			{
 				info.AddValue("KeyNode", KeyNodeTitle);
+			}
 		}
 	}
 
@@ -140,8 +155,8 @@ namespace Foreman
 		public IEnumerable<Item> Inputs => MyNode.Inputs;
 		public IEnumerable<Item> Outputs => MyNode.Outputs;
 
-		public IEnumerable<ReadOnlyNodeLink> InputLinks { get { foreach (NodeLink nodeLink in MyNode.InputLinks) yield return nodeLink.ReadOnlyLink; } }
-		public IEnumerable<ReadOnlyNodeLink> OutputLinks { get { foreach (NodeLink nodeLink in MyNode.OutputLinks) yield return nodeLink.ReadOnlyLink; } }
+		public IEnumerable<ReadOnlyNodeLink> InputLinks { get { foreach (NodeLink nodeLink in MyNode.InputLinks) { yield return nodeLink.ReadOnlyLink; } } }
+		public IEnumerable<ReadOnlyNodeLink> OutputLinks { get { foreach (NodeLink nodeLink in MyNode.OutputLinks) { yield return nodeLink.ReadOnlyLink; } } }
 
 		public RateType RateType => MyNode.RateType;
 		public double ActualRate => MyNode.ActualRate;
@@ -188,15 +203,43 @@ namespace Foreman
 			MyNode = myNode;
 		}
 
-		public void SetKeyNode(bool keyNode) { MyNode.KeyNode = keyNode; if (keyNode) MyNode.KeyNodeTitle = MyNode.NodeID.ToString(); else MyNode.KeyNodeTitle = ""; }
-		public void SetKeyNodeTitle(string title) { if(MyNode.KeyNode) MyNode.KeyNodeTitle = title; }
+		public void SetKeyNode(bool keyNode) { MyNode.KeyNode = keyNode; if (keyNode)
+			{
+				MyNode.KeyNodeTitle = MyNode.NodeID.ToString();
+			}
+			else
+			{
+				MyNode.KeyNodeTitle = "";
+			}
+		}
+		public void SetKeyNodeTitle(string title) { if(MyNode.KeyNode)
+			{
+				MyNode.KeyNodeTitle = title;
+			}
+		}
 
-		public void SetLocation(Point location) { if(MyNode.Location != location) MyNode.Location = location; }
+		public void SetLocation(Point location) { if(MyNode.Location != location)
+			{
+				MyNode.Location = location;
+			}
+		}
 
-		public void SetRateType(RateType type) { if (MyNode.RateType != type) MyNode.RateType = type; }
-		public virtual void SetDesiredRate(double rate) { if (MyNode.DesiredRate != rate) MyNode.DesiredRate = rate; }
+		public void SetRateType(RateType type) { if (MyNode.RateType != type)
+			{
+				MyNode.RateType = type;
+			}
+		}
+		public virtual void SetDesiredRate(double rate) { if (MyNode.DesiredRate != rate)
+			{
+				MyNode.DesiredRate = rate;
+			}
+		}
 
-		public void SetDirection(NodeDirection direction) { if (MyNode.NodeDirection != direction) MyNode.NodeDirection = direction; }
+		public void SetDirection(NodeDirection direction) { if (MyNode.NodeDirection != direction)
+			{
+				MyNode.NodeDirection = direction;
+			}
+		}
 
 		public abstract Dictionary<string, Action> GetErrorResolutions();
 		public abstract Dictionary<string, Action> GetWarningResolutions();
@@ -209,9 +252,14 @@ namespace Foreman
 				resolutions.Add("Delete invalid links", new Action(() =>
 				{
 					foreach (NodeLink invalidLink in MyNode.InputLinks.Where(l => !l.IsValid).ToList())
+					{
 						MyNode.MyGraph.DeleteLink(invalidLink.ReadOnlyLink);
+					}
+
 					foreach (NodeLink invalidLink in MyNode.OutputLinks.Where(l => !l.IsValid).ToList())
+					{
 						MyNode.MyGraph.DeleteLink(invalidLink.ReadOnlyLink);
+					}
 				}));
 			}
 			return resolutions;

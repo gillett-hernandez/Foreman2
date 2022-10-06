@@ -46,7 +46,9 @@ namespace Foreman
 		protected override void Draw(Graphics graphics, NodeDrawingStyle style)
 		{
 			if (style == NodeDrawingStyle.IconsOnly || style == NodeDrawingStyle.Simple)
+			{
 				return;
+			}
 
 			Point trans = LocalToGraph(new Point(-Width / 2, -Height / 2));
 			//graphics.DrawRectangle(devPen, trans.X, trans.Y, Width, Height);
@@ -58,7 +60,9 @@ namespace Foreman
 			if (DisplayedNode.AssemblerModules.Count <= 6)
 			{
 				for (int i = 0; i < moduleLocations.Length && i < DisplayedNode.AssemblerModules.Count; i++)
+				{
 					graphics.DrawImage(DisplayedNode.AssemblerModules[i].Icon, trans.X + moduleLocations[i].X + moduleOffset.X, trans.Y + moduleLocations[i].Y + moduleOffset.Y, ModuleIconSize, ModuleIconSize);
+				}
 			}
 			else if (DisplayedNode.AssemblerModules.Count <= 4 * 7) //resot to drawing circles for each module instead -> 4x7 set, so max 28 modules shown
 			{
@@ -118,15 +122,25 @@ namespace Foreman
 			{
 				double assemblerCount = DisplayedNode.ActualAssemblerCount;
 				if (assemblerCount >= 10000)
+				{
 					text += assemblerCount.ToString("0.##e0");
+				}
 				else if (Properties.Settings.Default.RoundAssemblerCount)
+				{
 					text += Math.Ceiling(assemblerCount).ToString("0");
+				}
 				else if (assemblerCount >= 0.1)
+				{
 					text += assemblerCount.ToString("0.#");
+				}
 				else if (assemblerCount != 0)
+				{
 					text += "<0.1";
+				}
 				else
+				{
 					text += "0";
+				}
 			}
 
 			GraphicsStuff.DrawText(graphics, textBrush, textFormat, text, counterBaseFont, textbox, true);
@@ -135,7 +149,9 @@ namespace Foreman
 		public override List<TooltipInfo> GetToolTips(Point graph_point)
 		{
 			if (!Visible)
+			{
 				return null;
+			}
 
 			List<TooltipInfo> tooltips = new List<TooltipInfo>();
 
@@ -151,13 +167,20 @@ namespace Foreman
 				foreach (Module m in DisplayedNode.AssemblerModules)
 				{
 					if (moduleCounter.ContainsKey(m))
+					{
 						moduleCounter[m]++;
+					}
 					else
+					{
 						moduleCounter.Add(m, 1);
+					}
 				}
 
 				foreach (Module m in moduleCounter.Keys.OrderBy(m => m.FriendlyName))
+				{
 					tti.Text += string.Format("\n   {0} :{1}", moduleCounter[m], m.FriendlyName);
+				}
+
 				tooltips.Add(tti);
 			}
 			else //over assembler

@@ -144,8 +144,12 @@ namespace Foreman
 			for (int i = nodeElements.Count - 1; i >= 0; i--)
 			{
 				if (initialCheckZone.Contains(nodeElements[i].Location))
+				{
 					if (nodeElements[i].ContainsPoint(point))
+					{
 						return nodeElements[i];
+					}
+				}
 			}
 			return null;
 		}
@@ -194,10 +198,14 @@ namespace Foreman
 			}
 
 			if ((nNodeType != NewNodeType.Disconnected) && (originElement == null || baseItem == null))
+			{
 				Trace.Fail("Origin element or base item not provided for a new (linked) node");
-			
+			}
+
 			if (Grid.ShowGrid)
+			{
 				newLocation = Grid.AlignToGrid(newLocation);
+			}
 
 			int lastNodeWidth = 0;
 			NodeDirection newNodeDirection = (originElement == null || !SmartNodeDirection) ? Graph.DefaultNodeDirection :
@@ -265,7 +273,10 @@ namespace Foreman
 					offsetDistance += (lastNodeWidth / 2);
 					int newOffsetDistance = Grid.AlignToGrid(offsetDistance);
 					if (newOffsetDistance < offsetDistance)
+					{
 						newOffsetDistance += Grid.CurrentGridUnit;
+					}
+
 					offsetDistance = newOffsetDistance;
 				}
 				newLocation = new Point(newLocation.X + offsetDistance, newLocation.Y);
@@ -275,12 +286,18 @@ namespace Foreman
 				Graph.RequestNodeController(newNode).SetLocation(new Point(newLocation.X, newLocation.Y + yoffset));
 
 				if (originElement != null)
+				{
 					Graph.RequestNodeController(newNode).SetDirection(newNodeDirection);
+				}
 
 				if (nNodeType == NewNodeType.Consumer)
+				{
 					Graph.CreateLink(originElement.DisplayedNode, newNode, baseItem);
+				}
 				else if (nNodeType == NewNodeType.Supplier)
+				{
 					Graph.CreateLink(newNode, originElement.DisplayedNode, baseItem);
+				}
 
 				DisposeLinkDrag();
 				Graph.UpdateNodeValues();
@@ -299,9 +316,13 @@ namespace Foreman
 				if (baseItem != null && baseItem is Fluid fluid && fluid.IsTemperatureDependent)
 				{
 					if (nNodeType == NewNodeType.Consumer) //need to check all nodes down to recipes for range of temperatures being produced
+					{
 						tempRange = LinkChecker.GetTemperatureRange(fluid, originElement.DisplayedNode, LinkType.Output, true);
+					}
 					else if (nNodeType == NewNodeType.Supplier) //need to check all nodes up to recipes for range of temperatures being consumed (guaranteed to be in a SINGLE [] range)
+					{
 						tempRange = LinkChecker.GetTemperatureRange(fluid, originElement.DisplayedNode, LinkType.Input, true);
+					}
 				}
 
 				RecipeChooserPanel recipeChooser = new RecipeChooserPanel(this, drawOrigin, baseItem, tempRange, nNodeType);
@@ -339,9 +360,13 @@ namespace Foreman
 				controller.SetDirection(newNodeDirection);
 
 				if (linkType == LinkType.Input)
+				{
 					Graph.CreateLink(newNode, passthroughNode.DisplayedNode, passthroughItem );
+				}
 				else
+				{
 					Graph.CreateLink(passthroughNode.DisplayedNode, newNode, passthroughItem );
+				}
 
 				newPassthroughNodes.Add(nodeElementDictionary[newNode]);
 			}
@@ -356,11 +381,17 @@ namespace Foreman
 		{
 			bool proceed = true;
 			if (selectedNodes.Count > 10)
+			{
 				proceed = (MessageBox.Show("You are deleting " + selectedNodes.Count + " nodes. \nAre you sure?", "Confirm delete.", MessageBoxButtons.YesNo) == DialogResult.Yes);
+			}
+
 			if (proceed)
 			{
 				foreach (BaseNodeElement node in selectedNodes.ToList())
+				{
 					Graph.DeleteNode(node.DisplayedNode);
+				}
+
 				selectedNodes.Clear();
 				Graph.UpdateNodeValues();
 			}
@@ -369,14 +400,20 @@ namespace Foreman
 		public void FlipSelectedNodes()
 		{
 			foreach (BaseNodeElement node in selectedNodes.ToList())
+			{
 				Graph.RequestNodeController(node.DisplayedNode).SetDirection(node.DisplayedNode.NodeDirection == NodeDirection.Up ? NodeDirection.Down : NodeDirection.Up);
+			}
+
 			Invalidate();
 		}
 
 		public void SetSelectedPassthroughNodesSimpleDraw(bool simpleDraw)
 		{
 			foreach (PassthroughNodeElement node in selectedNodes.Where(n => n is PassthroughNodeElement).ToList())
+			{
 				((PassthroughNodeController)Graph.RequestNodeController(node.DisplayedNode)).SetSimpleDraw(simpleDraw);
+			}
+
 			Invalidate();
 		}
 
@@ -454,45 +491,66 @@ namespace Foreman
 		private void SetSelection(IEnumerable<BaseNodeElement> newSelection)
 		{
 			foreach (BaseNodeElement element in selectedNodes)
+			{
 				element.Highlighted = false;
+			}
 
 			selectedNodes.Clear();
 			selectedNodes.UnionWith(newSelection);
 
 			foreach (BaseNodeElement element in selectedNodes)
+			{
 				element.Highlighted = true;
+			}
 		}
 
 		private void UpdateSelection()
 		{
 			foreach (BaseNodeElement element in nodeElements)
+			{
 				element.Highlighted = false;
+			}
 
 			if ((Control.ModifierKeys & Keys.Alt) != 0) //remove zone
 			{
 				foreach (BaseNodeElement selectedNode in selectedNodes)
+				{
 					selectedNode.Highlighted = true;
+				}
+
 				foreach (BaseNodeElement newlySelectedNode in currentSelectionNodes)
+				{
 					newlySelectedNode.Highlighted = false;
+				}
 			}
 			else if ((Control.ModifierKeys & Keys.Control) != 0)  //add zone
 			{
 				foreach (BaseNodeElement selectedNode in selectedNodes)
+				{
 					selectedNode.Highlighted = true;
+				}
+
 				foreach (BaseNodeElement newlySelectedNode in currentSelectionNodes)
+				{
 					newlySelectedNode.Highlighted = true;
+				}
 			}
 			else //add zone (additive with ctrl or simple selection)
 			{
 				foreach (BaseNodeElement newlySelectedNode in currentSelectionNodes)
+				{
 					newlySelectedNode.Highlighted = true;
+				}
 			}
 		}
 
 		public void ClearSelection()
 		{
 			foreach (BaseNodeElement element in nodeElements)
+			{
 				element.Highlighted = false;
+			}
+
 			selectedNodes.Clear();
 			currentSelectionNodes.Clear();
 			Invalidate();
@@ -501,7 +559,10 @@ namespace Foreman
 		public void AlignSelected()
 		{
 			foreach (BaseNodeElement ne in selectedNodes)
+			{
 				ne.SetLocation(Grid.AlignToGrid(ne.Location));
+			}
+
 			Invalidate();
 		}
 
@@ -510,11 +571,19 @@ namespace Foreman
 		protected IEnumerable<GraphElement> GetPaintingOrder()
 		{
 			if (draggedLinkElement != null)
+			{
 				yield return draggedLinkElement;
+			}
+
 			foreach (LinkElement element in linkElements)
+			{
 				yield return element;
+			}
+
 			foreach (BaseNodeElement element in nodeElements)
+			{
 				yield return element;
+			}
 		}
 
 		public void UpdateNodeVisuals()
@@ -522,7 +591,9 @@ namespace Foreman
 			try
 			{
 				foreach (BaseNodeElement node in nodeElements)
+				{
 					node.RequestStateUpdate();
+				}
 			}
 			catch (OverflowException) { }//Same as when working out node values, there's not really much to do here... Maybe I could show a tooltip saying the numbers are too big or something...
 			Invalidate();
@@ -545,18 +616,28 @@ namespace Foreman
 		{
 			//update visibility of all elements
 			if (FullGraph)
+			{
 				foreach (GraphElement element in GetPaintingOrder())
+				{
 					element.UpdateVisibility(Graph.Bounds);
+				}
+			}
 			else
+			{
 				foreach (GraphElement element in GetPaintingOrder())
+				{
 					element.UpdateVisibility(VisibleGraphBounds);
+				}
+			}
 
 			//ensure width of selection is correct
 			selectionPen.Width = 2 / ViewScale;
 
 			//grid
 			if(!FullGraph)
+			{
 				Grid.Paint(graphics, ViewScale, VisibleGraphBounds, (currentDragOperation == DragOperation.Item) ? MouseDownElement as BaseNodeElement : null);
+			}
 
 			//process link element widths
 			if (DynamicLinkWidth)
@@ -566,9 +647,13 @@ namespace Foreman
 				foreach (LinkElement element in linkElements)
 				{
 					if (element.Item is Fluid && !element.Item.Name.StartsWith("§§")) //§§ is the foreman added special items (currently just §§heat). ignore them
+					{
 						fluidMax = Math.Max(fluidMax, element.ConsumerElement.DisplayedNode.GetConsumeRate(element.Item));
+					}
 					else
+					{
 						itemMax = Math.Max(itemMax, element.ConsumerElement.DisplayedNode.GetConsumeRate(element.Item));
+					}
 				}
 				itemMax += itemMax == 0 ? 1 : 0;
 				fluidMax += fluidMax == 0 ? 1 : 0;
@@ -576,25 +661,35 @@ namespace Foreman
 				foreach (LinkElement element in linkElements)
 				{
 					if (element.Item is Fluid)
+					{
 						element.LinkWidth = (float)Math.Min((minLinkWidth + (maxLinkWidth - minLinkWidth) * (element.ConsumerElement.DisplayedNode.GetConsumeRate(element.Item) / fluidMax)), maxLinkWidth);
+					}
 					else
+					{
 						element.LinkWidth = (float)Math.Min((minLinkWidth + (maxLinkWidth - minLinkWidth) * (element.ConsumerElement.DisplayedNode.GetConsumeRate(element.Item) / itemMax)), maxLinkWidth);
+					}
 				}
 			}
 			else
 			{
 				foreach (LinkElement element in linkElements)
+				{
 					element.LinkWidth = minLinkWidth;
+				}
 			}
 
 			//run any pre-paint functions
 			foreach (GraphElement elemnent in GetPaintingOrder())
+			{
 				elemnent.PrePaint();
+			}
 
 			//paint all elements (nodes & lines)
 			int visibleElements = GetPaintingOrder().Count(e => e.Visible && e is BaseNodeElement);
 			foreach (GraphElement element in GetPaintingOrder())
+			{
 				element.Paint(graphics, FullGraph? NodeDrawingStyle.PrintStyle : IconsOnly? NodeDrawingStyle.IconsOnly : (visibleElements > NodeCountForSimpleView || ViewScale < 0.2)? NodeDrawingStyle.Simple : NodeDrawingStyle.Regular); //if viewscale is 0.2, then the text, images, etc being drawn are ~1/5th the size: aka: ~6x6 pixel images, etc. Use simple draw. Also simple draw if too many objects
+			}
 
 			//selection zone
 			if (currentDragOperation == DragOperation.Selection && !FullGraph)
@@ -623,7 +718,9 @@ namespace Foreman
 
 				//paused border
 				if (Graph != null && Graph.PauseUpdates) //graph null check is purely for design view
+				{
 					graphics.DrawRectangle(pausedBorders, 0, 0, Width - 3, Height - 3);
+				}
 			}
 		}
 
@@ -677,15 +774,25 @@ namespace Foreman
 		{
 			BaseNodeElement element = null;
 			if (e.node is ReadOnlySupplierNode snode)
+			{
 				element = new SupplierNodeElement(this, snode);
+			}
 			else if (e.node is ReadOnlyConsumerNode cnode)
+			{
 				element = new ConsumerNodeElement(this, cnode);
+			}
 			else if (e.node is ReadOnlyPassthroughNode pnode)
+			{
 				element = new PassthroughNodeElement(this, pnode);
+			}
 			else if (e.node is ReadOnlyRecipeNode rnode)
+			{
 				element = new RecipeNodeElement(this, rnode);
+			}
 			else
+			{
 				Trace.Fail("Unexpected node type created in graph.");
+			}
 
 			nodeElementDictionary.Add(e.node, element);
 			nodeElements.Add(element);
@@ -718,7 +825,10 @@ namespace Foreman
 				if ((Control.ModifierKeys & Keys.Control) == 0 && (Control.ModifierKeys & Keys.Alt) == 0) //clear all selected nodes if we arent using modifier keys
 				{
 					foreach (BaseNodeElement ne in selectedNodes)
+					{
 						ne.Highlighted = false;
+					}
+
 					selectedNodes.Clear();
 				}
 			}
@@ -736,7 +846,9 @@ namespace Foreman
 			{
 				case MouseButtons.Right:
 					if (viewBeingDragged)
+					{
 						viewBeingDragged = false;
+					}
 					else if (currentDragOperation == DragOperation.None && element == null) //right click on an empty space -> show add item/recipe menu
 					{
 						Point screenPoint = new Point(e.Location.X - 150, 15);
@@ -756,7 +868,10 @@ namespace Foreman
 						rightClickMenu.Show(this, e.Location);
 					}
 					else if(currentDragOperation != DragOperation.Selection)
+					{
 						element?.MouseUp(graph_location, e.Button, (currentDragOperation == DragOperation.Item));
+					}
+
 					break;
 				case MouseButtons.Middle:
 					viewBeingDragged = false;
@@ -766,11 +881,16 @@ namespace Foreman
 					if (currentDragOperation == DragOperation.Selection)
 					{
 						if ((Control.ModifierKeys & Keys.Alt) != 0) //removal zone processing
+						{
 							selectedNodes.ExceptWith(currentSelectionNodes);
+						}
 						else
 						{
 							if ((Control.ModifierKeys & Keys.Control) == 0) //if we arent using control, then we are just selecting
+							{
 								selectedNodes.Clear();
+							}
+
 							selectedNodes.UnionWith(currentSelectionNodes);
 						}
 						currentSelectionNodes.Clear();
@@ -788,9 +908,13 @@ namespace Foreman
 						else if ((Control.ModifierKeys & Keys.Control) != 0) //add if unselected, remove if selected
 						{
 							if (clickedNode.Highlighted)
+							{
 								selectedNodes.Remove(clickedNode);
+							}
 							else
+							{
 								selectedNodes.Add(clickedNode);
+							}
 
 							clickedNode.Highlighted = !clickedNode.Highlighted;
 							MouseDownElement = null;
@@ -802,8 +926,9 @@ namespace Foreman
 						}
 					}
 					else if (!viewBeingDragged)
+					{
 						element?.MouseUp(graph_location, e.Button, (currentDragOperation == DragOperation.Item));
-
+					}
 
 					currentDragOperation = DragOperation.None;
 					MouseDownElement = null;
@@ -830,12 +955,18 @@ namespace Foreman
 					if (dragDiff.X * dragDiff.X + dragDiff.Y * dragDiff.Y > minDragDiff)
 					{
 						if ((downButtons & MouseButtons.Middle) == MouseButtons.Middle || (downButtons & MouseButtons.Right) == MouseButtons.Right)
+						{
 							viewBeingDragged = true;
+						}
 
 						if (MouseDownElement != null) //there is an item under the mouse during drag
+						{
 							currentDragOperation = DragOperation.Item;
+						}
 						else if ((downButtons & MouseButtons.Left) != 0)
+						{
 							currentDragOperation = DragOperation.Selection;
+						}
 					}
 					break;
 
@@ -849,8 +980,13 @@ namespace Foreman
 						{
 							Point endPoint = MouseDownElement.Location;
 							if (startPoint != endPoint)
+							{
 								foreach (BaseNodeElement node in selectedNodes.Where(node => node != MouseDownElement))
+								{
 									node.SetLocation(new Point(node.X + endPoint.X - startPoint.X, node.Y + endPoint.Y - startPoint.Y));
+								}
+							}
+
 							Invalidate();
 						}
 					}
@@ -862,7 +998,10 @@ namespace Foreman
 
 					//accept middle mouse button for view dragging purposes (while dragging item or selection)
 					if ((downButtons & MouseButtons.Middle) == MouseButtons.Middle)
+					{
 						viewBeingDragged = true;
+					}
+
 					break;
 
 				case DragOperation.Selection:
@@ -874,7 +1013,10 @@ namespace Foreman
 
 					//accept middle mouse button for view dragging purposes (while dragging item or selection)
 					if ((downButtons & MouseButtons.Middle) == MouseButtons.Middle)
+					{
 						viewBeingDragged = true;
+					}
+
 					break;
 			}
 
@@ -891,16 +1033,22 @@ namespace Foreman
 		private void ProductionGraphViewer_MouseWheel(object sender, MouseEventArgs e)
 		{
 			if (ContainsFocus && !this.Focused) //currently have a control created within this viewer active (ex: recipe chooser) -> dont want to scroll then
+			{
 				return;
+			}
 
 			ToolTipRenderer.ClearFloatingControls();
 
 			Point oldZoomCenter = ScreenToGraph(e.Location);
 
 			if (e.Delta > 0)
+			{
 				ViewScale *= 1.1f;
+			}
 			else
+			{
 				ViewScale /= 1.1f;
+			}
 
 			ViewScale = Math.Max(ViewScale, 0.01f);
 			ViewScale = Math.Min(ViewScale, 2f);
@@ -934,8 +1082,12 @@ namespace Foreman
 					Clipboard.SetText(stringBuilder.ToString());
 
 					if (e.KeyCode == Keys.X) //cut
+					{
 						foreach (BaseNodeElement node in selectedNodes.ToList())
+						{
 							Graph.DeleteNode(node.DisplayedNode);
+						}
+					}
 				}
 				else if (e.KeyCode == Keys.V && (e.Modifiers & Keys.Control) == Keys.Control) //paste
 				{
@@ -948,7 +1100,9 @@ namespace Foreman
 				}
 			}
 			else if (currentDragOperation == DragOperation.Selection) //possible changes to selection type
+			{
 				UpdateSelection();
+			}
 
 			bool lockDragAxis = (Control.ModifierKeys & Keys.Shift) != 0;
 			if (Grid.LockDragToAxis != lockDragAxis)
@@ -956,7 +1110,9 @@ namespace Foreman
 				Grid.LockDragToAxis = lockDragAxis;
 				Grid.DragOrigin = Grid.AlignToGrid(MouseDownElement?.Location ?? new Point());
 				if (currentDragOperation == DragOperation.Item)
+				{
 					MouseDownElement?.Dragged(ScreenToGraph(PointToClient(Control.MousePosition)));
+				}
 			}
 			Invalidate();
 		}
@@ -974,7 +1130,9 @@ namespace Foreman
 				}
 			}
 			else if (currentDragOperation == DragOperation.Selection) //possible changes to selection type
+			{
 				UpdateSelection();
+			}
 
 			bool lockDragAxis = (Control.ModifierKeys & Keys.Shift) != 0;
 			if (Grid.LockDragToAxis != lockDragAxis)
@@ -982,7 +1140,9 @@ namespace Foreman
 				Grid.LockDragToAxis = lockDragAxis;
 				Grid.DragOrigin = Grid.AlignToGrid(MouseDownElement?.Location ?? new Point());
 				if (currentDragOperation == DragOperation.Item)
+				{
 					MouseDownElement?.Dragged(ScreenToGraph(PointToClient(Control.MousePosition)));
+				}
 			}
 			Invalidate();
 		}
@@ -994,30 +1154,44 @@ namespace Foreman
 			bool processed = false;
 			int moveUnit = (Grid.CurrentGridUnit > 0) ? Grid.CurrentGridUnit : 6;
 			if ((Control.ModifierKeys & Keys.Shift) == Keys.Shift) //large move
+			{
 				moveUnit = (Grid.CurrentMajorGridUnit > Grid.CurrentGridUnit) ? Grid.CurrentMajorGridUnit : moveUnit * 4;
+			}
 
 			if ((keyData & Keys.KeyCode) == Keys.Left)
 			{
 				foreach (BaseNodeElement node in selectedNodes)
+				{
 					node.SetLocation(new Point(node.X - moveUnit, node.Y));
+				}
+
 				processed = true;
 			}
 			else if ((keyData & Keys.KeyCode) == Keys.Right)
 			{
 				foreach (BaseNodeElement node in selectedNodes)
+				{
 					node.SetLocation(new Point(node.X + moveUnit, node.Y));
+				}
+
 				processed = true;
 			}
 			else if ((keyData & Keys.KeyCode) == Keys.Up)
 			{
 				foreach (BaseNodeElement node in selectedNodes)
+				{
 					node.SetLocation(new Point(node.X, node.Y - moveUnit));
+				}
+
 				processed = true;
 			}
 			else if ((keyData & Keys.KeyCode) == Keys.Down)
 			{
 				foreach (BaseNodeElement node in selectedNodes)
+				{
 					node.SetLocation(new Point(node.X, node.Y + moveUnit));
+				}
+
 				processed = true;
 			}
 
@@ -1128,7 +1302,9 @@ namespace Foreman
 		{
 			ProductionGraph.NewNodeCollection newNodeCollection = newNodeCollection = Graph.InsertNodesFromJson(DCache, json); //NOTE: missing items & recipes may be added here!
 			if (newNodeCollection == null || newNodeCollection.newNodes.Count == 0)
+			{
 				return;
+			}
 
 			//update the locations of the new nodes to be centered around the mouse position (as opposed to wherever they were before)
 			long xAve = 0;
@@ -1144,7 +1320,9 @@ namespace Foreman
 			Point importCenter = new Point((int)xAve, (int)yAve);
 			Size offset = (Size)Grid.AlignToGrid(Point.Subtract(origin, (Size)importCenter));
 			foreach (ReadOnlyBaseNode newNode in newNodeCollection.newNodes)
+			{
 				Graph.RequestNodeController(newNode).SetLocation(Point.Add(newNode.Location, offset));
+			}
 
 			//update the selection to be just the newly imported nodes
 			ClearSelection();
@@ -1180,7 +1358,9 @@ namespace Foreman
 						DialogResult result2 = form2.ShowDialog(); //LOAD default preset
 						DCache = form2.GetDataCache();
 						if (result2 == DialogResult.Abort)
+						{
 							MessageBox.Show("The default preset (" + Properties.Settings.Default.CurrentPresetName + ") is corrupt. No Preset is loaded!");
+						}
 					}
 				}
 				GC.Collect(); //loaded a new data cache - the old one should be collected (data caches can be over 1gb in size due to icons, plus whatever was in the old graph)
@@ -1194,7 +1374,9 @@ namespace Foreman
 			{
 				json = VersionUpdater.UpdateSave(json, DCache);
 				if (json == null) //update failed
+				{
 					return;
+				}
 			}
 
 			//grab mod list
@@ -1219,7 +1401,9 @@ namespace Foreman
 			List<PresetErrorPackage> presetErrors = new List<PresetErrorPackage>();
 			Preset chosenPreset = null;
 			if (useFirstPreset)
+			{
 				chosenPreset = allPresets[0];
+			}
 			else
 			{
 				//test for the preset specified in the json save
@@ -1228,12 +1412,17 @@ namespace Foreman
 				{
 					var errors = await PresetProcessor.TestPreset(savedWPreset, modSet, itemNames, assemblerNames, recipeShorts);
 					if (errors != null && errors.ErrorCount == 0) //no errors found here. We will then use this exact preset and not search for a different one
+					{
 						chosenPreset = savedWPreset;
+					}
 					else
 					{
 						//errors found. even though the name fits, but the preset seems to be the wrong one. Proceed with searching for best-fit
 						if(errors != null)
+						{
 							presetErrors.Add(errors);
+						}
+
 						allPresets.Remove(savedWPreset);
 					}
 				}
@@ -1245,7 +1434,9 @@ namespace Foreman
 					{
 						PresetErrorPackage errors = await PresetProcessor.TestPreset(preset, modSet, itemNames, assemblerNames, recipeShorts);
 						if (errors != null)
+						{
 							presetErrors.Add(errors);
+						}
 					}
 
 					//show the menu to select the preferred preset
@@ -1256,7 +1447,10 @@ namespace Foreman
 						form.Top = ParentForm.Top + 50;
 
 						if (form.ShowDialog() != DialogResult.OK || form.ChosenPreset == null) //null check is not necessary - if we get an ok dialogresult, we know it will be set
+						{
 							return;
+						}
+
 						chosenPreset = form.ChosenPreset;
 						Properties.Settings.Default.CurrentPresetName = chosenPreset.Name;
 						Properties.Settings.Default.Save();
@@ -1281,8 +1475,13 @@ namespace Foreman
 			Graph.AssemblerSelector.DefaultSelectionStyle = (AssemblerSelector.Style)(int)json["AssemblerSelectorStyle"];
 			Graph.ModuleSelector.DefaultSelectionStyle = (ModuleSelector.Style)(int)json["ModuleSelectorStyle"];
 			foreach (string fuelType in json["FuelPriorityList"].Select(t => (string)t))
+			{
 				if (DCache.Items.ContainsKey(fuelType))
+				{
 					Graph.FuelSelector.UseFuel(DCache.Items[fuelType]);
+				}
+			}
+
 			Graph.EnableExtraProductivityForNonMiners = (bool)json["ExtraProdForNonMiners"];
 
 			//set up graph view options
@@ -1294,29 +1493,58 @@ namespace Foreman
 			if (setEnablesFromJson)
 			{
 				foreach (Beacon beacon in DCache.Beacons.Values)
+				{
 					beacon.Enabled = false;
+				}
+
 				foreach (string beacon in json["EnabledBeacons"].Select(t => (string)t).ToList())
+				{
 					if (DCache.Beacons.ContainsKey(beacon))
+					{
 						DCache.Beacons[beacon].Enabled = true;
+					}
+				}
 
 				foreach (Assembler assembler in DCache.Assemblers.Values)
+				{
 					assembler.Enabled = false;
+				}
+
 				foreach (string name in json["EnabledAssemblers"].Select(t => (string)t).ToList())
+				{
 					if (DCache.Assemblers.ContainsKey(name))
+					{
 						DCache.Assemblers[name].Enabled = true;
+					}
+				}
+
 				DCache.RocketAssembler.Enabled = DCache.Assemblers["rocket-silo"]?.Enabled ?? false;
 
 				foreach (Module module in DCache.Modules.Values)
+				{
 					module.Enabled = false;
+				}
+
 				foreach (string name in json["EnabledModules"].Select(t => (string)t).ToList())
+				{
 					if (DCache.Modules.ContainsKey(name))
+					{
 						DCache.Modules[name].Enabled = true;
+					}
+				}
 
 				foreach (Recipe recipe in DCache.Recipes.Values)
+				{
 					recipe.Enabled = false;
+				}
+
 				foreach (string recipe in json["EnabledRecipes"].Select(t => (string)t).ToList())
+				{
 					if (DCache.Recipes.ContainsKey(recipe))
+					{
 						DCache.Recipes[recipe].Enabled = true;
+					}
+				}
 			}
 
 			//add all nodes
@@ -1324,8 +1552,12 @@ namespace Foreman
 
 			//check for old import
 			if (json["OldImport"] != null)
+			{
 				foreach (ReadOnlyRecipeNode rNode in collection.newNodes.Where(node => node is ReadOnlyRecipeNode))
+				{
 					((RecipeNodeController)Graph.RequestNodeController(rNode)).AutoSetAssembler(AssemblerSelector.Style.BestNonBurner);
+				}
+			}
 
 			//upgrade graph & values
 			UpdateGraphBounds();

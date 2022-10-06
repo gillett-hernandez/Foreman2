@@ -63,10 +63,16 @@ namespace Foreman
 		{
 			int modErrorComparison = this.MissingMods.Count.CompareTo(other.MissingMods.Count);
 			if (modErrorComparison != 0)
+			{
 				return modErrorComparison;
+			}
+
 			modErrorComparison = this.AddedMods.Count.CompareTo(other.AddedMods.Count);
 			if (modErrorComparison != 0)
+			{
 				return modErrorComparison;
+			}
+
 			return this.MICount.CompareTo(other.MICount);
 		}
 	}

@@ -19,8 +19,9 @@ namespace Foreman
 			List<Module> moduleList = new List<Module>();
 			Module bestModule = null;
 			if (assembler == null || assembler.ModuleSlots == 0)
+			{
 				return moduleList;
-
+			}
 
 			switch (style)
 			{
@@ -42,7 +43,10 @@ namespace Foreman
 
 					//return best module permutation that has the lowest consumption (max -80%), and the highest speed.
 					if (modulePermutations.Count > 0)
+					{
 						return modulePermutations.OrderByDescending(p => p.ConsumptionBonus).ThenBy(p => p.SpeedBonus).ThenByDescending(p => p.SquaredTierValue).Last().Modules.Where(m => m != null).OrderBy(m => m.FriendlyName).ToList();
+					}
+
 					return moduleList; //empty
 				case Style.EfficiencyOnly:
 					List<Module> moduleOptions = assembler.Modules.Intersect(recipe.Modules).Where(m => m.Enabled && m.ConsumptionBonus < 0).OrderByDescending(m => ((m.ConsumptionBonus * 1000) - m.SpeedBonus)).ToList();
@@ -50,7 +54,10 @@ namespace Foreman
 
 					//return best module permutation that has the lowest consumption (max -80%), and the lowest tier cost
 					if (modulePermutationsB.Count > 0)
+					{
 						return modulePermutationsB.OrderByDescending(p => p.ConsumptionBonus).ThenByDescending(p => p.SquaredTierValue).Last().Modules.Where(m => m != null).OrderBy(m => m.FriendlyName).ToList();
+					}
+
 					return moduleList; //empty
 				case Style.None:
 				default:
@@ -58,8 +65,13 @@ namespace Foreman
 			}
 
 			if (bestModule != null)
+			{
 				for (int i = 0; i < assembler.ModuleSlots; i++)
+				{
 					moduleList.Add(bestModule);
+				}
+			}
+
 			return moduleList;
 		}
 	}
@@ -105,9 +117,13 @@ namespace Foreman
 				foreach (Module m in Modules)
 				{
 					if (m != null)
+					{
 						str += m + ", ";
+					}
 					else
+					{
 						str += "---, ";
+					}
 				}
 				return str;
 			}
@@ -131,9 +147,15 @@ namespace Foreman
 					for (int border = 1; border < moduleSlots; border++)
 					{
 						for (int i = 1; i < border; i++)
+						{
 							permutation[i] = speedModules[sfA];
+						}
+
 						for (int i = border; i < moduleSlots - 1; i++)
+						{
 							permutation[i] = efficiencyModules[efA];
+						}
+
 						for (int sfB = sfA; sfB < speedModules.Count; sfB++)
 						{
 							permutation[0] = speedModules[sfB];
@@ -158,11 +180,20 @@ namespace Foreman
 						for (int x = n + 1; x < moduleSlots; x++)
 						{
 							for (int i = 0; i < n; i++)
+							{
 								permutation[i] = efficiencyModules[efA];
+							}
+
 							for (int i = n; i < x; i++)
+							{
 								permutation[i] = efficiencyModules[efB];
+							}
+
 							for (int i = x; i < moduleSlots; i++)
+							{
 								permutation[i] = null;
+							}
+
 							permutations.Add(new Permutation(permutation));
 						}
 					}
@@ -172,7 +203,10 @@ namespace Foreman
 			//last efficiency only -> 0 or 1 modules
 			//at least 1 slot
 			for (int i = 0; i < moduleSlots; i++)
+			{
 				permutation[i] = null;
+			}
+
 			permutations.Add(new Permutation(permutation)); //no modules
 			foreach (Module module in efficiencyModules)
 			{
@@ -182,7 +216,9 @@ namespace Foreman
 
 			//0 slots (empty permutation)
 			if (moduleSlots == 0)
+			{
 				permutations.Add(new Permutation(permutation));
+			}
 
 			return permutations;
 		}

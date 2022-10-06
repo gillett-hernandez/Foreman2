@@ -30,10 +30,15 @@ namespace Foreman
 
 			Ingredients = new Dictionary<string, double>();
 			foreach (var kvp in recipe.IngredientSet)
+			{
 				Ingredients.Add(kvp.Key.Name, kvp.Value);
+			}
+
 			Products = new Dictionary<string, double>();
 			foreach (var kvp in recipe.ProductSet)
+			{
 				Products.Add(kvp.Key.Name, kvp.Value);
+			}
 		}
 
 		public RecipeShort(JToken recipe)
@@ -44,18 +49,25 @@ namespace Foreman
 
 			Ingredients = new Dictionary<string, double>();
 			foreach (JProperty ingredient in recipe["Ingredients"])
+			{
 				Ingredients.Add((string)ingredient.Name, (double)ingredient.Value);
+			}
 
 			Products = new Dictionary<string, double>();
 			foreach (JProperty ingredient in recipe["Products"])
+			{
 				Products.Add((string)ingredient.Name, (double)ingredient.Value);
+			}
 		}
 
 		public static List<RecipeShort> GetSetFromJson(JToken jdata)
 		{
 			List<RecipeShort> resultList = new List<RecipeShort>();
 			foreach (JToken recipe in jdata)
+			{
 				resultList.Add(new RecipeShort(recipe));
+			}
+
 			return resultList;
 		}
 
@@ -74,11 +86,20 @@ namespace Foreman
 			if (similar)
 			{
 				foreach (Item ingredient in other.IngredientList)
+				{
 					if (!this.Ingredients.ContainsKey(ingredient.Name) || this.Ingredients[ingredient.Name] != other.IngredientSet[ingredient])
+					{
 						return false;
+					}
+				}
+
 				foreach (Item ingredient in other.ProductList)
+				{
 					if (!this.Products.ContainsKey(ingredient.Name) || this.Products[ingredient.Name] != other.ProductSet[ingredient])
+					{
 						return false;
+					}
+				}
 			}
 			return true;
 		}
@@ -89,21 +110,40 @@ namespace Foreman
 		public bool Equals(RecipeShort x, RecipeShort y)
 		{
 			if (x == y)
+			{
 				return true;
+			}
 
 			if (x.Name != y.Name)
+			{
 				return false;
+			}
+
 			if (x.Ingredients.Count != y.Ingredients.Count)
+			{
 				return false;
+			}
+
 			if (x.Products.Count != y.Products.Count)
+			{
 				return false;
+			}
 
 			foreach (string i in x.Ingredients.Keys)
+			{
 				if (!y.Ingredients.ContainsKey(i))
+				{
 					return false;
+				}
+			}
+
 			foreach (string i in x.Products.Keys)
+			{
 				if (!y.Products.ContainsKey(i))
+				{
 					return false;
+				}
+			}
 
 			return true;
 		}

@@ -28,9 +28,14 @@ namespace Foreman
 
 				RequestStateUpdate();
 				foreach (BaseNodeElement linkedNode in DisplayedNode.InputLinks.Select(l => graphViewer.LinkElementDictionary[l].SupplierElement))
+				{
 					linkedNode.RequestStateUpdate();
+				}
+
 				foreach (BaseNodeElement linkedNode in DisplayedNode.OutputLinks.Select(l => graphViewer.LinkElementDictionary[l].ConsumerElement))
+				{
 					linkedNode.RequestStateUpdate();
+				}
 			}
 		}
 
@@ -88,9 +93,14 @@ namespace Foreman
 
 			//first stage item tab creation - absolutely necessary in the constructor due to the creation and simultaneous linking of nodes being possible (drag to new node for example).
 			foreach (Item item in DisplayedNode.Inputs)
+			{
 				InputTabs.Add(new ItemTabElement(item, LinkType.Input, base.graphViewer, this));
+			}
+
 			foreach (Item item in DisplayedNode.Outputs)
+			{
 				OutputTabs.Add(new ItemTabElement(item, LinkType.Output, base.graphViewer, this));
+			}
 		}
 
 		private void DisplayedNode_NodeStateChanged(object sender, EventArgs e) { NodeStateRequiresUpdate = true; graphViewer.Invalidate(); }
@@ -112,9 +122,14 @@ namespace Foreman
 		{
 			//update tab values
 			foreach (ItemTabElement tab in InputTabs)
+			{
 				tab.UpdateValues(DisplayedNode.GetConsumeRate(tab.Item), 0, false); //for inputs we only care to display the supply rate (guaranteed by solver to be equal to the amount consumed by recipe)
+			}
+
 			foreach (ItemTabElement tab in OutputTabs)
+			{
 				tab.UpdateValues(DisplayedNode.GetSupplyRate(tab.Item), DisplayedNode.GetSupplyUsedRate(tab.Item), DisplayedNode.IsOverproducing(tab.Item)); //for outputs we want the amount produced by the node, the amount supplied to other nodes, and true if we are supplying less than producing.
+			}
 		}
 
 		private void UpdateTabOrder()
@@ -145,7 +160,10 @@ namespace Foreman
 		{
 			int result = TabPadding;
 			foreach (ItemTabElement tab in tabs)
+			{
 				result += tab.Bounds.Width + TabPadding;
+			}
+
 			return result;
 		}
 
@@ -163,7 +181,10 @@ namespace Foreman
 		public ItemTabElement GetOutputLineItemTab(Item item)
 		{
 			if (NodeStateRequiresUpdate)
+			{
 				UpdateState();
+			}
+
 			NodeStateRequiresUpdate = false;
 
 			return OutputTabs.First(it => it.Item == item);
@@ -171,7 +192,10 @@ namespace Foreman
 		public ItemTabElement GetInputLineItemTab(Item item)
 		{
 			if (NodeStateRequiresUpdate)
+			{
 				UpdateState();
+			}
+
 			NodeStateRequiresUpdate = false;
 
 			return InputTabs.First(it => it.Item == item);
@@ -185,15 +209,27 @@ namespace Foreman
 		public override bool ContainsPoint(Point graph_point)
 		{
 			if (!Visible)
+			{
 				return false;
+			}
+
 			if (base.ContainsPoint(graph_point))
+			{
 				return true;
+			}
 
 			foreach (ItemTabElement tab in SubElements.OfType<ItemTabElement>())
+			{
 				if (tab.ContainsPoint(graph_point))
+				{
 					return true;
+				}
+			}
+
 			if (errorNotice.ContainsPoint(graph_point))
+			{
 				return true;
+			}
 
 			return false;
 		}
@@ -201,9 +237,15 @@ namespace Foreman
 		public override void PrePaint()
 		{
 			if (NodeStateRequiresUpdate)
+			{
 				UpdateState();
+			}
+
 			if (NodeStateRequiresUpdate || NodeValuesRequireUpdate)
+			{
 				UpdateValues();
+			}
+
 			NodeStateRequiresUpdate = false;
 			NodeValuesRequireUpdate = false;
 		}
@@ -214,7 +256,10 @@ namespace Foreman
 			if (style == NodeDrawingStyle.IconsOnly)
 			{
 				int iconSize = graphViewer.IconsDrawSize;
-				if(NodeIcon() != null) graphics.DrawImage(NodeIcon(), trans.X - (iconSize / 2), trans.Y - (iconSize / 2), iconSize, iconSize);
+				if(NodeIcon() != null)
+				{
+					graphics.DrawImage(NodeIcon(), trans.X - (iconSize / 2), trans.Y - (iconSize / 2), iconSize, iconSize);
+				}
 			}
 			else
 			{
@@ -228,20 +273,31 @@ namespace Foreman
 				int heightOffset = DisplayedNode.KeyNode ? (this is ConsumerNodeElement || this is SupplierNodeElement) ? 15 : 30 : 0;
 				GraphicsStuff.FillRoundRect(trans.X - (Width / 2) + BorderSpacing + 3, trans.Y - (Height / 2) + BorderSpacing + 3 + yoffset, Width - (2 * BorderSpacing) - 6, Height - (2 * BorderSpacing) - 6 - heightOffset, 7, graphics, bgBrush); //basic background (with given background brush)
 				if (DisplayedNode.RateType == RateType.Manual)
+				{
 					GraphicsStuff.FillRoundRect(trans.X - (Width / 2) + 3, trans.Y - (Height / 2) + 3, Width - 6, Height - 6, 7, graphics, ManualRateBGFilterBrush); //darken background if its a manual rate set
+				}
 
 				if (graphViewer.FlagOUSuppliedNodes && borderBrush != equalFlowBorderBrush)
+				{
 					GraphicsStuff.FillRoundRectTLFlag(trans.X - (Width / 2) + 3, trans.Y - (Height / 2) + 3, Width / 2 - 6, Height / 2 - 6, 7, graphics, borderBrush); //supply flag
+				}
+
 				if (DisplayedNode.State == NodeState.Warning)
+				{
 					GraphicsStuff.FillRoundRectTLFlag(trans.X - (Width / 2) + 3, trans.Y - (Height / 2) + 3, Width / 2 - 6, Height / 2 - 6, 7, graphics, errorBgBrush); //warning flag
+				}
 
 				//draw in all the inside details for this node
 				if (style == NodeDrawingStyle.Regular || style == NodeDrawingStyle.PrintStyle)
+				{
 					DetailsDraw(graphics, trans);
+				}
 
 				//highlight
 				if (Highlighted)
+				{
 					GraphicsStuff.FillRoundRect(trans.X - (Width / 2), trans.Y - (Height / 2), Width, Height, 8, graphics, selectionOverlayBrush);
+				}
 			}
 		}
 
@@ -255,9 +311,14 @@ namespace Foreman
 			List<TooltipInfo> myTooltips = GetMyToolTips(graph_point, subTooltips == null || subTooltips.Count == 0);
 
 			if (myTooltips == null)
+			{
 				myTooltips = new List<TooltipInfo>();
+			}
+
 			if (subTooltips != null)
+			{
 				myTooltips.AddRange(subTooltips);
+			}
 
 			return myTooltips;
 		}
@@ -270,7 +331,9 @@ namespace Foreman
 			MouseDownNodeLocation = new Point(X, Y);
 
 			if (button == MouseButtons.Left)
+			{
 				graphViewer.MouseDownElement = this;
+			}
 		}
 
 		public override void MouseUp(Point graph_point, MouseButtons button, bool wasDragged)
@@ -280,11 +343,17 @@ namespace Foreman
 			if (!wasDragged)
 			{
 				if (subelement != null)
+				{
 					subelement.MouseUp(graph_point, button, false);
+				}
 				else if (errorNotice.ContainsPoint(graph_point))
+				{
 					errorNotice.MouseUp(graph_point, button, false);
+				}
 				else
+				{
 					MouseUpAction(graph_point, button);
+				}
 			}
 		}
 
@@ -361,7 +430,9 @@ namespace Foreman
 
 								Dictionary<ReadOnlyBaseNode, List<Item>> openInputNodes = new Dictionary<ReadOnlyBaseNode, List<Item>>();
 								foreach(BaseNodeElement node in graphViewer.SelectedNodes.Where(n => n.InputTabs.Any(t => !t.Links.Any())))
+								{
 									openInputNodes.Add(node.DisplayedNode, node.InputTabs.Where(t => !t.Links.Any()).Select(t => t.Item).ToList());
+								}
 
 								Dictionary<Item, List<ReadOnlyBaseNode>> availableOutputNodes = new Dictionary<Item, List<ReadOnlyBaseNode>>();
 								foreach(ReadOnlyBaseNode node in graphViewer.SelectedNodes.Select(n => n.DisplayedNode).Where(n => !openInputNodes.ContainsKey(n)))
@@ -369,7 +440,10 @@ namespace Foreman
 									foreach(Item output in node.Outputs)
 									{
 										if (!availableOutputNodes.ContainsKey(output))
+										{
 											availableOutputNodes.Add(output, new List<ReadOnlyBaseNode>());
+										}
+
 										availableOutputNodes[output].Add(node);
 									}
 								}
@@ -382,7 +456,9 @@ namespace Foreman
 										{
 											ReadOnlyBaseNode linkNode = availableOutputNodes[requiredInput].OrderBy(n => Math.Abs(node.Location.X - n.Location.X) + Math.Abs(node.Location.Y - n.Location.Y)).FirstOrDefault();
 											if (linkNode != null)
+											{
 												graphViewer.Graph.CreateLink(linkNode, node, requiredInput);
+											}
 										}
 									}
 								}
@@ -399,7 +475,9 @@ namespace Foreman
 
 								Dictionary<ReadOnlyBaseNode, List<Item>> openOutputNodes = new Dictionary<ReadOnlyBaseNode, List<Item>>();
 								foreach (BaseNodeElement node in graphViewer.SelectedNodes.Where(n => n.OutputTabs.Any(t => !t.Links.Any())))
+								{
 									openOutputNodes.Add(node.DisplayedNode, node.OutputTabs.Where(t => !t.Links.Any()).Select(t => t.Item).ToList());
+								}
 
 								Dictionary<Item, List<ReadOnlyBaseNode>> availableInputNodes = new Dictionary<Item, List<ReadOnlyBaseNode>>();
 								foreach (ReadOnlyBaseNode node in graphViewer.SelectedNodes.Select(n => n.DisplayedNode).Where(n => !openOutputNodes.ContainsKey(n)))
@@ -407,7 +485,10 @@ namespace Foreman
 									foreach (Item input in node.Inputs)
 									{
 										if (!availableInputNodes.ContainsKey(input))
+										{
 											availableInputNodes.Add(input, new List<ReadOnlyBaseNode>());
+										}
+
 										availableInputNodes[input].Add(node);
 									}
 								}
@@ -420,7 +501,9 @@ namespace Foreman
 										{
 											ReadOnlyBaseNode linkNode = availableInputNodes[requiredOutput].OrderBy(n => Math.Abs(node.Location.X - n.Location.X) + Math.Abs(node.Location.Y - n.Location.Y)).FirstOrDefault();
 											if (linkNode != null)
+											{
 												graphViewer.Graph.CreateLink(node, linkNode, requiredOutput);
+											}
 										}
 									}
 								}
@@ -495,10 +578,17 @@ namespace Foreman
 			{
 				ItemTabElement draggedTab = null;
 				foreach (ItemTabElement tab in SubElements.OfType<ItemTabElement>())
+				{
 					if (tab.ContainsPoint(MouseDownLocation))
+					{
 						draggedTab = tab;
+					}
+				}
+
 				if (draggedTab != null)
+				{
 					graphViewer.StartLinkDrag(this, draggedTab.LinkType, draggedTab.Item);
+				}
 				else
 				{
 					DragStarted = true;
@@ -513,9 +603,13 @@ namespace Foreman
 					Point lockedDragOffset = Point.Subtract(graph_point, (Size)graphViewer.Grid.DragOrigin);
 
 					if (Math.Abs(lockedDragOffset.X) > Math.Abs(lockedDragOffset.Y))
+					{
 						newLocation.Y = graphViewer.Grid.DragOrigin.Y;
+					}
 					else
+					{
 						newLocation.X = graphViewer.Grid.DragOrigin.X;
+					}
 				}
 
 				if (Location != newLocation)
@@ -524,9 +618,14 @@ namespace Foreman
 
 					this.UpdateTabOrder();
 					foreach (ReadOnlyBaseNode node in DisplayedNode.InputLinks.Select(l => l.Supplier))
+					{
 						graphViewer.NodeElementDictionary[node].UpdateTabOrder();
+					}
+
 					foreach (ReadOnlyBaseNode node in DisplayedNode.OutputLinks.Select(l => l.Consumer))
+					{
 						graphViewer.NodeElementDictionary[node].UpdateTabOrder();
+					}
 				}
 			}
 		}

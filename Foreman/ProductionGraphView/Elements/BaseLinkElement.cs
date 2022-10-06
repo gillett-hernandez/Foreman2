@@ -65,7 +65,9 @@ namespace Foreman
 			Tuple<NodeDirection, NodeDirection> endpointDirections = GetEndpointDirections();
 
 			if (endpoints == null || endpointDirections == null)
+			{
 				return;
+			}
 
 			if (supplierOrigin != endpoints.Item1|| consumerOrigin != endpoints.Item2 || supplierDirection != endpointDirections.Item1 || consumerDirection != endpointDirections.Item2)
 			{
@@ -197,9 +199,11 @@ namespace Foreman
 			using (Pen pen = new Pen(Item.AverageColor, LinkWidth) { EndCap = System.Drawing.Drawing2D.LineCap.Round, StartCap = System.Drawing.Drawing2D.LineCap.Round })
 			{
 				if (graphViewer.ArrowsOnLinks && !graphViewer.DynamicLinkWidth && !iconOnlyDraw)
+				{
 					pen.CustomEndCap = arrowCap;
+				}
 
-				switch(Type)
+				switch (Type)
 				{
 					case LineType.Simple:
 						graphics.DrawBeziers(pen, new Point[]

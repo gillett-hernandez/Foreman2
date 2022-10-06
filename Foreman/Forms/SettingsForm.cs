@@ -184,7 +184,9 @@ namespace Foreman
 		{
 			Preset selectedPreset = (Preset)PresetListBox.SelectedItem;
 			if (selectedPreset == null)
+			{
 				selectedPreset = Options.SelectedPreset;
+			}
 
 			PresetInfo presetInfo = PresetProcessor.ReadPresetInfo(selectedPreset);
 			ModSelectionBox.Items.Clear();
@@ -256,9 +258,12 @@ namespace Foreman
 			filteredList.Clear();
 
 			foreach (ListViewItem lvItem in unfilteredList)
+			{
 				if ((showUnavailables || ((DataObjectBase)lvItem.Tag).Available) && (string.IsNullOrEmpty(filterString) || lvItem.Text.ToLower().Contains(filterString)))
+				{
 					filteredList.Add(lvItem);
-
+				}
+			}
 
 			owner.VirtualListSize = filteredList.Count;
 			owner.Invalidate();
@@ -272,14 +277,21 @@ namespace Foreman
 		{
 			UpdateModList();
 			if (PresetListBox.SelectedItem == null)
+			{
 				CurrentPresetLabel.Font = new Font(CurrentPresetLabel.Font, FontStyle.Bold);
+			}
 			else
+			{
 				CurrentPresetLabel.Font = new Font(CurrentPresetLabel.Font, FontStyle.Regular);
+			}
 		}
 
 		private void PresetListBox_MouseDown(object sender, MouseEventArgs e)
 		{
-			if (e.Button != MouseButtons.Right) return;
+			if (e.Button != MouseButtons.Right)
+			{
+				return;
+			}
 
 			var index = PresetListBox.IndexFromPoint(e.Location);
 			if (index != ListBox.NoMatches)
@@ -313,7 +325,9 @@ namespace Foreman
 				PresetMenuStrip.Visible = true;
 			}
 			else
+			{
 				PresetMenuStrip.Visible = false;
+			}
 		}
 
 		private void PresetListBox_MouseDoubleClick(object sender, MouseEventArgs e)
@@ -341,11 +355,19 @@ namespace Foreman
 					string iconPath = Path.Combine(new string[] { Application.StartupPath, "Presets", selectedPreset.Name + ".dat" });
 
 					if (File.Exists(jsonPath))
+					{
 						File.Delete(jsonPath);
+					}
+
 					if (File.Exists(customjsonPath))
+					{
 						File.Delete(customjsonPath);
+					}
+
 					if (File.Exists(iconPath))
+					{
 						File.Delete(iconPath);
+					}
 
 					PresetListBox.Items.Remove(selectedPreset);
 					Options.Presets.Remove(selectedPreset);
@@ -371,7 +393,9 @@ namespace Foreman
 		private void ListView_KeyDown(object sender, KeyEventArgs e)
 		{
 			if (e.KeyCode == Keys.A && (e.Modifiers & Keys.Control) != 0)
+			{
 				NativeMethods.SelectAllItems(sender as ListView);
+			}
 		}
 
 		private void ListView_MouseClick(object sender, MouseEventArgs e)
@@ -387,18 +411,26 @@ namespace Foreman
 						lvi = (sender as ListView).Items[index];
 						lvi.Checked = setCheck;
 						if (lvi.Checked)
+						{
 							Options.EnabledObjects.Add((DataObjectBase)lvi.Tag);
+						}
 						else
+						{
 							Options.EnabledObjects.Remove((DataObjectBase)lvi.Tag);
+						}
 					}
 				}
 				else
 				{
 					lvi.Checked = !lvi.Checked;
 					if (lvi.Checked)
+					{
 						Options.EnabledObjects.Add((DataObjectBase)lvi.Tag);
+					}
 					else
+					{
 						Options.EnabledObjects.Remove((DataObjectBase)lvi.Tag);
+					}
 				}
 				(sender as ListView).Invalidate();
 			}
@@ -417,18 +449,26 @@ namespace Foreman
 						lvi = (sender as ListView).Items[index];
 						lvi.Checked = setCheck;
 						if (lvi.Checked)
+						{
 							Options.EnabledObjects.Add((DataObjectBase)lvi.Tag);
+						}
 						else
+						{
 							Options.EnabledObjects.Remove((DataObjectBase)lvi.Tag);
+						}
 					}
 				}
 				else
 				{
 					//lvi.Checked = lvi.Checked;
 					if (lvi.Checked)
+					{
 						Options.EnabledObjects.Add((DataObjectBase)lvi.Tag);
+					}
 					else
+					{
 						Options.EnabledObjects.Remove((DataObjectBase)lvi.Tag);
+					}
 				}
 				(sender as ListView).Invalidate();
 			}
@@ -517,7 +557,9 @@ namespace Foreman
 				DialogResult result = form.ShowDialog();
 
 				if (form.ImportStarted)
+				{
 					GC.Collect(); //we just processed a new preset (either fully or cancelled) - this required the opening of (potentially) alot of zip files and processing of a ton of bitmaps that are now stuck in garbate. In large mod packs like A&B this could clear out 2GB+ of memory.
+				}
 
 				if (result == DialogResult.OK && !string.IsNullOrEmpty(form.NewPresetName)) //we have added a new preset
 				{
@@ -577,9 +619,13 @@ namespace Foreman
 				DialogResult result = form.ShowDialog();
 
 				if(result == DialogResult.OK)
+				{
 					UpdateEnabledStatus();
+				}
 				else if (result == DialogResult.Abort)
+				{
 					MessageBox.Show("Error while reading save file. Try running factorio, opening the save game, saving again, and retrying?");
+				}
 			}
 		}
 
@@ -593,7 +639,9 @@ namespace Foreman
 				DialogResult result = form.ShowDialog();
 
 				if (result == DialogResult.OK)
+				{
 					UpdateEnabledStatus();
+				}
 			}
 		}
 
@@ -603,16 +651,24 @@ namespace Foreman
 			Options.EnabledObjects.Add(Options.DCache.PlayerAssembler);
 
 			foreach (Assembler assembler in Options.DCache.Assemblers.Values.Where(m => m.AssociatedItems.Any(i => i.Available)))
+			{
 				Options.EnabledObjects.Add(assembler);
+			}
 
 			foreach (Beacon beacon in Options.DCache.Beacons.Values.Where(m => m.AssociatedItems.Any(i => i.Available)))
+			{
 				Options.EnabledObjects.Add(beacon);
+			}
 
 			foreach (Module module in Options.DCache.Modules.Values.Where(m => m.AssociatedItem.Available))
+			{
 				Options.EnabledObjects.Add(module);
+			}
 
 			foreach (Recipe recipe in Options.DCache.Recipes.Values.Where(r => r.Available))
+			{
 				Options.EnabledObjects.Add(recipe);
+			}
 
 			UpdateEnabledStatus();
 		}
@@ -647,17 +703,34 @@ namespace Foreman
 
 
 			foreach (ListViewItem item in unfilteredAssemblerList)
+			{
 				item.Checked = Options.EnabledObjects.Contains((DataObjectBase)item.Tag);
+			}
+
 			foreach (ListViewItem item in unfilteredBeaconList)
+			{
 				item.Checked = Options.EnabledObjects.Contains((DataObjectBase)item.Tag);
+			}
+
 			foreach (ListViewItem item in unfilteredMinerList)
+			{
 				item.Checked = Options.EnabledObjects.Contains((DataObjectBase)item.Tag);
+			}
+
 			foreach (ListViewItem item in unfilteredModuleList)
+			{
 				item.Checked = Options.EnabledObjects.Contains((DataObjectBase)item.Tag);
+			}
+
 			foreach (ListViewItem item in unfilteredPowerList)
+			{
 				item.Checked = Options.EnabledObjects.Contains((DataObjectBase)item.Tag);
+			}
+
 			foreach (ListViewItem item in unfilteredRecipeList)
+			{
 				item.Checked = Options.EnabledObjects.Contains((DataObjectBase)item.Tag);
+			}
 
 			UpdateFilteredLists();
 		}

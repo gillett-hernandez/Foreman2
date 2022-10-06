@@ -47,7 +47,9 @@ namespace Foreman
 			else
 			{
 				if (items.Count == 0)
+				{
 					timer.Enabled = true;
+				}
 
 				info = new Info
 				{
@@ -72,7 +74,9 @@ namespace Foreman
 				control.HandleDestroyed -= new EventHandler(control_HandleDestroyed);
 				items.Remove(control);
 				if (items.Count == 0)
+				{
 					timer.Enabled = false;
+				}
 			}
 		}
 
@@ -113,7 +117,9 @@ namespace Foreman
 		private void timer_Tick(object sender, EventArgs e)
 		{
 			if (lastMouseMoveControl == null)
+			{
 				return;
+			}
 
 			DateTime now = DateTime.Now;
 			//Console.WriteLine(now);

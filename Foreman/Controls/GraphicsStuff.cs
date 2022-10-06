@@ -111,30 +111,60 @@ namespace Foreman
 		public static string DoubleToString(double value)
 		{
 			if (Math.Abs(value) >= 100000)
+			{
 				return value.ToString("0.00e0");
+			}
+
 			if (Math.Abs(value) >= 10000)
+			{
 				return value.ToString("0");
+			}
+
 			if (Math.Abs(value) >= 100)
+			{
 				return value.ToString("0.#");
+			}
+
 			if (Math.Abs(value) >= 10)
+			{
 				return value.ToString("0.##");
+			}
+
 			if (Math.Abs(value) >= 0.1)
+			{
 				return value.ToString("0.###");
+			}
+
 			if (Math.Abs(value) != 0)
+			{
 				return value.ToString("0.######");
+			}
+
 			return "0";
 		}
 
 		public static string DoubleToEnergy(double value, string unit)
 		{
 			if (Math.Abs(value) >= 1000000000000)
+			{
 				return (value / 1000000000000).ToString("0.##") + " P" + unit;
+			}
+
 			if (Math.Abs(value) >= 1000000000)
+			{
 				return (value / 1000000000).ToString("0.##") + " G" + unit;
+			}
+
 			if (Math.Abs(value) >= 1000000)
+			{
 				return (value / 1000000).ToString("0.##") + " M" + unit;
+			}
+
 			if (Math.Abs(value) >= 1000)
+			{
 				return (value / 1000).ToString("0.##") + " K" + unit;
+			}
+
 			return (value).ToString("0.##") + " " + unit;
 		}
 	}
@@ -236,9 +266,13 @@ namespace Foreman
 				graphics.FillRectangle(DarkBackgroundBrush, new Rectangle(xOffset, yOffset, SectionWidth, 22));
 				yOffset += 2;
 				if(Properties.Settings.Default.AbbreviateSciPacks)
+				{
 					graphics.DrawString(recipes[r].MyUnlockSciencePacks.Count > 1 ? "Key required science packs (any):" : "Key required science packs:", SectionFont, TextBrush, 4 + xOffset, 0 + yOffset);
+				}
 				else
+				{
 					graphics.DrawString(recipes[r].MyUnlockSciencePacks.Count > 1 ? "Required science packs (any):" : "Required science packs:", SectionFont, TextBrush, 4 + xOffset, 0 + yOffset);
+				}
 
 				yOffset += 20;
 				for (int i = 0; i < maxSciencePackListsCount; i++)
@@ -251,15 +285,22 @@ namespace Foreman
 						{
 							List<Item> filteredSciPacks = new List<Item>(sciPacks);
 							foreach (Item sciPack in sciPacks)
+							{
 								foreach (Item prereq in recipes[r].Owner.SciencePackPrerequisites[sciPack])
+								{
 									filteredSciPacks.Remove(prereq);
+								}
+							}
+
 							sciPacks = filteredSciPacks;
 							sciPackSize = 32;
 						}
 
 						int iconSize = sciPacks.Count == 0? sciPackSize : Math.Min(sciPackSize, (SectionWidth - 8) / sciPacks.Count); //ensure all science packs will fit (there should be space for 8, but knowing mods... this might not be enough)
 						for (int j = 0; j < sciPacks.Count; j++)
+						{
 							graphics.DrawImage(sciPacks[j].Icon, xOffset + 4 + (j * iconSize), 3 + yOffset, iconSize, iconSize);
+						}
 					}
 					yOffset += (Properties.Settings.Default.AbbreviateSciPacks? 40 : 30);
 				}
@@ -288,7 +329,10 @@ namespace Foreman
 		{
 			decimal multiplied = (decimal)((double)d * Math.Pow(10, i));
 			if (Math.Round(multiplied) == multiplied)
+			{
 				return i;
+			}
+
 			return GetDecimals(d, i + 1);
 		}
 	}

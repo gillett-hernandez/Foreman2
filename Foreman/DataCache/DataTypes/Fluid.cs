@@ -32,22 +32,34 @@ namespace Foreman
 		public string GetTemperatureRangeFriendlyName(fRange tempRange)
 		{
 			if (tempRange.Ignore)
+			{
 				return FriendlyName;
+			}
 
 			string name = FriendlyName;
 			bool includeMin = tempRange.Min >= double.MinValue;
 			bool includeMax = tempRange.Max <= double.MaxValue;
 
 			if (tempRange.Min == tempRange.Max)
+			{
 				name += string.Format(" ({0}°c)", tempRange.Min.ToString("0"));
+			}
 			else if (includeMin && includeMax)
+			{
 				name += string.Format(" ({0}-{1}°c)", tempRange.Min.ToString("0"), tempRange.Max.ToString("0"));
+			}
 			else if (includeMin)
+			{
 				name += string.Format(" (min {0}°c)", tempRange.Min.ToString("0"));
+			}
 			else if (includeMax)
+			{
 				name += string.Format(" (max {0}°c)", tempRange.Max.ToString("0"));
+			}
 			else
+			{
 				name += "(any°)";
+			}
 
 			return name;
 		}

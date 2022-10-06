@@ -41,7 +41,9 @@ namespace Foreman
 			this.graphViewer = graphViewer;
 			myParent = parent;
 			if (myParent != null)
+			{
 				parent.SubElements.Add(this);
+			}
 
 			RightClickMenu = new ContextMenuStrip();
 			RightClickMenu.ShowItemToolTips = false;
@@ -49,7 +51,9 @@ namespace Foreman
 			RightClickMenu.Closing += (o, e) =>
 			{
 				if (e.CloseReason == ToolStripDropDownCloseReason.ItemClicked)
+				{
 					e.Cancel = true; //we will handle closing from item clicking within the items themselves
+				}
 				else
 				{
 					RightClickMenu.Items.Clear();
@@ -64,17 +68,25 @@ namespace Foreman
 		public Point GraphToLocal(Point graph_point) //converts the point (in graph coordinates) to the local (0,0 is the center of this element's bound) point
 		{
 			if (myParent == null) //owned by graphViewer
+			{
 				return Point.Subtract(graph_point, (Size)Location);
+			}
 			else //subelement of some element
+			{
 				return Point.Subtract(myParent.GraphToLocal(graph_point), (Size)Location);
+			}
 		}
 
 		public Point LocalToGraph(Point local_point)
 		{
 			if (myParent == null) //owned by graphViewer
+			{
 				return Point.Add(local_point, (Size)Location);
+			}
 			else //subelement of some element
+			{
 				return Point.Add(myParent.LocalToGraph(local_point), (Size)Location);
+			}
 		}
 
 		public bool IntersectsWithZone(Rectangle graph_zone, int xborder, int yborder)
@@ -94,7 +106,10 @@ namespace Foreman
 		public virtual bool ContainsPoint(Point graph_point)
 		{
 			if (!Visible)
+			{
 				return false;
+			}
+
 			return Bounds.Contains(GraphToLocal(graph_point));
 		}
 
@@ -108,7 +123,9 @@ namespace Foreman
 
 				//call paint operations (this function) for each of the sub-elements owned by this element (who will call their own draw and further paint operations on their own sub elements)
 				foreach (GraphElement element in SubElements)
+				{
 					element.Paint(graphics, style);
+				}
 			}
 		}
 
@@ -123,10 +140,15 @@ namespace Foreman
 		public virtual void Dispose()
 		{
 			foreach (GraphElement element in SubElements.ToArray())
+			{
 				element.Dispose();
+			}
+
 			SubElements.Clear();
 			if (myParent != null)
+			{
 				myParent.SubElements.Remove(this);
+			}
 
 			RightClickMenu.Dispose();
 

@@ -108,21 +108,29 @@ namespace Foreman
 		public string GetIngredientFriendlyName(Item item)
 		{
 			if (IngredientSet.ContainsKey(item) && (item is Fluid fluid) && fluid.IsTemperatureDependent)
+			{
 				return fluid.GetTemperatureRangeFriendlyName(IngredientTemperatureMap[item]);
+			}
+
 			return item.FriendlyName;
 		}
 
 		public string GetProductFriendlyName(Item item)
 		{
 			if (productSet.ContainsKey(item) && (item is Fluid fluid) && (fluid.IsTemperatureDependent || fluid.DefaultTemperature != ProductTemperatureMap[item]))
+			{
 				return fluid.GetTemperatureFriendlyName(productTemperatureMap[item]);
+			}
+
 			return item.FriendlyName;
 		}
 
 		public bool TestIngredientConnection(Recipe provider, Item ingredient) //checks if the temperature that the ingredient is coming out at fits within the range of temperatures required for this recipe
 		{
 			if (!IngredientSet.ContainsKey(ingredient) || !provider.ProductSet.ContainsKey(ingredient))
+			{
 				return false;
+			}
 
 			return IngredientTemperatureMap[ingredient].Contains(provider.ProductTemperatureMap[ingredient]);
 		}
@@ -130,7 +138,9 @@ namespace Foreman
 		public void InternalOneWayAddIngredient(ItemPrototype item, double quantity, double minTemp = double.NaN, double maxTemp = double.NaN)
 		{
 			if (IngredientSet.ContainsKey(item))
+			{
 				ingredientSet[item] += quantity;
+			}
 			else
 			{
 				ingredientSet.Add(item, quantity);
@@ -183,21 +193,40 @@ namespace Foreman
 		public bool Equals(Recipe x, Recipe y)
 		{
 			if (x == y)
+			{
 				return true;
+			}
 
 			if (x.Name != y.Name)
+			{
 				return false;
+			}
+
 			if (x.IngredientList.Count != y.IngredientList.Count)
+			{
 				return false;
+			}
+
 			if (x.ProductList.Count != y.ProductList.Count)
+			{
 				return false;
+			}
 
 			foreach (Item i in x.IngredientList)
+			{
 				if (!y.IngredientSet.ContainsKey(i))
+				{
 					return false;
+				}
+			}
+
 			foreach (Item i in x.ProductList)
+			{
 				if (!y.ProductSet.ContainsKey(i))
+				{
 					return false;
+				}
+			}
 
 			return true;
 		}

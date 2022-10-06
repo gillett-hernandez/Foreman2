@@ -37,7 +37,10 @@ namespace Foreman
 				dialog.Filter = "PNG files (*.png)|*.png";
 				dialog.InitialDirectory = Path.Combine(Application.StartupPath, "Exported Graphs");
 				if (!Directory.Exists(dialog.InitialDirectory))
+				{
 					Directory.CreateDirectory(dialog.InitialDirectory);
+				}
+
 				dialog.FileName = "Foreman Production Flowchart.png";
 				dialog.ValidateNames = true;
 				dialog.OverwritePrompt = true;
@@ -82,7 +85,9 @@ namespace Foreman
 					graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
 
 					if (!TransparencyCheckBox.Checked)
+					{
 						graphics.Clear(Color.White);
+					}
 
 					graphViewer.Paint(graphics, true);
 
