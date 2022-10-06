@@ -1164,7 +1164,7 @@ namespace Foreman
 					}
 				}
 				// only remove fuel remains link if the burn results of the new fuel are different from the old fuel
-				if (MyNode.FuelRemains != null && !MyNode.BaseRecipe.ProductSet.ContainsKey(MyNode.FuelRemains) && MyNode.FuelRemains != fuel.BurnResult )
+				if (MyNode.FuelRemains != null && !MyNode.BaseRecipe.ProductSet.ContainsKey(MyNode.FuelRemains) && MyNode.FuelRemains != fuel?.BurnResult)
 				{
 					foreach (NodeLink link in MyNode.OutputLinks.Where(link => link.Item == MyNode.FuelRemains).ToList())
 					{ 
