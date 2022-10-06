@@ -1159,15 +1159,22 @@ namespace Foreman
 				if (MyNode.Fuel != null && !MyNode.BaseRecipe.IngredientSet.ContainsKey(MyNode.Fuel))
 				{
 					foreach (NodeLink link in MyNode.InputLinks.Where(link => link.Item == MyNode.Fuel).ToList())
-					{ 
+					{
 						link.Controller.Delete();
 					}
 				}
-				// only remove fuel remains link if the burn results of the new fuel are different from the old fuel
-				if (MyNode.FuelRemains != null && !MyNode.BaseRecipe.ProductSet.ContainsKey(MyNode.FuelRemains) && MyNode.FuelRemains != fuel.BurnResult )
+				// only remove fuel remains links if the burn results of the new fuel are different from the old fuel
+				// or if the new fuel is null (non-fuel-burning assembler)
+
+				if (MyNode.FuelRemains != null
+					&& !MyNode.BaseRecipe.ProductSet.ContainsKey(MyNode.FuelRemains)
+					&& (
+						(fuel != null && MyNode.FuelRemains != fuel.BurnResult)
+						|| fuel == null)
+				)
 				{
 					foreach (NodeLink link in MyNode.OutputLinks.Where(link => link.Item == MyNode.FuelRemains).ToList())
-					{ 
+					{
 						link.Controller.Delete();
 					}
 				}
