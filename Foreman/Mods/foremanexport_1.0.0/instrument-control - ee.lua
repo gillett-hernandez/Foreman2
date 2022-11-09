@@ -76,7 +76,9 @@ local function ExportRecipes()
 		trecipe = {}
 		trecipe['name'] = recipe.name
 		trecipe['icon_name'] = 'icon.r.' .. recipe.name
-		if recipe.products[1] then
+		if recipe.main_product then
+			trecipe["icon_alt_name"] = 'icon.i.' .. recipe.main_product.name
+		elseif recipe.products[1] then
 			trecipe["icon_alt_name"] = 'icon.i.' .. recipe.products[1].name
 		else
 			trecipe["icon_alt_name"] = 'icon.r.' .. recipe.name
@@ -440,7 +442,7 @@ local function ExportResources()
 			tresource['mining_time'] = resource.mineable_properties.mining_time
 			if resource.mineable_properties.required_fluid then
 				tresource['required_fluid'] = resource.mineable_properties.required_fluid
-				tresource['fluid_amount'] = resource.mineable_properties.fluid_amount
+				tresource['fluid_amount'] = resource.mineable_properties.fluid_amount / 10.0
 			end
 			tresource['name'] = resource.name
 
