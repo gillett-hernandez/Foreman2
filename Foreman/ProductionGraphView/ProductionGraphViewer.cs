@@ -137,10 +137,10 @@ namespace Foreman
 
 		public BaseNodeElement GetNodeAtPoint(Point point) //returns first such node (in case of stacking)
 		{
-			//done in a 2 stage process -> first we do a rough check on the node's location (if it is within the 500x300 zone centered on the given point, it goes to part 2)
+			//done in a 2 stage process -> first we do a rough check on the node's location (if it is within the 800x300 zone centered on the given point, it goes to part 2)
 			//							-> then we do a full element.containsPoint check
 
-			Rectangle initialCheckZone = new Rectangle(point.X - 250, point.Y - 150, 500, 300);
+			Rectangle initialCheckZone = new Rectangle(point.X - 400, point.Y - 150, 800, 300);
 			for (int i = nodeElements.Count - 1; i >= 0; i--)
 			{
 				if (initialCheckZone.Contains(nodeElements[i].Location))
