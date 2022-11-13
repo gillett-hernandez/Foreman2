@@ -1,4 +1,4 @@
-local etable = {}
+local e_table = {}
 
 G_global_index = 0
 local function generate_index()
@@ -32,7 +32,7 @@ local function ExportModList()
 	for name, version in pairs(game.active_mods) do
 		table.insert(t_mods, { ['name'] = name, ['version'] = version })
 	end
-	etable['mods'] = t_mods
+	e_table['mods'] = t_mods
 end
 
 local function ExportResearch()
@@ -58,10 +58,10 @@ local function ExportResearch()
 
 		t_tech['research_unit_ingredients'] = {}
 		for _, ingredient in pairs(tech.research_unit_ingredients) do
-			tingredient = {}
-			tingredient['name'] = ingredient.name
-			tingredient['amount'] = ingredient.amount
-			table.insert(t_tech['research_unit_ingredients'], tingredient)
+			local t_ingredient = {}
+			t_ingredient['name'] = ingredient.name
+			t_ingredient['amount'] = ingredient.amount
+			table.insert(t_tech['research_unit_ingredients'], t_ingredient)
 		end
 		t_tech['research_unit_count'] = tech.research_unit_count
 
@@ -72,7 +72,7 @@ local function ExportResearch()
 
 		table.insert(t_technologies, t_tech)
 	end
-	etable['technologies'] = t_technologies
+	e_table['technologies'] = t_technologies
 end
 
 local function ExportRecipes()
@@ -156,7 +156,7 @@ local function ExportRecipes()
 
 		table.insert(t_recipes, t_recipe)
 	end
-	etable['recipes'] = t_recipes
+	e_table['recipes'] = t_recipes
 end
 
 local function ExportItems()
@@ -206,7 +206,7 @@ local function ExportItems()
 
 		table.insert(t_items, t_item)
 	end
-	etable['items'] = t_items
+	e_table['items'] = t_items
 end
 
 local function ExportFluids()
@@ -234,7 +234,7 @@ local function ExportFluids()
 
 		table.insert(t_fluids, t_fluid)
 	end
-	etable['fluids'] = t_fluids
+	e_table['fluids'] = t_fluids
 end
 
 local function ExportModules()
@@ -262,14 +262,15 @@ local function ExportModules()
 				table.insert(t_module['limitations'], recipe)
 			end
 
-			t_module['lid'] = '$' .. GlobalIndex
-			ExportLocalisedString(module.localised_name, GlobalIndex)
+			local index = generate_index()
+			t_module['lid'] = '$' .. index
+			ExportLocalisedString(module.localised_name, index)
 
 
 			table.insert(t_modules, t_module)
 		end
 	end
-	etable['modules'] = t_modules
+	e_table['modules'] = t_modules
 end
 
 local function ExportEntities()
@@ -440,7 +441,7 @@ local function ExportEntities()
 			table.insert(t_entities, t_entity)
 		end
 	end
-	etable['entities'] = t_entities
+	e_table['entities'] = t_entities
 end
 
 local function ExportResources()
@@ -472,7 +473,7 @@ local function ExportResources()
 					amount = amount * ((product.probability == nil) and 1 or product.probability)
 					tproduct['amount'] = amount
 
-					if product.type == 'fluid' and product.temperate ~= nil then
+					if product.type == 'fluid' and product.temperature ~= nil then
 						tproduct['temperature'] = ProcessTemperature(product.temperature)
 					end
 					table.insert(t_resource['products'], tproduct)
@@ -487,7 +488,7 @@ local function ExportResources()
 			table.insert(t_resources, t_resource)
 		end
 	end
-	etable['resources'] = t_resources
+	e_table['resources'] = t_resources
 end
 
 local function ExportGroups()
@@ -503,13 +504,14 @@ local function ExportGroups()
 			table.insert(t_group['subgroups'], subgroup.name)
 		end
 
-		t_group['lid'] = '$' .. GlobalIndex
-		ExportLocalisedString(group.localised_name, GlobalIndex)
+		local index = generate_index()
+		t_group['lid'] = '$' .. index
+		ExportLocalisedString(group.localised_name, index)
 
 
 		table.insert(t_groups, t_group)
 	end
-	etable['groups'] = t_groups
+	e_table['groups'] = t_groups
 end
 
 local function ExportSubGroups()
@@ -521,7 +523,7 @@ local function ExportSubGroups()
 
 		table.insert(t_subgroups, t_subgroup)
 	end
-	etable['subgroups'] = t_subgroups
+	e_table['subgroups'] = t_subgroups
 end
 
 script.on_nth_tick(1,
@@ -529,7 +531,7 @@ script.on_nth_tick(1,
 
 		game.difficulty_settings.recipe_difficulty = defines.difficulty_settings.recipe_difficulty.expensive
 		game.difficulty_settings.technology_difficulty = defines.difficulty_settings.technology_difficulty.normal
-		etable['difficulty'] = { 1, 0 }
+		e_table['difficulty'] = { 1, 0 }
 
 		localised_print('<<<START-EXPORT-LN>>>')
 
@@ -547,7 +549,7 @@ script.on_nth_tick(1,
 		localised_print('<<<END-EXPORT-LN>>>')
 
 		localised_print('<<<START-EXPORT-P2>>>')
-		localised_print(game.table_to_json(etable))
+		localised_print(game.table_to_json(e_table))
 		localised_print('<<<END-EXPORT-P2>>>')
 
 		ENDEXPORTANDJUSTDIE() -- just the most safe way of ensuring that we export once and quit. Basically... there is no ENDEXPORTANDJUSTDIE function. so lua will throw an expection and the run will end here.
