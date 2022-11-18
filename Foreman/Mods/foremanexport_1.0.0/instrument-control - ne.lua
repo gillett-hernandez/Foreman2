@@ -531,7 +531,7 @@ script.on_nth_tick(1,
 
 		game.difficulty_settings.recipe_difficulty = defines.difficulty_settings.recipe_difficulty.normal
 		game.difficulty_settings.technology_difficulty = defines.difficulty_settings.technology_difficulty.expensive
-		etable['difficulty'] = { 0, 1 }
+		e_table['difficulty'] = { 0, 1 }
 
 		localised_print('<<<START-EXPORT-LN>>>')
 
