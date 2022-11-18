@@ -75,7 +75,15 @@ namespace Foreman
 		public List<Module> BeaconModules { get; private set; }
 
 		public double DesiredAssemblerCount { get; set; }
-		public double ActualAssemblerCount { get { return ActualRatePerSec * BaseRecipe.Time / (SelectedAssembler.Speed * GetSpeedMultiplier()); } }
+		public double ActualAssemblerCount { get {
+				if (SelectedAssembler.Speed == 0)
+				{
+					return 1;
+				}
+				else {
+					return ActualRatePerSec * BaseRecipe.Time / (SelectedAssembler.Speed * GetSpeedMultiplier());
+				}
+			} }
 		public override double DesiredRatePerSec { get { return DesiredAssemblerCount * SelectedAssembler.Speed * GetSpeedMultiplier() / (BaseRecipe.Time); } set { Trace.Fail("Desired rate set on a recipe node!"); } }
 
 		public double ExtraProductivityBonus { get; set; }

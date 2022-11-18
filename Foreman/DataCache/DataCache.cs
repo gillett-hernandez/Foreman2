@@ -954,6 +954,11 @@ namespace Foreman
 						entity.associatedItems.Add((ItemPrototype)items[item]);
 					}
 				}
+				// TODO: add recipes that don't have any associated items to their own bin, like the extraction bin.
+				/* if (entity.associatedItems.Count == 0) {
+					// entity does not have any associated items, and thus would be invisible
+					entity.associatedItems.Add((ItemPrototype)items["default"]);
+				} */
 			}
 
 			//base parameters

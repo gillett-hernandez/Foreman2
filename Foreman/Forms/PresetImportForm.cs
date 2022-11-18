@@ -277,6 +277,8 @@ namespace Foreman
 				process.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
 				process.StartInfo.FileName = exePath;
 
+				process.StartInfo.StandardOutputEncoding = System.Text.Encoding.UTF8;
+
 				progress.Report(new KeyValuePair<int, string>(10, "Running Factorio - creating test save."));
 				process.StartInfo.Arguments = string.Format("--mod-directory \"{0}\" --create temp-save.zip", modsPath);
 				process.StartInfo.UseShellExecute = false;
