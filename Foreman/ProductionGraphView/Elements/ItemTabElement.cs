@@ -57,9 +57,13 @@ namespace Foreman
 		public Point GetConnectionPoint() //in graph coordinates
 		{
 			if ((LinkType == LinkType.Input && DisplayedNode.NodeDirection == NodeDirection.Up) || (LinkType == LinkType.Output && DisplayedNode.NodeDirection == NodeDirection.Down))
+			{
 				return LocalToGraph(new Point(0, Height / 2));
+			}
 			else //if ((LinkType == LinkType.Input && DisplayedNode.NodeDirection == NodeDirection.down) || (LinkType == LinkType.Output && DisplayedNode.NodeDirection == NodeDirection.Up))
+			{
 				return LocalToGraph(new Point(0, -Height / 2));
+			}
 		}
 
 		public void UpdateValues(double recipeRate, double outputRate, bool isOverproduced) //if input then: recipe rate = consume rate; if output then recipe rate = production rate
@@ -74,7 +78,9 @@ namespace Foreman
 				textHeight += 10;
 			}
 			else if (!Links.Any())
+			{
 				borderPen = disconnectedBorderPen;
+			}
 
 			Height = iconSize + textHeight + border + 3;
 		}
@@ -82,7 +88,9 @@ namespace Foreman
 		protected override void Draw(Graphics graphics, NodeDrawingStyle style)
 		{
 			if (style == NodeDrawingStyle.IconsOnly || HideItemTab)
+			{
 				return;
+			}
 
 			Point trans = LocalToGraph(new Point(0, 0));
 
@@ -93,9 +101,13 @@ namespace Foreman
 			if (graphViewer.DynamicLinkWidth || !graphViewer.ArrowsOnLinks)
 			{
 				if (DisplayedNode.NodeDirection == NodeDirection.Up)
+				{
 					graphics.FillPolygon(directionBrush, new Point[] { new Point(trans.X - (Bounds.Width / 2), trans.Y + (Bounds.Height / 2)), new Point(trans.X + (Bounds.Width / 2), trans.Y + (Bounds.Height / 2)), new Point(trans.X, trans.Y - (Bounds.Height / 2)) });
+				}
 				else
+				{
 					graphics.FillPolygon(directionBrush, new Point[] { new Point(trans.X - (Bounds.Width / 2), trans.Y - (Bounds.Height / 2)), new Point(trans.X + (Bounds.Width / 2), trans.Y - (Bounds.Height / 2)), new Point(trans.X, trans.Y + (Bounds.Height / 2)) });
+				}
 			}
 
 			//border
@@ -126,19 +138,28 @@ namespace Foreman
 			if (parentNode.DisplayedNode is ReadOnlyRecipeNode rNode)
 			{
 				if (LinkType == LinkType.Input)
+				{
 					tti.Text = rNode.BaseRecipe.GetIngredientFriendlyName(Item);
+				}
 				else //if(LinkType == LinkType.Output)
+				{
 					tti.Text = rNode.BaseRecipe.GetProductFriendlyName(Item);
+				}
 			}
 			else if ((Item is Fluid fluid) && fluid.IsTemperatureDependent)
 			{
 				fRange tempRange = LinkChecker.GetTemperatureRange(fluid, parentNode.DisplayedNode, (LinkType == LinkType.Input) ? LinkType.Output : LinkType.Input, true); //input type tab means output of connection link and vice versa
 				if (tempRange.Ignore && DisplayedNode is ReadOnlyPassthroughNode)
+				{
 					tempRange = LinkChecker.GetTemperatureRange(fluid, parentNode.DisplayedNode, LinkType, true); //if there was no temp range on this side of this throughput node, try to just copy the other side
+				}
+
 				tti.Text = fluid.GetTemperatureRangeFriendlyName(tempRange);
 			}
 			else
+			{
 				tti.Text = Item.FriendlyName;
+			}
 
 			tti.Direction = ((LinkType == LinkType.Input && DisplayedNode.NodeDirection == NodeDirection.Up) || (LinkType == LinkType.Output && DisplayedNode.NodeDirection == NodeDirection.Down)) ? Direction.Up : Direction.Down;
 			tti.ScreenLocation = graphViewer.GraphToScreen(GetConnectionPoint());
@@ -159,16 +180,23 @@ namespace Foreman
 			{
 				List<ReadOnlyNodeLink> connections = new List<ReadOnlyNodeLink>();
 				if (LinkType == LinkType.Input)
+				{
 					connections.AddRange(DisplayedNode.InputLinks.Where(l => l.Item == Item));
+				}
 				else //if (LinkType == LinkType.Output)
+				{
 					connections.AddRange(DisplayedNode.OutputLinks.Where(l => l.Item == Item));
+				}
 
 				RightClickMenu.Items.Add(new ToolStripMenuItem("Delete connections", null,
 					new EventHandler((o, e) =>
 					{
 						RightClickMenu.Close();
 						foreach (ReadOnlyNodeLink link in connections)
+						{
 							graphViewer.Graph.DeleteLink(link);
+						}
+
 						graphViewer.Graph.UpdateNodeValues();
 					}))
 				{ Enabled = connections.Count > 0 });

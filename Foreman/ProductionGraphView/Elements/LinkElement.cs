@@ -17,7 +17,9 @@ namespace Foreman
 		public LinkElement(ProductionGraphViewer graphViewer, ReadOnlyNodeLink displayedLink, BaseNodeElement supplierElement, BaseNodeElement consumerElement) : base(graphViewer)
 		{
 			if (supplierElement == null || consumerElement == null)
+			{
 				Trace.Fail("Link element being created with one of the connected elements being null!");
+			}
 
 			DisplayedLink = displayedLink;
 			SupplierElement = supplierElement;
@@ -26,7 +28,9 @@ namespace Foreman
 			ConsumerTab = consumerElement.GetInputLineItemTab(Item);
 
 			if (SupplierTab == null || ConsumerTab == null)
+			{
 				Trace.Fail(string.Format("Link element being created with one of the elements ({0}, {1}) not having the required item ({2})!", supplierElement, consumerElement, Item));
+			}
 
 			LinkWidth = 3f;
 			UpdateCurve();

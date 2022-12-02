@@ -49,7 +49,10 @@ namespace Foreman
 			Rectangle ttRect = GraphViewer.ToolTipRenderer.getTooltipScreenBounds(parent.GraphToScreen(graphLocation), control.Size, direction);
 
 			if (!useControlLocation)
+			{
 				control.Location = ttRect.Location;
+			}
+
 			control.Focus();
 		}
 

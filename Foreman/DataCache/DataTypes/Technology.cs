@@ -45,7 +45,9 @@ namespace Foreman
 		public void InternalOneWayAddSciPack(ItemPrototype pack, double quantity)
 		{
 			if (sciPackSet.ContainsKey(pack))
+			{
 				sciPackSet[pack] += quantity;
+			}
 			else
 			{
 				sciPackSet.Add(pack, quantity);

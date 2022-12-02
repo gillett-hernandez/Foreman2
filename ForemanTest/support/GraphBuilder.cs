@@ -161,16 +161,23 @@ namespace ForemanTest
             {
                 var duration = 1;
                 if (name == null)
-                    name = "recipe-" + GetSequence();
+				{
+					name = "recipe-" + GetSequence();
+				}
 
-                RecipePrototype recipe = new RecipePrototype(graph.DCache, name, "", TestSubgroup, "");
+				RecipePrototype recipe = new RecipePrototype(graph.DCache, name, "", TestSubgroup, "");
                 recipe.Time = duration;
                 foreach (KeyValuePair<string, float> kvp in inputs)
-                    recipe.InternalOneWayAddIngredient(graph.DCache.Items[kvp.Key] as ItemPrototype, kvp.Value);
-                foreach (KeyValuePair<string, float> kvp in outputs)
-                    recipe.InternalOneWayAddProduct(graph.DCache.Items[kvp.Key] as ItemPrototype, kvp.Value);
+				{
+					recipe.InternalOneWayAddIngredient(graph.DCache.Items[kvp.Key] as ItemPrototype, kvp.Value);
+				}
 
-                Built = RecipeNode.Create(recipe, graph);
+				foreach (KeyValuePair<string, float> kvp in outputs)
+				{
+					recipe.InternalOneWayAddProduct(graph.DCache.Items[kvp.Key] as ItemPrototype, kvp.Value);
+				}
+
+				Built = RecipeNode.Create(recipe, graph);
                 this.Built.ProductivityBonus = efficiency;
 
                 if (target > 0)

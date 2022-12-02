@@ -32,7 +32,9 @@ namespace Foreman
 
 			FactorioLocationComboBox.Items.AddRange(FactorioPathsProcessor.GetFactorioInstallLocations().ToArray());
 			if (FactorioLocationComboBox.Items.Count > 0)
+			{
 				FactorioLocationComboBox.SelectedIndex = 0;
+			}
 		}
 
 		private void EnableProgressBar(bool enabled)
@@ -57,18 +59,28 @@ namespace Foreman
 			using (FolderBrowserDialog dialog = new FolderBrowserDialog())
 			{
 				if (Directory.Exists(FactorioLocationComboBox.Text))
+				{
 					dialog.SelectedPath = FactorioLocationComboBox.Text;
+				}
 
 				if (dialog.ShowDialog() == DialogResult.OK)
 				{
 					if (File.Exists(Path.Combine(new string[] { dialog.SelectedPath, "bin", "x64", "factorio.exe" })))
+					{
 						FactorioLocationComboBox.Text = dialog.SelectedPath;
+					}
 					else if(File.Exists(Path.Combine(new string[] {dialog.SelectedPath, "x64", "factorio.exe"})))
+					{
 						FactorioLocationComboBox.Text = Path.GetDirectoryName(dialog.SelectedPath);
+					}
 					else if (File.Exists(Path.Combine(dialog.SelectedPath, "factorio.exe")))
+					{
 						FactorioLocationComboBox.Text = Path.GetDirectoryName(Path.GetDirectoryName(dialog.SelectedPath));
+					}
 					else
+					{
 						MessageBox.Show("Selected directory doesnt seem to be a factorio install folder (it should at the very least have \"bin\" and \"data\" folders, along with a \"config-path.cfg\" file)");
+					}
 				}
 			}
 		}
@@ -78,14 +90,20 @@ namespace Foreman
 						using (FolderBrowserDialog dialog = new FolderBrowserDialog())
 			{
 				if (Directory.Exists(ModsLocationComboBox.Text))
+				{
 					dialog.SelectedPath = ModsLocationComboBox.Text;
+				}
 
 				if (dialog.ShowDialog() == DialogResult.OK)
 				{
 					if (File.Exists(Path.Combine(dialog.SelectedPath, "mod-list.json")))
+					{
 						ModsLocationComboBox.Text = dialog.SelectedPath;
+					}
 					else
+					{
 						MessageBox.Show("Selected directory doesnt seem to be a factorio mods folder (it should at the very least have \"mod-list.json\" file)");
+					}
 				}
 			}
 		}
@@ -135,8 +153,12 @@ namespace Foreman
 			string installPath = FactorioLocationComboBox.Text;
 			//quick check to ensure the install path is correct (and accept a direct path to the factorio.exe folder just in case)
 			if (!File.Exists(Path.Combine(new string[] { installPath, "bin", "x64", "factorio.exe" })))
+			{
 				if (File.Exists(Path.Combine(installPath, "factorio.exe")))
+				{
 					installPath = Path.Combine(Path.GetDirectoryName(installPath), @"..\\..\\");
+				}
+			}
 
 			if (!File.Exists(Path.Combine(new string[] { installPath, "bin", "x64", "factorio.exe" })))
 			{
@@ -173,9 +195,14 @@ namespace Foreman
 			var progress = new Progress<KeyValuePair<int, string>>(value =>
 			{
 				if (value.Key > ImportProgressBar.Value)
+				{
 					ImportProgressBar.Value = value.Key;
+				}
+
 				if (!String.IsNullOrEmpty(value.Value) && value.Value != ImportProgressBar.CustomText)
+				{
 					ImportProgressBar.CustomText = value.Value;
+				}
 			}) as IProgress<KeyValuePair<int, string>>;
 			var token = cts.Token;
 
@@ -220,9 +247,14 @@ namespace Foreman
 				try
 				{
 					if (!Directory.Exists(modsPath))
+					{
 						Directory.CreateDirectory(modsPath);
+					}
+
 					if (Directory.Exists(Path.Combine(modsPath, "foremanexport_1.0.0")))
+					{
 						Directory.Delete(Path.Combine(modsPath, "foremanexport_1.0.0"));
+					}
 				}
 				catch (Exception e)
 				{
@@ -244,6 +276,8 @@ namespace Foreman
 				Process process = new Process();
 				process.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
 				process.StartInfo.FileName = exePath;
+
+				process.StartInfo.StandardOutputEncoding = System.Text.Encoding.UTF8;
 
 				progress.Report(new KeyValuePair<int, string>(10, "Running Factorio - creating test save."));
 				process.StartInfo.Arguments = string.Format("--mod-directory \"{0}\" --create temp-save.zip", modsPath);
@@ -276,17 +310,28 @@ namespace Foreman
 				string modListPath = Path.Combine(modsPath, "mod-list.json");
 				JObject modlist = null;
 				if (!File.Exists(modListPath))
+				{
 					modlist = new JObject();
+				}
 				else
+				{
 					modlist = JObject.Parse(File.ReadAllText(modListPath));
+				}
+
 				if (modlist["mods"] == null)
+				{
 					modlist.Add("mods", new JArray());
+				}
 
 				JToken foremanModToken = modlist["mods"].ToList().FirstOrDefault(t => t["name"] != null && (string)t["name"] == "foremanexport");
 				if (foremanModToken == null)
+				{
 					((JArray)modlist["mods"]).Add(new JObject() { { "name", "foremanexport" }, { "enabled", true } });
+				}
 				else
+				{
 					foremanModToken["enabled"] = true;
+				}
 
 				//copy the files as necessary
 				try
@@ -301,16 +346,24 @@ namespace Foreman
 					if (NormalRecipeRButton.Checked)
 					{
 						if (NormalTechnologyRButton.Checked)
+						{
 							File.Copy(Path.Combine(new string[] { "Mods", "foremanexport_1.0.0", "instrument-control - nn.lua" }), Path.Combine(new string[] { modsPath, "foremanexport_1.0.0", "instrument-control.lua" }), true);
+						}
 						else
+						{
 							File.Copy(Path.Combine(new string[] { "Mods", "foremanexport_1.0.0", "instrument-control - ne.lua" }), Path.Combine(new string[] { modsPath, "foremanexport_1.0.0", "instrument-control.lua" }), true);
+						}
 					}
 					else
 					{
 						if (NormalTechnologyRButton.Checked)
+						{
 							File.Copy(Path.Combine(new string[] { "Mods", "foremanexport_1.0.0", "instrument-control - en.lua" }), Path.Combine(new string[] { modsPath, "foremanexport_1.0.0", "instrument-control.lua" }), true);
+						}
 						else
+						{
 							File.Copy(Path.Combine(new string[] { "Mods", "foremanexport_1.0.0", "instrument-control - ee.lua" }), Path.Combine(new string[] { modsPath, "foremanexport_1.0.0", "instrument-control.lua" }), true);
+						}
 					}
 				}
 				catch (Exception e)
@@ -347,9 +400,14 @@ namespace Foreman
 				}
 
 				if (File.Exists("temp-save.zip"))
+				{
 					File.Delete("temp-save.zip");
+				}
+
 				if (Directory.Exists(Path.Combine(modsPath, "foremanexport_1.0.0")))
+				{
 					Directory.Delete(Path.Combine(modsPath, "foremanexport_1.0.0"), true);
+				}
 
 				progress.Report(new KeyValuePair<int, string>(25, "Processing mod files."));
 
@@ -381,7 +439,9 @@ namespace Foreman
 				string[] lnames = lnamesString.Split('\n'); //keep empties - we know where they are!
 				Dictionary<string, string> localisedNames = new Dictionary<string, string>(); //this is the link between the 'lid' property and the localised names in dataString
 				for (int i = 0; i < lnames.Length / 2; i++)
+				{
 					localisedNames.Add('$' + i.ToString(), lnames[(i * 2) + 1].Replace("Unknown key: \"", "").Replace("\"", ""));
+				}
 
 #if DEBUG
 				File.WriteAllText(Path.Combine(Application.StartupPath, "_iconJObjectOut.json"), iconString.ToString());
@@ -436,7 +496,9 @@ namespace Foreman
 				//now we need to process icons. This is done by the IconProcessor.
 				Dictionary<string, string> modSet = new Dictionary<string, string>();
 				foreach (var objJToken in dataJObject["mods"].ToList())
+				{
 					modSet.Add(((string)objJToken["name"]).ToLower(), (string)objJToken["version"]);
+				}
 
 				using (IconCacheProcessor icProcessor = new IconCacheProcessor())
 				{
@@ -479,17 +541,29 @@ namespace Foreman
 			NewPresetName = "";
 
 			if (File.Exists("temp-save.zip"))
+			{
 				File.Delete("temp-save.zip");
+			}
 
 			if (modsPath != "" && Directory.Exists(Path.Combine(modsPath, "foremanexport_1.0.0")))
+			{
 				Directory.Delete(Path.Combine(modsPath, "foremanexport_1.0.0"), true);
+			}
 
 			if (presetPath != "" && File.Exists(Path.Combine(Application.StartupPath, presetPath + ".pjson")))
+			{
 				File.Delete(Path.Combine(Application.StartupPath, presetPath + ".pjson"));
+			}
+
 			if (presetPath != "" && File.Exists(Path.Combine(Application.StartupPath, presetPath + ".json")))
+			{
 				File.Delete(Path.Combine(Application.StartupPath, presetPath + ".json"));
+			}
+
 			if (presetPath != "" && File.Exists(Path.Combine(Application.StartupPath, presetPath + ".dat")))
+			{
 				File.Delete(Path.Combine(Application.StartupPath, presetPath + ".dat"));
+			}
 		}
 
 		private void PresetNameTextBox_TextChanged(object sender, EventArgs e)
@@ -505,11 +579,17 @@ namespace Foreman
 
 			List<Preset> existingPresets = MainForm.GetValidPresetsList();
 			if (filteredText.Length < 5)
+			{
 				PresetNameTextBox.BackColor = Color.Moccasin;
+			}
 			else if (existingPresets.Any(p => p.Name.ToLower() == filteredText.ToLower()))
+			{
 				PresetNameTextBox.BackColor = Color.Pink;
+			}
 			else
+			{
 				PresetNameTextBox.BackColor = Color.LightGreen;
+			}
 		}
 	}
 }

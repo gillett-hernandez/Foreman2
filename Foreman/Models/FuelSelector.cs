@@ -12,7 +12,9 @@ namespace Foreman
 		public void LoadFuelPriority(List<Item> fuelList)
 		{
 			foreach (Item fuel in fuelList)
+			{
 				UseFuel(fuel);
+			}
 		}
 
 		public void ClearFuels()
@@ -23,7 +25,9 @@ namespace Foreman
 		public void UseFuel(Item fuel)
 		{
 			if (fuel == null)
+			{
 				return;
+			}
 
 			fuelPriority.Remove(fuel);
 			fuelPriority.Add(fuel);
@@ -32,7 +36,9 @@ namespace Foreman
 		public Item GetFuel(Assembler assembler)
 		{
 			if (assembler == null || !assembler.IsBurner)
+			{
 				return null;
+			}
 
 			//check for valid fuel in order from highest standards to lowest
 			Item fuel = assembler.Fuels.OrderBy(item => item.Available)
@@ -44,7 +50,10 @@ namespace Foreman
 				.LastOrDefault();
 
 			if (fuel != null)
+			{
 				UseFuel(fuel);
+			}
+
 			return fuel;
 		}
 

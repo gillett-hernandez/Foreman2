@@ -15,13 +15,18 @@ namespace Foreman
 			Dictionary<string, string> mods = new Dictionary<string, string>();
 			string presetPath = Path.Combine(new string[] { Application.StartupPath, "Presets", preset.Name + ".pjson" });
 			if (!File.Exists(presetPath))
+			{
 				return new PresetInfo(null, false, false);
+			}
 
 			try
 			{
 				JObject jsonData = JObject.Parse(File.ReadAllText(presetPath));
 				foreach (var objJToken in jsonData["mods"].ToList())
+				{
 					mods.Add((string)objJToken["name"], (string)objJToken["version"]);
+				}
+
 				return new PresetInfo(mods, (int)jsonData["difficulty"][0] == 1, (int)jsonData["difficulty"][1] == 1);
 			}
 			catch
@@ -48,10 +53,16 @@ namespace Foreman
 					{
 						JObject presetItemToken = (JObject)jsonData[groupToken.Key].FirstOrDefault(t => (string)t["name"] == (string)itemToken["name"]);
 						if (presetItemToken != null)
+						{
 							foreach (var parameter in itemToken)
+							{
 								presetItemToken[parameter.Key] = parameter.Value;
+							}
+						}
 						else
+						{
 							((JArray)jsonData[groupToken.Key]).Add(itemToken);
+						}
 					}
 				}
 			}
@@ -77,7 +88,9 @@ namespace Foreman
 		{
 			string presetPath = Path.Combine(new string[] { Application.StartupPath, "Presets", preset.Name + ".pjson" });
 			if (!File.Exists(presetPath))
+			{
 				return null;
+			}
 
 			DataCache presetCache = new DataCache(Properties.Settings.Default.UseRecipeBWfilters);
 			await presetCache.LoadAllData(preset, null, false);
@@ -89,20 +102,30 @@ namespace Foreman
 				errors.RequiredMods.Add(mod.Key + "|" + mod.Value);
 
 				if (!presetCache.IncludedMods.ContainsKey(mod.Key))
+				{
 					errors.MissingMods.Add(mod.Key + "|" + mod.Value);
+				}
 				else if (presetCache.IncludedMods[mod.Key] != mod.Value)
+				{
 					errors.WrongVersionMods.Add(mod.Key + "|" + mod.Value + "|" + presetCache.IncludedMods[mod.Key]);
+				}
 			}
 			foreach (var mod in presetCache.IncludedMods)
+			{
 				if (!modList.ContainsKey(mod.Key))
+				{
 					errors.AddedMods.Add(mod.Key + "|" + mod.Value);
+				}
+			}
 
 			foreach (string itemName in itemList)
 			{
 				errors.RequiredItems.Add(itemName);
 
 				if (!presetCache.Items.ContainsKey(itemName))
+				{
 					errors.MissingItems.Add(itemName);
+				}
 			}
 
 			foreach (RecipeShort recipeS in recipeShorts)
@@ -111,16 +134,24 @@ namespace Foreman
 				if (recipeS.isMissing)
 				{
 					if (presetCache.Recipes.ContainsKey(recipeS.Name) && recipeS.Equals(presetCache.Recipes[recipeS.Name]))
+					{
 						errors.ValidMissingRecipes.Add(recipeS.Name);
+					}
 					else
+					{
 						errors.IncorrectRecipes.Add(recipeS.Name);
+					}
 				}
 				else
 				{
 					if (!presetCache.Recipes.ContainsKey(recipeS.Name))
+					{
 						errors.MissingRecipes.Add(recipeS.Name);
+					}
 					else if (!recipeS.Equals(presetCache.Recipes[recipeS.Name]))
+					{
 						errors.IncorrectRecipes.Add(recipeS.Name);
+					}
 				}
 			}
 
@@ -155,13 +186,24 @@ namespace Foreman
 
 			//read in mods, items and entities
 			foreach (var objJToken in jsonData["mods"].ToList())
+			{
 				presetMods.Add((string)objJToken["name"], (string)objJToken["version"]);
+			}
+
 			foreach (var objJToken in jsonData["items"].ToList())
+			{
 				presetItems.Add((string)objJToken["name"]);
+			}
+
 			foreach (var objJToken in jsonData["fluids"].ToList())
+			{
 				presetItems.Add((string)objJToken["name"]);
+			}
+
 			foreach (var objJToken in jsonData["entities"].ToList())
+			{
 				presetEntities.Add((string)objJToken["name"]);
+			}
 
 			//read in recipes
 			foreach (var objJToken in jsonData["recipes"].ToList())
@@ -175,9 +217,13 @@ namespace Foreman
 					{
 						string ingredientName = (string)ingredientJToken["name"];
 						if (recipe.Ingredients.ContainsKey(ingredientName))
+						{
 							recipe.Ingredients[ingredientName] +=amount;
+						}
 						else
+						{
 							recipe.Ingredients.Add(ingredientName, amount);
+						}
 					}
 				}
 				foreach (var productJToken in objJToken["products"].ToList())
@@ -188,9 +234,13 @@ namespace Foreman
 
 						string productName = (string)productJToken["name"];
 						if (recipe.Products.ContainsKey(productName))
+						{
 							recipe.Products[productName] += amount;
+						}
 						else
+						{
 							recipe.Products.Add(productName, amount);
+						}
 					}
 				}
 				presetRecipes.Add(recipe.Name, recipe);
@@ -200,7 +250,9 @@ namespace Foreman
 			foreach (var objJToken in jsonData["resources"])
 			{
 				if (objJToken["products"].Count() == 0)
+				{
 					continue;
+				}
 
 				RecipeShort recipe = new RecipeShort("§§r:e:" + (string)objJToken["name"]);
 
@@ -211,16 +263,24 @@ namespace Foreman
 					{
 						string productName = (string)productJToken["name"];
 						if (recipe.Products.ContainsKey(productName))
+						{
 							recipe.Products[productName] += amount;
+						}
 						else
+						{
 							recipe.Products.Add(productName, amount);
+						}
 					}
 				}
 				if (recipe.Products.Count == 0)
+				{
 					continue;
+				}
 
 				if (objJToken["required_fluid"] != null && (double)objJToken["fluid_amount"] != 0)
+				{
 					recipe.Ingredients.Add((string)objJToken["required_fluid"], (double)objJToken["fluid_amount"]);
+				}
 
 				presetRecipes.Add(recipe.Name, recipe);
 			}
@@ -235,12 +295,16 @@ namespace Foreman
 					recipe.Products.Add(fluidName, 60);
 
 					if (!presetRecipes.ContainsKey(recipe.Name))
+					{
 						presetRecipes.Add(recipe.Name, recipe);
+					}
 				}
 				else if (type == "boiler")
 				{
 					if (objJToken["fluid_ingredient"] == null || objJToken["fluid_product"] == null)
+					{
 						continue;
+					}
 
 					double temp = (double)objJToken["target_temperature"];
 					string ingredient = (string)objJToken["fluid_ingredient"];
@@ -251,12 +315,16 @@ namespace Foreman
 					recipe.Products.Add(product, 60);
 
 					if (!presetRecipes.ContainsKey(recipe.Name))
+					{
 						presetRecipes.Add(recipe.Name, recipe);
+					}
 				}
 				else if (type == "generator")
 				{
 					if (objJToken["fluid_ingredient"] == null)
+					{
 						continue;
+					}
 
 					string ingredient = (string)objJToken["fluid_ingredient"];
 					double minTemp = (double)(objJToken["minimum_temperature"] ?? double.NaN);
@@ -265,7 +333,9 @@ namespace Foreman
 					recipe.Ingredients.Add(ingredient, 60);
 
 					if (!presetRecipes.ContainsKey(recipe.Name))
+					{
 						presetRecipes.Add(recipe.Name, recipe);
+					}
 				}
 			}
 
@@ -282,13 +352,17 @@ namespace Foreman
 						double amount = (double)productJToken["amount"];
 						int productStack = (int)(jsonData["items"].First(t => (string)t["name"] == (string)productJToken["name"])["stack"]?? 1);
 						if (amount != 0 && inputSize * amount > productStack)
+						{
 							inputSize = (int)(productStack / amount);
+						}
 					}
 					foreach (var productJToken in objJToken["launch_products"])
 					{
 						double amount = (double)productJToken["amount"];
 						if (amount != 0)
+						{
 							recipe.Products.Add((string)productJToken["name"], amount * inputSize);
+						}
 					}
 
 					recipe.Ingredients.Add((string)objJToken["name"], inputSize);
@@ -305,20 +379,30 @@ namespace Foreman
 				errors.RequiredMods.Add(mod.Key + "|" + mod.Value);
 
 				if (!presetMods.ContainsKey(mod.Key))
+				{
 					errors.MissingMods.Add(mod.Key + "|" + mod.Value);
+				}
 				else if (presetMods[mod.Key] != mod.Value)
+				{
 					errors.WrongVersionMods.Add(mod.Key + "|" + mod.Value + "|" + presetMods[mod.Key]);
+				}
 			}
 			foreach (var mod in presetMods)
+			{
 				if (!modList.ContainsKey(mod.Key))
+				{
 					errors.AddedMods.Add(mod.Key + "|" + mod.Value);
+				}
+			}
 
 			foreach (string itemName in itemList)
 			{
 				errors.RequiredItems.Add(itemName);
 
 				if (!presetItems.Contains(itemName))
+				{
 					errors.MissingItems.Add(itemName);
+				}
 			}
 
 			foreach (RecipeShort recipeS in recipeShorts)
@@ -327,16 +411,24 @@ namespace Foreman
 				if (recipeS.isMissing)
 				{
 					if (presetRecipes.ContainsKey(recipeS.Name) && recipeS.Equals(presetRecipes[recipeS.Name]))
+					{
 						errors.ValidMissingRecipes.Add(recipeS.Name);
+					}
 					else
+					{
 						errors.IncorrectRecipes.Add(recipeS.Name);
+					}
 				}
 				else
 				{
 					if (!presetRecipes.ContainsKey(recipeS.Name))
+					{
 						errors.MissingRecipes.Add(recipeS.Name);
+					}
 					else if (!recipeS.Equals(presetRecipes[recipeS.Name]))
+					{
 						errors.IncorrectRecipes.Add(recipeS.Name);
+					}
 				}
 			}
 

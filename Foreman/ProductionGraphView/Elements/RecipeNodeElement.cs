@@ -74,23 +74,38 @@ namespace Foreman
 			foreach (ItemTabElement oldTab in InputTabs.Where(tab => !DisplayedNode.Inputs.Contains(tab.Item)).ToList())
 			{
 				foreach (ReadOnlyNodeLink link in DisplayedNode.InputLinks.Where(link => link.Item == oldTab.Item).ToList())
+				{
 					graphViewer.Graph.DeleteLink(link);
+				}
+
 				InputTabs.Remove(oldTab);
 				oldTab.Dispose();
 			}
 			foreach (ItemTabElement oldTab in OutputTabs.Where(tab => !DisplayedNode.Outputs.Contains(tab.Item)).ToList())
 			{
 				foreach (ReadOnlyNodeLink link in DisplayedNode.OutputLinks.Where(link => link.Item == oldTab.Item).ToList())
+				{
 					graphViewer.Graph.DeleteLink(link);
+				}
+
 				OutputTabs.Remove(oldTab);
 				oldTab.Dispose();
 			}
 			foreach (Item item in DisplayedNode.Inputs)
+			{
 				if (!InputTabs.Any(tab => tab.Item == item))
+				{
 					InputTabs.Add(new ItemTabElement(item, LinkType.Input, graphViewer, this));
+				}
+			}
+
 			foreach (Item item in DisplayedNode.Outputs)
+			{
 				if (!OutputTabs.Any(tab => tab.Item == item))
+				{
 					OutputTabs.Add(new ItemTabElement(item, LinkType.Output, graphViewer, this));
+				}
+			}
 
 			base.UpdateState();
 		}
@@ -118,7 +133,10 @@ namespace Foreman
 				pModules += extraProductivity ? 1 : 0;
 
 				for (int i = 0; i < pModules && i < 6; i++)
+				{
 					graphics.DrawEllipse((extraProductivity && i == 0) ? extraProductivityPen : productivityPen, trans.X - (Width / 2) - 1, trans.Y - (Height / 2) + 10 + i * 12, 6, 6);
+				}
+
 				if (pModules > 6)
 				{
 					graphics.DrawLine(productivityPlusPen, trans.X - (Width / 2) - 4, trans.Y - (Height / 2) + 84, trans.X - (Width / 2) + 8, trans.Y - (Height / 2) + 84);
@@ -137,7 +155,9 @@ namespace Foreman
 			{
 				List<ReadOnlyRecipeNode> rNodes = new List<ReadOnlyRecipeNode>(graphViewer.SelectedNodes.Where(ne => ne is RecipeNodeElement).Select(ne => (ReadOnlyRecipeNode)ne.DisplayedNode));
 				if (!rNodes.Contains(this.DisplayedNode))
+				{
 					rNodes.Add((ReadOnlyRecipeNode)this.DisplayedNode);
+				}
 
 				RightClickMenu.Items.Add(new ToolStripSeparator());
 
@@ -146,31 +166,44 @@ namespace Foreman
 					{
 						RightClickMenu.Close();
 						foreach (ReadOnlyRecipeNode rNode in rNodes)
+						{
 							((RecipeNodeController)graphViewer.Graph.RequestNodeController(rNode)).AutoSetAssembler();
+						}
 					})));
 				RightClickMenu.Items.Add(new ToolStripMenuItem("Apply default modules", null,
 					new EventHandler((o, e) =>
 					{
 						RightClickMenu.Close();
 						foreach (ReadOnlyRecipeNode rNode in rNodes)
+						{
 							((RecipeNodeController)graphViewer.Graph.RequestNodeController(rNode)).AutoSetAssemblerModules();
+						}
 					})));
 				if (rNodes.Any(rn => rn.AssemblerModules.Count > 0))
+				{
 					RightClickMenu.Items.Add(new ToolStripMenuItem("Remove modules", null,
 						new EventHandler((o, e) =>
 						{
 							RightClickMenu.Close();
 							foreach (ReadOnlyRecipeNode rNode in rNodes)
+							{
 								((RecipeNodeController)graphViewer.Graph.RequestNodeController(rNode)).SetAssemblerModules(null, false);
+							}
 						})));
+				}
+
 				if (rNodes.Any(rn => rn.SelectedBeacon != null))
+				{
 					RightClickMenu.Items.Add(new ToolStripMenuItem("Remove beacons", null,
 						new EventHandler((o, e) =>
 						{
 							RightClickMenu.Close();
 							foreach (ReadOnlyRecipeNode rNode in rNodes)
+							{
 								((RecipeNodeController)graphViewer.Graph.RequestNodeController(rNode)).SetBeacon(null);
+							}
 						})));
+				}
 
 				RightClickMenu.Items.Add(new ToolStripSeparator());
 				NodeCopyOptions copiedOptions = NodeCopyOptions.GetNodeCopyOptions(Clipboard.GetText(), graphViewer.DCache);
@@ -195,25 +228,80 @@ namespace Foreman
 						ToolStripMenuItem beaconCheck = new ToolStripMenuItem("Beacon") { CheckOnClick = true, Checked = canPasteBeacon && OptionsCopyBeaconDefault, Enabled = canPasteBeacon, Tag = "CheckBox" };
 						ToolStripMenuItem beaconModuleCheck = new ToolStripMenuItem("Beacon Modules") { CheckOnClick = true, Checked = canPasteBeacon && OptionsCopyBeaconModulesDefault, Enabled = canPasteBeacon, Tag = "CheckBox" };
 
-						if (canPasteAssembler) RightClickMenu.Items.Add(assemblerCheck);
-						if (canPasteExtraProductivityMiners) RightClickMenu.Items.Add(extraProductivityMinersCheck);
-						if (canPasteExtraProductivityNonMiners) RightClickMenu.Items.Add(extraProductivityNonMinersCheck);
-						if (canPasteFuel) RightClickMenu.Items.Add(fuelCheck);
-						if (canPasteModules) RightClickMenu.Items.Add(modulesCheck);
-						if (canPasteBeacon) RightClickMenu.Items.Add(beaconCheck);
-						if (canPasteBeacon) RightClickMenu.Items.Add(beaconModuleCheck);
+						if (canPasteAssembler)
+						{
+							RightClickMenu.Items.Add(assemblerCheck);
+						}
+
+						if (canPasteExtraProductivityMiners)
+						{
+							RightClickMenu.Items.Add(extraProductivityMinersCheck);
+						}
+
+						if (canPasteExtraProductivityNonMiners)
+						{
+							RightClickMenu.Items.Add(extraProductivityNonMinersCheck);
+						}
+
+						if (canPasteFuel)
+						{
+							RightClickMenu.Items.Add(fuelCheck);
+						}
+
+						if (canPasteModules)
+						{
+							RightClickMenu.Items.Add(modulesCheck);
+						}
+
+						if (canPasteBeacon)
+						{
+							RightClickMenu.Items.Add(beaconCheck);
+						}
+
+						if (canPasteBeacon)
+						{
+							RightClickMenu.Items.Add(beaconModuleCheck);
+						}
+
 						RightClickMenu.Items.Add(new ToolStripSeparator());
 						RightClickMenu.Items.Add(new ToolStripMenuItem("Paste selected options", null,
 							new EventHandler((o, e) =>
 							{
 								RightClickMenu.Close();
-								if (canPasteAssembler) OptionsCopyAssemblerDefault = assemblerCheck.Checked;
-								if (canPasteExtraProductivityMiners) OptionsCopyExtraProductivityMinersDefault = extraProductivityMinersCheck.Checked;
-								if (canPasteExtraProductivityNonMiners) OptionsCopyExtraProductivityNonMinersDefault = extraProductivityNonMinersCheck.Checked;
-								if (canPasteFuel) OptionsCopyFuelDefault = fuelCheck.Checked;
-								if (canPasteModules) OptionsCopyModulesDefault = modulesCheck.Checked;
-								if (canPasteBeacon) OptionsCopyBeaconDefault = beaconCheck.Checked;
-								if (canPasteBeacon) OptionsCopyBeaconModulesDefault = beaconCheck.Checked;
+								if (canPasteAssembler)
+								{
+									OptionsCopyAssemblerDefault = assemblerCheck.Checked;
+								}
+
+								if (canPasteExtraProductivityMiners)
+								{
+									OptionsCopyExtraProductivityMinersDefault = extraProductivityMinersCheck.Checked;
+								}
+
+								if (canPasteExtraProductivityNonMiners)
+								{
+									OptionsCopyExtraProductivityNonMinersDefault = extraProductivityNonMinersCheck.Checked;
+								}
+
+								if (canPasteFuel)
+								{
+									OptionsCopyFuelDefault = fuelCheck.Checked;
+								}
+
+								if (canPasteModules)
+								{
+									OptionsCopyModulesDefault = modulesCheck.Checked;
+								}
+
+								if (canPasteBeacon)
+								{
+									OptionsCopyBeaconDefault = beaconCheck.Checked;
+								}
+
+								if (canPasteBeacon)
+								{
+									OptionsCopyBeaconModulesDefault = beaconCheck.Checked;
+								}
 
 								foreach (ReadOnlyRecipeNode rNode in rNodes)
 								{
@@ -225,23 +313,33 @@ namespace Foreman
 										controller.SetAssembler(copiedOptions.Assembler);
 										assemblerFilter = true;
 										if (rNode.SelectedAssembler.EntityType == EntityType.Reactor)
+										{
 											controller.SetNeighbourCount(copiedOptions.NeighbourCount);
+										}
 									}
 
 									if (extraProductivityMinersCheck.Checked && rNode.SelectedAssembler.EntityType == EntityType.Miner)
+									{
 										controller.SetExtraProductivityBonus(copiedOptions.ExtraProductivityBonus);
-									if (extraProductivityNonMinersCheck.Checked && rNode.SelectedAssembler.EntityType != EntityType.Miner)
-										controller.SetExtraProductivityBonus(copiedOptions.ExtraProductivityBonus);
+									}
 
+									if (extraProductivityNonMinersCheck.Checked && rNode.SelectedAssembler.EntityType != EntityType.Miner)
+									{
+										controller.SetExtraProductivityBonus(copiedOptions.ExtraProductivityBonus);
+									}
 
 									if (fuelCheck.Checked && rNode.SelectedAssembler.Fuels.Contains(copiedOptions.Fuel)) //fuel fits the given recipe node
-									controller.SetFuel(copiedOptions.Fuel);
+									{
+										controller.SetFuel(copiedOptions.Fuel);
+									}
 
 									if (modulesCheck.Checked)
 									{
 										HashSet<Module> acceptableAssemblerModules = new HashSet<Module>(rNode.BaseRecipe.Modules.Intersect(rNode.SelectedAssembler.Modules));
 										if (!copiedOptions.AssemblerModules.Any(module => !acceptableAssemblerModules.Contains(module))) //all modules we copied can be added to the selected recipe/assembler
-										controller.SetAssemblerModules(copiedOptions.AssemblerModules, true);
+										{
+											controller.SetAssemblerModules(copiedOptions.AssemblerModules, true);
+										}
 									}
 
 									if (beaconCheck.Checked && rNode.BaseRecipe.Modules.Intersect(rNode.SelectedAssembler.Modules).Count() > 0)
@@ -256,7 +354,9 @@ namespace Foreman
 									{
 										HashSet<Module> acceptableBeaconModules = new HashSet<Module>(rNode.BaseRecipe.Modules.Intersect(rNode.SelectedAssembler.Modules).Intersect(rNode.SelectedBeacon.Modules));
 										if (!copiedOptions.BeaconModules.Any(module => !acceptableBeaconModules.Contains(module)))
+										{
 											controller.SetBeaconModules(copiedOptions.BeaconModules, true);
+										}
 									}
 								}
 
@@ -268,7 +368,9 @@ namespace Foreman
 				}
 			}
 			else
+			{
 				RightClickMenu.Items.Add(new ToolStripSeparator());
+			}
 
 			RightClickMenu.Items.Add(new ToolStripMenuItem("Copy this assembler's options", null,
 				new EventHandler((o, e) =>

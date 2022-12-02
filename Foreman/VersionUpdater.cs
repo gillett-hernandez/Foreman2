@@ -40,7 +40,9 @@ namespace Foreman
 					updated["EnabledRecipes"] = original["EnabledRecipes"];
 					updated["EnabledAssemblers"] = original["EnabledAssemblers"];
 					foreach (string miner in original["EnabledMiners"].Select(t => (string)t))
+					{
 						((JArray)updated["EnabledAssemblers"]).Add(miner);
+					}
 
 					updated["EnabledModules"] = original["EnabledModules"];
 					updated["EnabledBeacons"] = new JArray();
@@ -61,9 +63,15 @@ namespace Foreman
 					//item processing
 					HashSet<string> includedItems = new HashSet<string>();
 					foreach (string item in original["Nodes"].Where(t => (string)t["NodeType"] == "PassThrough" || (string)t["NodeType"] == "Supply" || (string)t["NodeType"] == "Consumer").Select(t => (string)t["ItemName"]))
+					{
 						includedItems.Add(item);
+					}
+
 					foreach (string item in original["NodeLinks"].Select(t => (string)t["Item"]))
+					{
 						includedItems.Add(item);
+					}
+
 					updatedGraph["IncludedItems"] = new JArray(includedItems);
 
 					//recipe processing
@@ -81,7 +89,9 @@ namespace Foreman
 						{
 							recipeNames.Add(i, (string)node["RecipeName"]);
 							if(!recipeFossils.ContainsKey((string)node["RecipeName"]))
+							{
 								recipeFossils.Add((string)node["RecipeName"], new Tuple<HashSet<string>, HashSet<string>>(new HashSet<string>(), new HashSet<string>()));
+							}
 						}
 					}
 
@@ -91,9 +101,14 @@ namespace Foreman
 						int consumerId = (int)link["Consumer"];
 						string item = (string)link["Item"];
 						if (recipeNames.ContainsKey(consumerId))
+						{
 							recipeFossils[recipeNames[consumerId]].Item1.Add(item);
+						}
+
 						if (recipeNames.ContainsKey(supplierId))
+						{
 							recipeFossils[recipeNames[supplierId]].Item2.Add(item);
+						}
 					}
 
 					foreach(var recipeFossil in recipeFossils)
@@ -105,18 +120,28 @@ namespace Foreman
 							Recipe recipe = cache.Recipes[recipeFossil.Key];
 							bool fits = true;
 							foreach (string ingredient in recipeFossil.Value.Item1)
+							{
 								fits &= cache.Items.ContainsKey(ingredient) && recipe.IngredientSet.ContainsKey(cache.Items[ingredient]);
+							}
+
 							foreach (string product in recipeFossil.Value.Item2)
+							{
 								fits &= cache.Items.ContainsKey(product) && recipe.ProductSet.ContainsKey(cache.Items[product]);
-							if(fits)
+							}
+
+							if (fits)
 							{
 								JObject ingredients = new JObject();
 								foreach (Item ingredient in recipe.IngredientList)
+								{
 									ingredients[ingredient.Name] = recipe.IngredientSet[ingredient];
-								
+								}
+
 								JObject products = new JObject();
 								foreach (Item product in recipe.ProductList)
+								{
 									products[product.Name] = recipe.ProductSet[product];
+								}
 
 								includedRecipe = new JObject
 								{
@@ -133,11 +158,15 @@ namespace Foreman
 						{
 							JObject ingredients = new JObject();
 							foreach (string ingredient in recipeFossil.Value.Item1)
+							{
 								ingredients[ingredient] = 1;
+							}
 
 							JObject products = new JObject();
 							foreach (string product in recipeFossil.Value.Item2)
+							{
 								products[product] = 1;
+							}
 
 							includedRecipe = new JObject()
 							{
@@ -170,7 +199,9 @@ namespace Foreman
 							{"Location", nodeLocations[i] }
 						};
 						if ((int)newNode["RateType"] == (int)RateType.Manual)
+						{
 							newNode["DesiredRate"] = (double)originalNode["DesiredRate"];
+						}
 
 						processedNodeIDs.Add(i);
 						switch((string)originalNode["NodeType"])
@@ -217,12 +248,14 @@ namespace Foreman
 						string item = (string)link["Item"];
 
 						if (processedNodeIDs.Contains(supplierId) && processedNodeIDs.Contains(consumerId))
+						{
 							nodeLinks.Add(new JObject
 							{
 								{"SupplierID", supplierId },
 								{"ConsumerID", consumerId },
 								{"Item", item }
 							});
+						}
 					}
 					original = updated;
 				}
@@ -269,7 +302,9 @@ namespace Foreman
 				original["Version"] = 2;
 
 				foreach (JToken nodeJToken in original["Nodes"].Where(jt => (NodeType)(int)jt["NodeType"] == NodeType.Recipe).ToList())
+				{
 					nodeJToken["ExtraProductivity"] = 0;
+				}
 			}
 
 			if ((int)original["Version"] == 2)
@@ -279,7 +314,9 @@ namespace Foreman
 				original["Version"] = 3;
 
 				foreach (JToken nodeJToken in original["Nodes"].ToList())
+				{
 					nodeJToken["Direction"] = (int)NodeDirection.Up;
+				}
 			}
 
 			if ((int)original["Version"] == 3)
@@ -289,7 +326,9 @@ namespace Foreman
 				original["Version"] = 4;
 
 				foreach (JToken nodeJToken in original["Nodes"].Where(n => (NodeType)(int)n["NodeType"] == NodeType.Passthrough).ToList())
+				{
 					nodeJToken["SDraw"] = true;
+				}
 			}
 
 			if ((int)original["Version"] == 4)

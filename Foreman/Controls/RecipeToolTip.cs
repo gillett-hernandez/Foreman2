@@ -122,7 +122,10 @@ namespace Foreman
 		public static int GetRecipeToolTipHeight(Recipe recipe)
 		{
 			if (recipe == null)
+			{
 				return 110;
+			}
+
 			return RecipePainter.GetSize(new Recipe[] { recipe }).Height;
 		}
 	}

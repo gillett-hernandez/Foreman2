@@ -107,13 +107,22 @@ namespace Foreman
 		public double GetBaseFuelConsumptionRate(Item fuel, double temperature = double.NaN)
 		{
 			if ((EnergySource != EnergySource.Burner && EnergySource != EnergySource.FluidBurner && EnergySource != EnergySource.Heat))
+			{
 				Trace.Fail(string.Format("Cant ask for fuel consumption rate on a non-burner! {0}", this));
+			}
 			else if (!fuels.Contains(fuel))
+			{
 				Trace.Fail(string.Format("Invalid fuel! {0} for entity {1}", fuel, this));
+			}
 			else if (!IsTemperatureFluidBurner)
+			{
 				return EnergyConsumption / (fuel.FuelValue * ConsumptionEffectivity);
+			}
 			else if (!double.IsNaN(temperature) && (fuel is Fluid fluidFuel) && (temperature > fluidFuel.DefaultTemperature) && (fluidFuel.SpecificHeatCapacity > 0)) //temperature burn of liquid
+			{
 				return EnergyConsumption / ((temperature - fluidFuel.DefaultTemperature) * fluidFuel.SpecificHeatCapacity * ConsumptionEffectivity);
+			}
+
 			return 0.01; // we cant have a 0 consumption rate as that would mess with the solver.
 		}
 

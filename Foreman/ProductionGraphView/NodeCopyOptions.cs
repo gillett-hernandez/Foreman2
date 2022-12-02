@@ -60,7 +60,9 @@ namespace Foreman
 		public static NodeCopyOptions GetNodeCopyOptions(JToken json, DataCache cache)
 		{
 			if (json["Version"] == null || (int)json["Version"] != Properties.Settings.Default.ForemanVersion || json["Object"] == null || (string)json["Object"] != "NodeCopyOptions")
+			{
 				return null;
+			}
 
 			bool beacons = json["Beacon"] != null;
 			NodeCopyOptions nco = new NodeCopyOptions(
@@ -89,7 +91,9 @@ namespace Foreman
 			info.AddValue("BModules", BeaconModules.Select(m => m.Name));
 
 			if (Fuel != null)
+			{
 				info.AddValue("Fuel", Fuel.Name);
+			}
 
 			if (Beacon != null)
 			{

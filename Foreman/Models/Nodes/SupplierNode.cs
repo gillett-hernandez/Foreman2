@@ -27,7 +27,9 @@ namespace Foreman
 			NodeState oldState = State;
 			State = (!SuppliedItem.IsMissing && AllLinksValid) ? AllLinksConnected ? NodeState.Clean : NodeState.MissingLink : NodeState.Error;
 			if (oldState != State)
+			{
 				OnNodeStateChanged();
+			}
 		}
 
 		public override double GetConsumeRate(Item item) { throw new ArgumentException("Supplier does not consume! nothing should be asking for the consume rate"); }
@@ -43,7 +45,9 @@ namespace Foreman
 			info.AddValue("NodeType", NodeType.Supplier);
 			info.AddValue("Item", SuppliedItem.Name);
 			if (RateType == RateType.Manual)
+			{
 				info.AddValue("DesiredRate", DesiredRatePerSec);
+			}
 		}
 
 		public override string ToString() { return string.Format("Supply node for: {0}", SuppliedItem.Name); }
@@ -61,9 +65,14 @@ namespace Foreman
 		{
 			List<string> errors = new List<string>();
 			if (SuppliedItem.IsMissing)
+			{
 				errors.Add(string.Format("> Item \"{0}\" doesnt exist in preset!", SuppliedItem.FriendlyName));
+			}
 			else if (!MyNode.AllLinksValid)
+			{
 				errors.Add("> Some links are invalid!");
+			}
+
 			return errors;
 		}
 
@@ -79,7 +88,10 @@ namespace Foreman
 		public static SupplierNodeController GetController(SupplierNode node)
 		{
 			if (node.Controller != null)
+			{
 				return (SupplierNodeController)node.Controller;
+			}
+
 			return new SupplierNodeController(node);
 		}
 
@@ -87,10 +99,17 @@ namespace Foreman
 		{
 			Dictionary<string, Action> resolutions = new Dictionary<string, Action>();
 			if (MyNode.SuppliedItem.IsMissing)
+			{
 				resolutions.Add("Delete node", new Action(() => this.Delete()));
+			}
 			else
+			{
 				foreach (KeyValuePair<string, Action> kvp in GetInvalidConnectionResolutions())
+				{
 					resolutions.Add(kvp.Key, kvp.Value);
+				}
+			}
+
 			return resolutions;
 		}
 

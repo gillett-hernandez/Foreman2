@@ -39,14 +39,25 @@ namespace Foreman
 			//check for previous save file location and its validity (or set to "")
 			DefaultSaveFileLocation = Properties.Settings.Default.LastSaveFileLocation;
 			if (string.IsNullOrEmpty(DefaultSaveFileLocation))
+			{
 				DefaultSaveFileLocation = "";
+			}
+
 			string tempUDirectory = DefaultSaveFileLocation;
 			while (!string.IsNullOrEmpty(tempUDirectory) && Path.GetFileName(tempUDirectory).ToLower() != "saves")
+			{
 				tempUDirectory = Path.GetDirectoryName(tempUDirectory);
+			}
+
 			if (!string.IsNullOrEmpty(tempUDirectory))
+			{
 				tempUDirectory = Path.GetDirectoryName(tempUDirectory); //done one more time to get the actual user directory, not the saves folder
+			}
+
 			if (!File.Exists(Path.Combine(tempUDirectory, "factorio-current.log")))
+			{
 				DefaultSaveFileLocation = "";
+			}
 
 			//check default folders for a factorio installation (to fill in the path as the 'default')
 			//program files install
@@ -57,7 +68,9 @@ namespace Foreman
 				{
 					string userPath = FactorioPathsProcessor.GetFactorioUserPath(factorioInstallLocations[0], false);
 					if (!string.IsNullOrEmpty(userPath))
+					{
 						DefaultSaveFileLocation = Path.Combine(userPath, "saves");
+					}
 				}
 			}
 		}
@@ -76,7 +89,9 @@ namespace Foreman
 				dialog.Multiselect = false;
 
 				if (dialog.ShowDialog() == DialogResult.OK)
+				{
 					saveFilePath = dialog.FileName;
+				}
 				else
 				{
 					DialogResult = DialogResult.Cancel;
@@ -89,7 +104,10 @@ namespace Foreman
 			var token = cts.Token;
 			DialogResult = await LoadSaveFile(token); //OK: all good, data loaded, ABORT: error during loading, display error message, CANCEL: local error prior to load (message already displayed)
 			if (DialogResult == DialogResult.OK)
+			{
 				ProcessSaveData();
+			}
+
 			Close();
 
 #if DEBUG
@@ -109,7 +127,10 @@ namespace Foreman
 					//get factorio path
 					string userDataPath = saveFilePath;
 					while (!string.IsNullOrEmpty(userDataPath) && Path.GetFileName(userDataPath).ToLower() != "saves")
+					{
 						userDataPath = Path.GetDirectoryName(userDataPath);
+					}
+
 					userDataPath = Path.GetDirectoryName(userDataPath); //done one more time to get the actual user directory, not the saves folder
 
 					string currentLog = Path.Combine(userDataPath, "factorio-current.log");
@@ -135,7 +156,10 @@ namespace Foreman
 					//copy the save reader mod to the mods folder
 					modsPath = Path.Combine(userDataPath, "mods");
 					if (!Directory.Exists(modsPath))
+					{
 						Directory.CreateDirectory(modsPath);
+					}
+
 					Directory.CreateDirectory(Path.Combine(modsPath, "foremansavereader_1.0.0"));
 					try
 					{
@@ -154,17 +178,29 @@ namespace Foreman
 					string modListPath = Path.Combine(modsPath, "mod-list.json");
 					JObject modlist = null;
 					if (!File.Exists(modListPath))
+					{
 						modlist = new JObject();
+					}
 					else
+					{
 						modlist = JObject.Parse(File.ReadAllText(modListPath));
+					}
+
 					if (modlist["mods"] == null)
+					{
 						modlist.Add("mods", new JArray());
+					}
 
 					JToken foremansavereaderModToken = modlist["mods"].ToList().FirstOrDefault(t => t["name"] != null && (string)t["name"] == "foremansavereader");
 					if (foremansavereaderModToken == null)
+					{
 						((JArray)modlist["mods"]).Add(new JObject() { { "name", "foremansavereader" }, { "enabled", true } });
+					}
 					else
+					{
 						foremansavereaderModToken["enabled"] = true;
+					}
+
 					File.WriteAllText(modListPath, modlist.ToString(Formatting.Indented));
 
 					//open the map with factorio and read the save file info (mods, technology, recipes)
@@ -185,14 +221,19 @@ namespace Foreman
 						{
 							process.Close();
 							if (Directory.Exists(Path.Combine(modsPath, "foremansavereader_1.0.0")))
+							{
 								Directory.Delete(Path.Combine(modsPath, "foremansavereader_1.0.0"), true);
+							}
+
 							return DialogResult.Cancel;
 						}
 						Thread.Sleep(100);
 					}
 
 					if (Directory.Exists(Path.Combine(modsPath, "foremansavereader_1.0.0")))
+					{
 						Directory.Delete(Path.Combine(modsPath, "foremansavereader_1.0.0"), true);
+					}
 
 					if (resultString.IndexOf("Is another instance already running?") != -1)
 					{
@@ -211,11 +252,19 @@ namespace Foreman
 
 					SaveFileInfo = new SaveFileInfo();
 					foreach (var objJToken in export["mods"].ToList())
+					{
 						SaveFileInfo.Mods.Add((string)objJToken["name"], (string)objJToken["version"]);
+					}
+
 					foreach (var objJToken in export["technologies"].ToList())
+					{
 						SaveFileInfo.Technologies.Add((string)objJToken["name"], (bool)objJToken["enabled"]);
+					}
+
 					foreach (var objJToken in export["recipes"].ToList())
+					{
 						SaveFileInfo.Recipes.Add((string)objJToken["name"], (bool)objJToken["enabled"]);
+					}
 
 					Properties.Settings.Default.LastSaveFileLocation = Path.GetDirectoryName(saveFilePath);
 					Properties.Settings.Default.Save();
@@ -224,7 +273,10 @@ namespace Foreman
 				catch
 				{
 					if (!string.IsNullOrEmpty(modsPath) && Directory.Exists(Path.Combine(modsPath, "foremanexport_1.0.0")))
+					{
 						Directory.Delete(Path.Combine(modsPath, "foremanexport_1.0.0"), true);
+					}
+
 					SaveFileInfo = null;
 					return DialogResult.Abort;
 				}
@@ -241,68 +293,116 @@ namespace Foreman
 			foreach (KeyValuePair<string, string> mod in DCache.IncludedMods)
 			{
 				if (mod.Key == "foremanexport" || mod.Key == "foremansavereader" || mod.Key == "core")
+				{
 					continue;
+				}
 
 				if (!SaveFileInfo.Mods.ContainsKey(mod.Key))
+				{
 					missingMods += mod.Key + ", ";
+				}
 				else if (SaveFileInfo.Mods[mod.Key] != mod.Value)
+				{
 					wrongVersionMods += mod.Key + ", ";
+				}
 			}
 			foreach (KeyValuePair<string, string> mod in SaveFileInfo.Mods)
 			{
 				if (mod.Key == "foremanexport" || mod.Key == "foremansavereader" || mod.Key == "core")
+				{
 					continue;
+				}
 
 				if (!DCache.IncludedMods.ContainsKey(mod.Key))
+				{
 					newMods += mod.Key + ", ";
+				}
 			}
 			missingMods = missingMods.Substring(0, missingMods.Length - 2);
-			if (missingMods == "\nMissing Mods") missingMods = "";
+			if (missingMods == "\nMissing Mods")
+			{
+				missingMods = "";
+			}
+
 			wrongVersionMods = wrongVersionMods.Substring(0, wrongVersionMods.Length - 2);
-			if (wrongVersionMods == "\nWrong Version Mods") wrongVersionMods = "";
+			if (wrongVersionMods == "\nWrong Version Mods")
+			{
+				wrongVersionMods = "";
+			}
+
 			newMods = newMods.Substring(0, newMods.Length - 2);
-			if (newMods == "\nAdded Mods") newMods = "";
+			if (newMods == "\nAdded Mods")
+			{
+				newMods = "";
+			}
 
 			if (missingMods != "" || wrongVersionMods != "" || newMods != "")
+			{
 				if (MessageBox.Show("selected save file mods do not match preset mods; out of {0} mods:" + missingMods + wrongVersionMods + newMods + "\nAre you sure you wish to use this save file?", "Save file mod inconsistencies found!", MessageBoxButtons.OKCancel) == DialogResult.Cancel)
+				{
 					return;
+				}
+			}
 
 			//we will not be updating technology based on the read data. we will instead be updating the recipes based on their enabled status. This is due to the possibility that a recipe was 'manually' enabled outside of the default technology unlocks. Is this possible? I dont know.
 			EnabledObjects.Clear();
 			EnabledObjects.Add(DCache.PlayerAssembler);
 
 			foreach (Recipe recipe in DCache.Recipes.Values)
+			{
 				if (recipe.Name.StartsWith("§§") || SaveFileInfo.Recipes.ContainsKey(recipe.Name))
+				{
 					EnabledObjects.Add(recipe);
+				}
+			}
 
 			//go through all the assemblers, beacons, and modules and add them to the enabled set if at least one of their associated items has at least one production recipe that is in the enabled set.
 			foreach (Assembler assembler in DCache.Assemblers.Values)
 			{
 				bool enabled = false;
 				foreach (IReadOnlyCollection<Recipe> recipes in assembler.AssociatedItems.Select(item => item.ProductionRecipes))
+				{
 					foreach (Recipe recipe in recipes)
+					{
 						enabled |= EnabledObjects.Contains(recipe);
+					}
+				}
+
 				if (enabled)
+				{
 					EnabledObjects.Add(assembler);
+				}
 			}
 
 			foreach (Beacon beacon in DCache.Beacons.Values)
 			{
 				bool enabled = false;
 				foreach (IReadOnlyCollection<Recipe> recipes in beacon.AssociatedItems.Select(item => item.ProductionRecipes))
+				{
 					foreach (Recipe recipe in recipes)
+					{
 						enabled |= EnabledObjects.Contains(recipe);
+					}
+				}
+
 				if (enabled)
+				{
 					EnabledObjects.Add(beacon);
+				}
 			}
 
 			foreach (Module module in DCache.Modules.Values)
 			{
 				bool enabled = false;
 				foreach (Recipe recipe in module.AssociatedItem.ProductionRecipes)
+				{
 					enabled |= EnabledObjects.Contains(recipe);
+				}
+
 				if (enabled)
+				{
 					EnabledObjects.Add(module);
+				}
 			}
 
 		}

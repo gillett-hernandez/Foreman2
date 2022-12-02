@@ -177,7 +177,10 @@ namespace Foreman
 			foreach (ReadOnlyRecipeNode rnode in origin)
 			{
 				if (!beaconCounters.ContainsKey(rnode.SelectedBeacon))
+				{
 					beaconCounters.Add(rnode.SelectedBeacon, 0);
+				}
+
 				beaconCounters[rnode.SelectedBeacon] += rnode.GetTotalBeacons();
 			}
 
@@ -217,22 +220,30 @@ namespace Foreman
 					foreach (Item input in node.Inputs.Where(i => fluids.Equals(i is Fluid)))
 					{
 						if (!itemCounters.ContainsKey(input))
+						{
 							itemCounters.Add(input, new ItemCounter(0, 0, 0, 0, 0, 0, 0));
+						}
 
 						double consumeRate = node.GetConsumeRate(input);
 						if (consumeRate > 0)
 						{
 							if (!node.InputLinks.Any(l => l.Item == input))
+							{
 								itemCounters[input].InputUnlinked += consumeRate;
+							}
 							else
+							{
 								itemCounters[input].Consumption += consumeRate;
+							}
 						}
 					}
 
 					foreach (Item output in node.Outputs.Where(i => fluids.Equals(i is Fluid)))
 					{
 						if (!itemCounters.ContainsKey(output))
+						{
 							itemCounters.Add(output, new ItemCounter(0, 0, 0, 0, 0, 0, 0));
+						}
 
 						double supplyRate = node.GetSupplyRate(output);
 						bool isOverProduced = node.IsOverproducing(output);
@@ -241,11 +252,15 @@ namespace Foreman
 						if (supplyRate > 0)
 						{
 							if (!node.OutputLinks.Any(l => l.Item == output))
+							{
 								itemCounters[output].OutputUnlinked += supplyRate;
+							}
 
 							itemCounters[output].Production += supplyRate;
 							if (isOverProduced)
+							{
 								itemCounters[output].OutputOverflow += supplyRate - supplyUsedRate;
+							}
 						}
 					}
 				}
@@ -253,14 +268,20 @@ namespace Foreman
 				else if(node is ReadOnlySupplierNode sNode && fluids.Equals(sNode.SuppliedItem is Fluid))
 				{
 					if (!itemCounters.ContainsKey(sNode.SuppliedItem))
+					{
 						itemCounters.Add(sNode.SuppliedItem, new ItemCounter(0, 0, 0, 0, 0, 0, 0));
+					}
+
 					itemCounters[sNode.SuppliedItem].Input += sNode.ActualRate;
 				}
 
 				else if(node is ReadOnlyConsumerNode cNode && fluids.Equals(cNode.ConsumedItem is Fluid))
 				{
 					if (!itemCounters.ContainsKey(cNode.ConsumedItem))
+					{
 						itemCounters.Add(cNode.ConsumedItem, new ItemCounter(0, 0, 0, 0, 0, 0, 0));
+					}
+
 					itemCounters[cNode.ConsumedItem].Output += cNode.ActualRate;
 				}
 			}
@@ -327,7 +348,9 @@ namespace Foreman
 					nodeType = "Recipe";
 				}
 				else
+				{
 					continue;
+				}
 
 				if (icon != null)
 				{
@@ -377,8 +400,12 @@ namespace Foreman
 			filteredList.Clear();
 
 			foreach (ListViewItem lvItem in unfilteredList)
+			{
 				if (string.IsNullOrEmpty(filterString) || ((DataObjectBase)lvItem.Tag).LFriendlyName.Contains(filterString))
+				{
 					filteredList.Add(lvItem);
+				}
+			}
 
 			owner.VirtualListSize = filteredList.Count;
 			owner.Invalidate();
@@ -488,16 +515,28 @@ namespace Foreman
 			{
 				int result;
 				if (column == 0)
+				{
 					result = -double.Parse(a.Text).CompareTo(double.Parse(b.Text));
+				}
 				else if (column == 1)
+				{
 					result = a.SubItems[1].Text.ToLower().CompareTo(b.SubItems[1].Text.ToLower());
+				}
 				else
+				{
 					result = -((double)a.SubItems[column].Tag).CompareTo((double)b.SubItems[column].Tag);
+				}
 
 				if (result == 0)
+				{
 					result = ((DataObjectBase)a.Tag).LFriendlyName.CompareTo(((DataObjectBase)b.Tag).LFriendlyName);
+				}
+
 				if (result == 0)
+				{
 					result = ((DataObjectBase)a.Tag).Name.CompareTo(((DataObjectBase)b.Tag).Name);
+				}
+
 				return result * reverseSortLamda;
 
 			});
@@ -518,14 +557,24 @@ namespace Foreman
 			{
 				int result;
 				if (column == 0)
+				{
 					result = a.SubItems[0].Text.ToLower().CompareTo(b.SubItems[0].Text.ToLower());
+				}
 				else
+				{
 					result = -((double)a.SubItems[column].Tag).CompareTo((double)b.SubItems[column].Tag);
+				}
 
 				if (result == 0)
+				{
 					result = ((DataObjectBase)a.Tag).LFriendlyName.CompareTo(((DataObjectBase)b.Tag).LFriendlyName);
+				}
+
 				if (result == 0)
+				{
 					result = ((DataObjectBase)a.Tag).Name.CompareTo(((DataObjectBase)b.Tag).Name);
+				}
+
 				return result * reverseSortLamda;
 			});
 
@@ -541,9 +590,14 @@ namespace Foreman
 			int NaturalCompareStrings(string a, string b)
 			{
 				if (!stringComparerProcessedStrings.ContainsKey(a))
+				{
 					stringComparerProcessedStrings.Add(a, comparerRegex.Replace(a.ToLower(), matcha => matcha.Value.PadLeft(maxDigits, '0')));
+				}
+
 				if (!stringComparerProcessedStrings.ContainsKey(b))
+				{
 					stringComparerProcessedStrings.Add(b, comparerRegex.Replace(b.ToLower(), matcha => matcha.Value.PadLeft(maxDigits, '0')));
+				}
 
 				return stringComparerProcessedStrings[a].CompareTo(stringComparerProcessedStrings[b]);
 			}
@@ -555,20 +609,38 @@ namespace Foreman
 			{
 				int result;
 				if (e.Column == 2)
+				{
 					result = NaturalCompareStrings(a.SubItems[2].Text, b.SubItems[2].Text);
+				}
 				else if(e.Column < 3)
+				{
 					result = a.SubItems[e.Column].Text.ToLower().CompareTo(b.SubItems[e.Column].Text.ToLower());
+				}
 				else
+				{
 					result =  -((double)a.SubItems[e.Column].Tag).CompareTo((double)b.SubItems[e.Column].Tag);
+				}
 
-				if(result == 0 && e.Column != 2)
+				if (result == 0 && e.Column != 2)
+				{
 					result = NaturalCompareStrings(a.SubItems[2].Text, b.SubItems[2].Text);
-				if(result == 0 && e.Column != 0)
+				}
+
+				if (result == 0 && e.Column != 0)
+				{
 					result = a.SubItems[0].Text.ToLower().CompareTo(b.SubItems[0].Text.ToLower());
+				}
+
 				if (result == 0 && e.Column != 1)
+				{
 					result = a.SubItems[1].Text.ToLower().CompareTo(b.SubItems[1].Text.ToLower());
+				}
+
 				if (result == 0)
+				{
 					result = ((ReadOnlyBaseNode)a.Tag).NodeID.CompareTo(((ReadOnlyBaseNode)b.Tag).NodeID);
+				}
+
 				return result * reverseSortLamda;
 			});
 
@@ -619,7 +691,10 @@ namespace Foreman
 				dialog.Filter = "CSV (*.csv)|*.csv";
 				dialog.InitialDirectory = Path.Combine(Application.StartupPath, "Exported CSVs");
 				if (!Directory.Exists(dialog.InitialDirectory))
+				{
 					Directory.CreateDirectory(dialog.InitialDirectory);
+				}
+
 				dialog.FileName = "foreman data.csv";
 				dialog.ValidateNames = true;
 				dialog.OverwritePrompt = true;
@@ -636,13 +711,18 @@ namespace Foreman
 						{
 							string[] cLine = new string[columnNames[i].Length];
 							for (int j = 0; j < cLine.Length; j++)
+							{
 								cLine[j] = (lvi.SubItems[j].Tag?? lvi.SubItems[j].Text).ToString().Replace(",", "").Replace("\n", "; ").Replace("\t", "");
+							}
+
 							csvLines.Add(cLine);
 						}
 						csvLines.Add(new string[] { "" });
 					}
 					if (csvLines.Count > 0)
+					{
 						csvLines.RemoveAt(csvLines.Count - 1);
+					}
 
 					//export to csv.
 					StringBuilder csvBuilder = new StringBuilder();

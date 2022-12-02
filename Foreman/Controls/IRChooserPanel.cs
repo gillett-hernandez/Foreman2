@@ -97,7 +97,9 @@ namespace Foreman
 
 			//add any extra rows to handle the amount of sorted groups
 			for (int i = 0; i < (SortedGroups.Count - 1) / GroupTable.ColumnCount; i++)
+			{
 				GroupTable.RowStyles.Add(new RowStyle(GroupTable.RowStyles[0].SizeType, GroupTable.RowStyles[0].Height));
+			}
 
 			//add in the group buttons
 			for (int i = 0; i < SortedGroups.Count; i++)
@@ -196,7 +198,9 @@ namespace Foreman
 				this.UIThread(delegate
 				{
 					if (currentID != updateID)
+					{
 						return;
+					}
 
 					if (!so)
 					{
@@ -216,14 +220,18 @@ namespace Foreman
 					for (int row = 0; row < IRButtons.GetLength(1); row++)
 					{
 						if (currentID != updateID)
+						{
 							return;
+						}
 
 						int c = column;
 						int r = row;
 						this.UIThread(delegate
 						{
 							if (currentID != updateID)
+							{
 								return;
+							}
 
 							DataObjectBase irObject = (r + startRow < filteredIRRowsList.Count) ? filteredIRRowsList[r + startRow][c].Key : null;
 							NFButton b = IRButtons[c, r];
@@ -252,7 +260,10 @@ namespace Foreman
 			this.UIThread(delegate
 			{
 				if (currentID != updateID)
+				{
 					return;
+				}
+
 				IRTable.ResumeLayout();
 			});
 		}
@@ -269,13 +280,18 @@ namespace Foreman
 			else
 			{
 				foreach (NFButton groupButton in GroupButtons)
+				{
 					groupButton.BackColor = ((Group)(groupButton.Tag) == sGroup) ? SelectedGroupButtonBGColor : Color.DimGray;
+				}
+
 				if (SelectedGroup != sGroup)
 				{
 					StartingGroup = sGroup;
 					SelectedGroup = sGroup;
 					if (causeUpdate)
+					{
 						UpdateIRButtons();
+					}
 				}
 			}
 		}
@@ -312,7 +328,9 @@ namespace Foreman
 		private void IRPanelScrollBar_Scroll(object sender, ScrollEventArgs e)
 		{
 			if (e.NewValue != CurrentRow)
+			{
 				UpdateIRButtons(e.NewValue, true);
+			}
 		}
 
 		private void IRFlowPanel_MouseWheel(object sender, MouseEventArgs e)
@@ -383,7 +401,9 @@ namespace Foreman
 		{
 			base.IRChooserPanel_Disposed(sender, e);
 			if (selectedItem != null)
+			{
 				ItemRequested?.Invoke(this, new ItemRequestArgs(selectedItem));
+			}
 		}
 
 		protected override List<Group> GetSortedGroups()
@@ -393,9 +413,14 @@ namespace Foreman
 			{
 				int itemCount = 0;
 				foreach (Subgroup sgroup in group.Subgroups)
+				{
 					itemCount += ShowUnavailable ? sgroup.Items.Count : sgroup.Items.Count(i => i.Available);
+				}
+
 				if (itemCount > 0)
+				{
 					groups.Add(group);
+				}
 			}
 			groups.Sort();
 			return groups;
@@ -449,17 +474,36 @@ namespace Foreman
 			{
 				int selectedGroupIndex = 0;
 				for (int i = 0; i < SortedGroups.Count; i++)
+				{
 					if (SortedGroups[i] == SelectedGroup)
+					{
 						selectedGroupIndex = i;
+					}
+				}
+
 				for (int i = selectedGroupIndex; i >= 0; i--)
+				{
 					if (filteredItemCount[SortedGroups[i]] > 0)
+					{
 						alternateGroup = SortedGroups[i];
+					}
+				}
+
 				if (alternateGroup == null)
+				{
 					for (int i = selectedGroupIndex; i < SortedGroups.Count; i++)
+					{
 						if (filteredItemCount[SortedGroups[i]] > 0)
+						{
 							alternateGroup = SortedGroups[i];
+						}
+					}
+				}
+
 				if (alternateGroup == null)
+				{
 					alternateGroup = SelectedGroup;
+				}
 			}
 			SetSelectedGroup(alternateGroup == null ? SelectedGroup : alternateGroup, false);
 
@@ -557,9 +601,14 @@ namespace Foreman
 			{
 				int recipeCount = 0;
 				foreach (Subgroup sgroup in group.Subgroups)
+				{
 					recipeCount += ShowUnavailable ? sgroup.Recipes.Count : sgroup.Recipes.Count(r => r.Available);
+				}
+
 				if (recipeCount > 0)
+				{
 					groups.Add(group);
+				}
 			}
 			groups.Sort();
 			return groups;
@@ -624,17 +673,36 @@ namespace Foreman
 			{
 				int selectedGroupIndex = 0;
 				for (int i = 0; i < SortedGroups.Count; i++)
+				{
 					if (SortedGroups[i] == SelectedGroup)
+					{
 						selectedGroupIndex = i;
+					}
+				}
+
 				for (int i = selectedGroupIndex; i >= 0; i--)
+				{
 					if (filteredRecipeCount[SortedGroups[i]] > 0)
+					{
 						alternateGroup = SortedGroups[i];
+					}
+				}
+
 				if (alternateGroup == null)
+				{
 					for (int i = selectedGroupIndex; i < SortedGroups.Count; i++)
+					{
 						if (filteredRecipeCount[SortedGroups[i]] > 0)
+						{
 							alternateGroup = SortedGroups[i];
+						}
+					}
+				}
+
 				if (alternateGroup == null)
+				{
 					alternateGroup = SelectedGroup;
+				}
 			}
 			SetSelectedGroup(alternateGroup == null ? SelectedGroup : alternateGroup, false);
 
@@ -650,7 +718,9 @@ namespace Foreman
 				RecipeRequested?.Invoke(this, new RecipeRequestArgs(NodeType.Recipe, (Recipe)((Button)sender).Tag));
 
 				if ((Control.ModifierKeys & Keys.Shift) != Keys.Shift)
+				{
 					Dispose();
+				}
 			}
 			else if (e.Button == MouseButtons.Right) //flip hidden status of recipe
 			{
@@ -665,7 +735,9 @@ namespace Foreman
 			RecipeRequested?.Invoke(this, new RecipeRequestArgs(NodeType.Supplier, null));
 
 			if ((Control.ModifierKeys & Keys.Shift) != Keys.Shift)
+			{
 				Dispose();
+			}
 		}
 
 		private void AddConsumerButton_Click(object sender, EventArgs e)
@@ -673,7 +745,9 @@ namespace Foreman
 			RecipeRequested?.Invoke(this, new RecipeRequestArgs(NodeType.Consumer, null));
 
 			if ((Control.ModifierKeys & Keys.Shift) != Keys.Shift)
+			{
 				Dispose();
+			}
 		}
 
 		private void AddPassthroughButton_Click(object sender, EventArgs e)
@@ -681,7 +755,9 @@ namespace Foreman
 			RecipeRequested?.Invoke(this, new RecipeRequestArgs(NodeType.Passthrough, null));
 
 			if ((Control.ModifierKeys & Keys.Shift) != Keys.Shift)
+			{
 				Dispose();
+			}
 		}
 
 		internal override void IRButton_MouseHover(object sender, EventArgs e)

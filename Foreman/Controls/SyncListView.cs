@@ -33,7 +33,9 @@ namespace Foreman
 		private void SyncListView_ItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)
 		{
 			if (SyncSelection && Buddy != null && Buddy.IsHandleCreated && Buddy.Items[e.ItemIndex].Selected != e.IsSelected)
+			{
 				Buddy.Items[e.ItemIndex].Selected = e.IsSelected;
+			}
 		}
 
 		protected override void WndProc(ref Message m)

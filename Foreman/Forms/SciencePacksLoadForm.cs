@@ -41,11 +41,17 @@ namespace Foreman
 			int rowCount = (DCache.SciencePacks.Count / MaxColumns) + (DCache.SciencePacks.Count % MaxColumns > 0 ? 1 : 0);
 			int columnCount = (DCache.SciencePacks.Count / rowCount) + (DCache.SciencePacks.Count % rowCount > 0 ? 1 : 0);
 			for(int i = 0; i < columnCount; i++)
+			{
 				SciencePackTable.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, IconSize));
+			}
+
 			SciencePackTable.ColumnStyles.RemoveAt(0);
 			SciencePackTable.ColumnCount = SciencePackTable.ColumnStyles.Count;
 			for(int i = 0; i < rowCount; i++)
+			{
 				SciencePackTable.RowStyles.Add(new RowStyle(SizeType.Absolute, IconSize));
+			}
+
 			SciencePackTable.RowStyles.RemoveAt(0);
 			SciencePackTable.RowCount = SciencePackTable.RowStyles.Count;
 
@@ -138,37 +144,60 @@ namespace Foreman
 
 			//go through all technologies, check for fit compared to accepted science packs, and add its recipes to the set of enabled recipes
 			foreach (Technology tech in DCache.Technologies.Values)
+			{
 				if (tech.Available && !tech.SciPackList.Except(acceptedSciencePacks).Any())
+				{
 					EnabledObjects.UnionWith(tech.UnlockedRecipes);
+				}
+			}
 
 			//go through all the assemblers, beacons, and modules and add them to the enabled set if at least one of their associated items has at least one production recipe that is in the enabled set.
 			foreach (Assembler assembler in DCache.Assemblers.Values)
 			{
 				bool enabled = false;
 				foreach (IReadOnlyCollection<Recipe> recipes in assembler.AssociatedItems.Select(item => item.ProductionRecipes))
+				{
 					foreach (Recipe recipe in recipes)
+					{
 						enabled |= EnabledObjects.Contains(recipe);
+					}
+				}
+
 				if (enabled)
+				{
 					EnabledObjects.Add(assembler);
+				}
 			}
 
 			foreach (Beacon beacon in DCache.Beacons.Values)
 			{
 				bool enabled = false;
 				foreach (IReadOnlyCollection<Recipe> recipes in beacon.AssociatedItems.Select(item => item.ProductionRecipes))
+				{
 					foreach (Recipe recipe in recipes)
+					{
 						enabled |= EnabledObjects.Contains(recipe);
+					}
+				}
+
 				if (enabled)
+				{
 					EnabledObjects.Add(beacon);
+				}
 			}
 
 			foreach (Module module in DCache.Modules.Values)
 			{
 				bool enabled = false;
 				foreach (Recipe recipe in module.AssociatedItem.ProductionRecipes)
+				{
 					enabled |= EnabledObjects.Contains(recipe);
+				}
+
 				if (enabled)
+				{
 					EnabledObjects.Add(module);
+				}
 			}
 
 			DialogResult = DialogResult.OK;

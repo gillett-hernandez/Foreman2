@@ -9,7 +9,7 @@ namespace Foreman
 	public class ConsumerNode : BaseNode
 	{
 		private readonly BaseNodeController controller;
-		public override BaseNodeController Controller { get{ return controller; } }
+		public override BaseNodeController Controller { get { return controller; } }
 
 		public readonly Item ConsumedItem;
 
@@ -28,7 +28,9 @@ namespace Foreman
 			NodeState oldState = State;
 			State = (!ConsumedItem.IsMissing && AllLinksValid) ? AllLinksConnected ? NodeState.Clean : NodeState.MissingLink : NodeState.Error;
 			if (oldState != State)
+			{
 				OnNodeStateChanged();
+			}
 		}
 
 		public override double GetConsumeRate(Item item) { return ActualRate; }
@@ -44,7 +46,9 @@ namespace Foreman
 			info.AddValue("NodeType", NodeType.Consumer);
 			info.AddValue("Item", ConsumedItem.Name);
 			if (RateType == RateType.Manual)
+			{
 				info.AddValue("DesiredRate", DesiredRatePerSec);
+			}
 		}
 
 		public override string ToString() { return string.Format("Consumption node for: {0}", ConsumedItem.Name); }
@@ -62,9 +66,14 @@ namespace Foreman
 		{
 			List<string> errors = new List<string>();
 			if (ConsumedItem.IsMissing)
+			{
 				errors.Add(string.Format("> Item \"{0}\" doesnt exist in preset!", ConsumedItem.FriendlyName));
+			}
 			else if (!MyNode.AllLinksValid)
+			{
 				errors.Add("> Some links are invalid!");
+			}
+
 			return errors;
 		}
 
@@ -79,8 +88,9 @@ namespace Foreman
 
 		public static ConsumerNodeController GetController(ConsumerNode node)
 		{
-			if (node.Controller != null)
+			if (node.Controller != null){
 				return (ConsumerNodeController)node.Controller;
+			}
 			return new ConsumerNodeController(node);
 		}
 
@@ -88,10 +98,16 @@ namespace Foreman
 		{
 			Dictionary<string, Action> resolutions = new Dictionary<string, Action>();
 			if (MyNode.ConsumedItem.IsMissing)
+			{
 				resolutions.Add("Delete node", new Action(() => this.Delete()));
+			}
 			else
+			{
 				foreach (KeyValuePair<string, Action> kvp in GetInvalidConnectionResolutions())
+				{
 					resolutions.Add(kvp.Key, kvp.Value);
+				}
+			}
 			return resolutions;
 		}
 

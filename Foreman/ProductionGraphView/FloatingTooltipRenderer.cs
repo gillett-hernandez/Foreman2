@@ -41,7 +41,9 @@ namespace Foreman
 		public void ClearFloatingControls()
 		{
 			foreach (var control in floatingTooltipControls.Keys.ToArray())
+			{
 				control.Dispose();
+			}
 		}
 
 		public void Paint(Graphics graphics, bool paintAll)
@@ -49,23 +51,35 @@ namespace Foreman
 			if (paintAll)
 			{
 				foreach (FloatingTooltipControl fttp in floatingTooltipControls.Keys)
+				{
 					DrawTooltip(parent.GraphToScreen(fttp.GraphLocation), fttp.Control.Size, fttp.Direction, graphics, null);
-				foreach(TooltipInfo tti in extraTooltips)
+				}
+
+				foreach (TooltipInfo tti in extraTooltips)
+				{
 					DrawTooltip(tti.ScreenLocation, tti.ScreenSize, tti.Direction, graphics, tti.Text, tti.CustomDraw);
+				}
 
 				BaseNodeElement element = parent.GetNodeAtPoint(parent.ScreenToGraph(parent.PointToClient(Control.MousePosition)));
 				if (element != null)
 				{
 					foreach (TooltipInfo tti in element.GetToolTips(parent.ScreenToGraph(parent.PointToClient(Control.MousePosition))))
+					{
 						DrawTooltip(tti.ScreenLocation, tti.ScreenSize, tti.Direction, graphics, tti.Text, tti.CustomDraw);
+					}
 				}
 			}
 			else
 			{
 				foreach (FloatingTooltipControl fttp in floatingTooltipControls.Where(kvp => kvp.Value).Select(kvp => kvp.Key))
+				{
 					DrawTooltip(parent.GraphToScreen(fttp.GraphLocation), fttp.Control.Bounds, fttp.Direction, graphics, null);
+				}
+
 				foreach (TooltipInfo tti in extraTooltips)
+				{
 					DrawTooltip(tti.ScreenLocation, tti.ScreenSize, tti.Direction, graphics, tti.Text, tti.CustomDraw);
+				}
 			}
 		}
 
@@ -80,9 +94,13 @@ namespace Foreman
 			Rectangle rect;
 
 			if (direction == Direction.None)
+			{
 				rect = new Rectangle(screenArrowPoint, size);
+			}
 			else
+			{
 				rect = getTooltipScreenBounds(screenArrowPoint, size, direction);
+			}
 
 			DrawTooltip(screenArrowPoint, rect, direction, graphics, text, custonDraw);
 		}
@@ -123,15 +141,21 @@ namespace Foreman
 			{
 				Point point;
 				if (stringFormat.Alignment == StringAlignment.Center)
+				{
 					point = new Point(bounds.X + textPadding + bounds.Width / 2, bounds.Y + textPadding - 1 + bounds.Height / 2);
+				}
 				else
+				{
 					point = new Point(bounds.X + textPadding, bounds.Y + textPadding - 1 + bounds.Height / 2);
+				}
 
 				graphics.DrawString(text, size10Font, textBrush, point, stringFormat);
 			}
 
 			if (customDraw != null)
+			{
 				customDraw.Invoke(graphics, bounds.Location);
+			}
 		}
 
 		public Rectangle getTooltipScreenBounds(Point screenArrowPoint, Size screenSize, Direction direction)

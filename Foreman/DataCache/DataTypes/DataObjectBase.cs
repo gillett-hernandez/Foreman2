@@ -54,9 +54,13 @@ namespace Foreman
 		public void SetIconAndColor(IconColorPair icp)
 		{
 			if (icp.Icon != null)
+			{
 				this.Icon = icp.Icon;
+			}
 			else
+			{
 				this.Icon = DataCache.UnknownIcon;
+			}
 
 			this.AverageColor = icp.Color;
 		}
@@ -72,11 +76,20 @@ namespace Foreman
 		public static bool operator ==(DataObjectBasePrototype doBase1, DataObjectBasePrototype doBase2)
 		{
 			if (ReferenceEquals(doBase1, doBase2))
+			{
 				return true;
+			}
+
 			if ((object)doBase1 == null || (object)doBase2 == null)
+			{
 				return false;
+			}
+
 			if (doBase1.GetType() != doBase2.GetType())
+			{
 				return false;
+			}
+
 			return doBase1.Name == doBase2.Name;
 		}
 
@@ -100,13 +113,19 @@ namespace Foreman
 					{
 						int result = this.OrderCompareArray[i][j].CompareTo(otherP.OrderCompareArray[i][j]);
 						if (result != 0)
+						{
 							return result;
+						}
 					}
 					if (this.OrderCompareArray[i].Length != otherP.OrderCompareArray[i].Length)
+					{
 						return (this.OrderCompareArray[i].Length > otherP.OrderCompareArray[i].Length) ? -1 : 1;
+					}
 				}
 				if (this.OrderCompareArray.Length != otherP.OrderCompareArray.Length)
+				{
 					return (this.OrderCompareArray.Length < otherP.OrderCompareArray.Length) ? -1 : 1;
+				}
 
 				return LFriendlyName.CompareTo(otherP.LFriendlyName);
 			}

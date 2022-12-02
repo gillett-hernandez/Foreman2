@@ -74,7 +74,9 @@ namespace Foreman
 			get
 			{
 				if (nodes.Count == 0)
+				{
 					return new Rectangle(0, 0, 0, 0);
+				}
 
 				int xMin = int.MaxValue;
 				int yMin = int.MaxValue;
@@ -116,7 +118,7 @@ namespace Foreman
 			FuelSelector = new FuelSelector();
 		}
 
-		public BaseNodeController RequestNodeController(ReadOnlyBaseNode node) { if(roToNode.ContainsKey(node)) return roToNode[node].Controller; return null; }
+		public BaseNodeController RequestNodeController(ReadOnlyBaseNode node) { if(roToNode.ContainsKey(node)) { return roToNode[node].Controller; } return null; }
 
 		public ReadOnlyConsumerNode CreateConsumerNode(Item item, Point location)
 		{
@@ -178,9 +180,14 @@ namespace Foreman
 		public ReadOnlyNodeLink CreateLink(ReadOnlyBaseNode supplier, ReadOnlyBaseNode consumer, Item item)
 		{
 			if (!roToNode.ContainsKey(supplier) || !roToNode.ContainsKey(consumer) || !supplier.Outputs.Contains(item) || !consumer.Inputs.Contains(item))
+			{
 				Trace.Fail(string.Format("Node link creation called with invalid parameters! consumer:{0}. supplier:{1}. item:{2}.", consumer.ToString(), supplier.ToString(), item.ToString()));
+			}
+
 			if (supplier.OutputLinks.Any(l => l.Item == item && l.Consumer == consumer)) //check for an already existing connection
+			{
 				return supplier.OutputLinks.First(l => l.Item == item && l.Consumer == consumer);
+			}
 
 			BaseNode supplierNode = roToNode[supplier];
 			BaseNode consumerNode = roToNode[consumer];
@@ -200,12 +207,19 @@ namespace Foreman
 		public void DeleteNode(ReadOnlyBaseNode node)
 		{
 			if (!roToNode.ContainsKey(node))
+			{
 				Trace.Fail(string.Format("Node deletion called on a node ({0}) that isnt part of the graph!", node.ToString()));
+			}
 
 			foreach (ReadOnlyNodeLink link in node.InputLinks.ToList())
+			{
 				DeleteLink(link);
+			}
+
 			foreach (ReadOnlyNodeLink link in node.OutputLinks.ToList())
+			{
 				DeleteLink(link);
+			}
 
 			nodes.Remove(roToNode[node]);
 			roToNode.Remove(node);
@@ -215,13 +229,17 @@ namespace Foreman
 		public void DeleteNodes(IEnumerable<ReadOnlyBaseNode> nodes)
 		{
 			foreach (ReadOnlyBaseNode node in nodes)
+			{
 				DeleteNode(node);
+			}
 		}
 
 		public void DeleteLink(ReadOnlyNodeLink link)
 		{
 			if (!roToLink.ContainsKey(link) || !roToNode.ContainsKey(link.Consumer) || !roToNode.ContainsKey(link.Supplier))
+			{
 				Trace.Fail(string.Format("Link deletion called with a link ({0}) that isnt part of the graph, or whose node(s) ({1}), ({2}) is/are not part of the graph!", link.ToString(), link.Consumer.ToString(), link.Supplier.ToString()));
+			}
 
 			NodeLink nodeLink = roToLink[link];
 			nodeLink.ConsumerNode.InputLinks.Remove(nodeLink);
@@ -237,7 +255,9 @@ namespace Foreman
 		public void ClearGraph()
 		{
 			foreach (BaseNode node in nodes.ToList())
+			{
 				DeleteNode(node.ReadOnlyNode);
+			}
 
 			SerializeNodeIdSet = null;
 			lastNodeID = 0;
@@ -246,24 +266,38 @@ namespace Foreman
 		public void UpdateNodeStates()
 		{
 			foreach (BaseNode node in nodes)
+			{
 				node.UpdateState();
+			}
 		}
 
 		public IEnumerable<ReadOnlyBaseNode> GetSuppliers(Item item)
 		{
 			foreach (ReadOnlyBaseNode node in Nodes)
+			{
 				if (node.Outputs.Contains(item))
+				{
 					yield return node;
+				}
+			}
 		}
 
 		public IEnumerable<ReadOnlyBaseNode> GetConsumers(Item item)
 		{
 			foreach (ReadOnlyBaseNode node in Nodes)
+			{
 				if (node.Inputs.Contains(item))
+				{
 					yield return node;
+				}
+			}
 		}
 
-		public IEnumerable<IEnumerable<ReadOnlyBaseNode>> GetConnectedNodeGroups() { foreach (IEnumerable<BaseNode> group in GetConnectedComponents()) yield return group.Select(node => node.ReadOnlyNode); }
+		public IEnumerable<IEnumerable<ReadOnlyBaseNode>> GetConnectedNodeGroups() { foreach (IEnumerable<BaseNode> group in GetConnectedComponents())
+			{
+				yield return group.Select(node => node.ReadOnlyNode);
+			}
+		}
 		private IEnumerable<IEnumerable<BaseNode>> GetConnectedComponents() //used to break the graph into groups (in case there are multiple disconnected groups) for simpler solving
 		{
 			//there is an optimized solution for connected components where we keep track of the various groups and modify them as each node/link is added/removed, but testing shows that this calculation below takes under 1ms even for larg 1000+ node graphs, so why bother.
@@ -283,12 +317,20 @@ namespace Foreman
 					BaseNode currentNode = toVisitNext.First();
 
 					foreach (NodeLink link in currentNode.InputLinks)
+					{
 						if (unvisitedNodes.Contains(link.SupplierNode))
+						{
 							toVisitNext.Add(link.SupplierNode);
+						}
+					}
 
 					foreach (NodeLink link in currentNode.OutputLinks)
+					{
 						if (unvisitedNodes.Contains(link.ConsumerNode))
+						{
 							toVisitNext.Add(link.ConsumerNode);
+						}
+					}
 
 					connectedComponents.Last().Add(currentNode);
 					toVisitNext.Remove(currentNode);
@@ -315,23 +357,33 @@ namespace Foreman
 			void Internal_UpdateLinkedNodes(NodeLink ilink)
 			{
 				if (visitedLinks.Contains(ilink))
+				{
 					return;
+				}
+
 				visitedLinks.Add(ilink);
 
 				if (direction == LinkType.Output)
 				{
 					ilink.ConsumerNode.UpdateState();
 					if (ilink.ConsumerNode is PassthroughNode)
+					{
 						foreach (NodeLink secondaryLink in ilink.ConsumerNode.OutputLinks)
+						{
 							Internal_UpdateLinkedNodes(secondaryLink);
+						}
+					}
 				}
 				else
 				{
 					ilink.SupplierNode.UpdateState();
 					if (ilink.SupplierNode is PassthroughNode)
+					{
 						foreach (NodeLink secondaryLink in ilink.SupplierNode.InputLinks)
+						{
 							Internal_UpdateLinkedNodes(secondaryLink);
-
+						}
+					}
 				}
 			}
 
@@ -350,8 +402,12 @@ namespace Foreman
 				includedNodes = new HashSet<BaseNode>(nodes.Where(node => SerializeNodeIdSet.Contains(node.NodeID)));
 				includedLinks = new HashSet<NodeLink>();
 				foreach (NodeLink link in nodeLinks)
+				{
 					if (includedNodes.Contains(link.ConsumerNode) && includedNodes.Contains(link.SupplierNode))
+					{
 						includedLinks.Add(link);
+					}
+				}
 			}
 
 			//prepare list of items/assemblers/modules/beacons/recipes that are part of the saved set. Recipes have to include a missing component due to the possibility of different recipes having same name (ex: regular iron.recipe, missing iron.recipe, missing iron.recipe #2)
@@ -368,14 +424,24 @@ namespace Foreman
 				if (node is RecipeNode rnode)
 				{
 					if (rnode.BaseRecipe.IsMissing)
+					{
 						includedMissingRecipes.Add(rnode.BaseRecipe);
+					}
 					else
+					{
 						includedRecipes.Add(rnode.BaseRecipe);
+					}
 
 					if (rnode.SelectedAssembler != null)
+					{
 						includedAssemblers.Add(rnode.SelectedAssembler.Name);
+					}
+
 					if (rnode.SelectedBeacon != null)
+					{
 						includedBeacons.Add(rnode.SelectedBeacon.Name);
+					}
+
 					includedModules.UnionWith(rnode.AssemblerModules.Select(m => m.Name));
 					includedModules.UnionWith(rnode.BeaconModules.Select(m => m.Name));
 				}
@@ -413,7 +479,9 @@ namespace Foreman
 			{
 				json = VersionUpdater.UpdateGraph(json);
 				if (json == null) //update failed
+				{
 					return new NewNodeCollection();
+				}
 			}
 
 			NewNodeCollection newNodeCollection = new NewNodeCollection();
@@ -447,26 +515,39 @@ namespace Foreman
 						case NodeType.Consumer:
 							itemName = (string)nodeJToken["Item"];
 							if (cache.Items.ContainsKey(itemName))
+							{
 								newNode = roToNode[CreateConsumerNode(cache.Items[itemName], location)];
+							}
 							else
+							{
 								newNode = roToNode[CreateConsumerNode(cache.MissingItems[itemName], location)];
+							}
+
 							newNodeCollection.newNodes.Add(newNode.ReadOnlyNode);
 							break;
 						case NodeType.Supplier:
 							itemName = (string)nodeJToken["Item"];
 							if (cache.Items.ContainsKey(itemName))
+							{
 								newNode = roToNode[CreateSupplierNode(cache.Items[itemName], location)];
+							}
 							else
+							{
 								newNode = roToNode[CreateSupplierNode(cache.MissingItems[itemName], location)];
+							}
+
 							newNodeCollection.newNodes.Add(newNode.ReadOnlyNode);
 							break;
 						case NodeType.Passthrough:
 							itemName = (string)nodeJToken["Item"];
 							if (cache.Items.ContainsKey(itemName))
+							{
 								newNode = roToNode[CreatePassthroughNode(cache.Items[itemName], location)];
+							}
 							else
+							{
 								newNode = roToNode[CreatePassthroughNode(cache.MissingItems[itemName], location)];
-							((PassthroughNode)newNode).SimpleDraw = (bool)nodeJToken["SDraw"];
+							} ((PassthroughNode)newNode).SimpleDraw = (bool)nodeJToken["SDraw"];
 							newNodeCollection.newNodes.Add(newNode.ReadOnlyNode);
 							break;
 						case NodeType.Recipe:
@@ -482,55 +563,86 @@ namespace Foreman
 
 								string assemblerName = (string)nodeJToken["Assembler"];
 								if (cache.Assemblers.ContainsKey(assemblerName))
+								{
 									rNodeController.SetAssembler(cache.Assemblers[assemblerName]);
+								}
 								else
+								{
 									rNodeController.SetAssembler(cache.MissingAssemblers[assemblerName]);
+								}
 
 								foreach (string moduleName in nodeJToken["AssemblerModules"].Select(t => (string)t).ToList())
 								{
 									if (cache.Modules.ContainsKey(moduleName))
+									{
 										rNodeController.AddAssemblerModule(cache.Modules[moduleName]);
+									}
 									else
+									{
 										rNodeController.AddAssemblerModule(cache.MissingModules[moduleName]);
+									}
 								}
 
 								if (nodeJToken["Fuel"] != null)
 								{
 									if (cache.Items.ContainsKey((string)nodeJToken["Fuel"]))
+									{
 										rNodeController.SetFuel(cache.Items[(string)nodeJToken["Fuel"]]);
+									}
 									else
+									{
 										rNodeController.SetFuel(cache.MissingItems[(string)nodeJToken["Fuel"]]);
+									}
 								}
 								else if (rNode.SelectedAssembler.IsBurner) //and fuel is null... well - its the import. set it as null (and consider it an error)
+								{
 									rNodeController.SetFuel(null);
+								}
 
 								if (nodeJToken["Burnt"] != null)
 								{
 									Item burntItem;
 									if (cache.Items.ContainsKey((string)nodeJToken["Burnt"]))
+									{
 										burntItem = cache.Items[(string)nodeJToken["Burnt"]];
+									}
 									else
+									{
 										burntItem = cache.MissingItems[(string)nodeJToken["Burnt"]];
+									}
+
 									if (rNode.FuelRemains != burntItem)
+									{
 										rNode.SetBurntOverride(burntItem);
+									}
 								}
 								else if (rNode.Fuel != null && rNode.Fuel.BurnResult != null) //same as above - there should be a burn result, but there isnt...
+								{
 									rNode.SetBurntOverride(null);
+								}
 
 								if (nodeJToken["Beacon"] != null)
 								{
 									string beaconName = (string)nodeJToken["Beacon"];
 									if (cache.Beacons.ContainsKey(beaconName))
+									{
 										rNodeController.SetBeacon(cache.Beacons[beaconName]);
+									}
 									else
+									{
 										rNodeController.SetBeacon(cache.MissingBeacons[beaconName]);
+									}
 
 									foreach (string moduleName in nodeJToken["BeaconModules"].Select(t => (string)t).ToList())
 									{
 										if (cache.Modules.ContainsKey(moduleName))
+										{
 											rNodeController.AddBeaconModule(cache.Modules[moduleName]);
+										}
 										else
+										{
 											rNodeController.AddBeaconModule(cache.MissingModules[moduleName]);
+										}
 									}
 
 									rNode.BeaconCount = (double)nodeJToken["BeaconCount"];
@@ -549,9 +661,13 @@ namespace Foreman
 					if (newNode.RateType == RateType.Manual)
 					{
 						if (newNode is RecipeNode rnewNode)
+						{
 							rnewNode.DesiredAssemblerCount = (double)nodeJToken["DesiredAssemblers"];
+						}
 						else
+						{
 							newNode.DesiredRatePerSec = (double)nodeJToken["DesiredRate"];
+						}
 					}
 
 					newNode.NodeDirection = (NodeDirection)(int)nodeJToken["Direction"];
@@ -574,12 +690,18 @@ namespace Foreman
 
 					string itemName = (string)nodeLinkJToken["Item"];
 					if (cache.Items.ContainsKey(itemName))
+					{
 						item = cache.Items[itemName];
+					}
 					else
+					{
 						item = cache.MissingItems[itemName];
+					}
 
 					if (LinkChecker.IsPossibleConnection(item, supplier, consumer)) //not necessary to test if connection is valid. It must be valid based on json
+					{
 						newNodeCollection.newLinks.Add(CreateLink(supplier, consumer, item));
+					}
 				}
 			}
 			catch (Exception e) //there was something wrong with the json (probably someone edited it by hand and it didnt link properly). Delete all added nodes and return empty

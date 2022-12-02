@@ -81,7 +81,9 @@ namespace Foreman
 			foreach (KeyValuePair<string, string> mod in modSet)
 			{
 				if (token.IsCancellationRequested)
+				{
 					return false;
+				}
 
 				string versionMatch = string.Join(".", mod.Value.Split('.').Select(s => "0*"+int.Parse(s).ToString()));
 
@@ -90,17 +92,24 @@ namespace Foreman
 
 				string foundFolder = folders.FirstOrDefault(f => Regex.IsMatch(Path.GetFileName(f).ToLower(), string.Format("{0}_{1}", mod.Key, versionMatch)));
 				if (foundFolder == null)
+				{
 					foundFolder = folders.FirstOrDefault(f => Path.GetFileName(f).ToLower() == mod.Key);
+				}
 
 				if (foundFolder != null)
+				{
 					folderLinks.Add("__" + mod.Key.ToLower() + "__", foundFolder);
+				}
 				else
 				{
 					string foundFile = files.FirstOrDefault(f => Regex.IsMatch(Path.GetFileName(f).ToLower(), string.Format("{0}_{1}.zip", mod.Key, versionMatch)));
 					if (foundFile == null)
 					{
 						if (mod.Key.ToLower() != "core" && mod.Key.ToLower() != "base" && mod.Key.ToLower() != "foremanexport")
+						{
 							return false;
+						}
+
 						continue;
 					}
 
@@ -110,7 +119,9 @@ namespace Foreman
 					foreach (ZipArchiveEntry zentity in zip.Entries)
 					{
 						if (zentity.Name == "")
+						{
 							continue; //folder
+						}
 
 						LinkedList<string> brokenPath = new LinkedList<string>();
 						string filePath = zentity.FullName;
@@ -149,37 +160,61 @@ namespace Foreman
 			int counter = 0;
 			foreach (var iconJToken in iconJObject["technologies"].ToList())
 			{
-				if (token.IsCancellationRequested) return false;
+				if (token.IsCancellationRequested)
+				{
+					return false;
+				}
+
 				progress.Report(new KeyValuePair<int, string>(startingPercent + (endingPercent - startingPercent) * counter++ / totalCount, ""));
 				ProcessIcon(iconJToken, 256);
 			}
 			foreach (var iconJToken in iconJObject["recipes"].ToList())
 			{
-				if (token.IsCancellationRequested) return false;
+				if (token.IsCancellationRequested)
+				{
+					return false;
+				}
+
 				progress.Report(new KeyValuePair<int, string>(startingPercent + (endingPercent - startingPercent) * counter++ / totalCount, ""));
 				ProcessIcon(iconJToken, 32);
 			}
 			foreach (var iconJToken in iconJObject["items"].ToList())
 			{
-				if (token.IsCancellationRequested) return false;
+				if (token.IsCancellationRequested)
+				{
+					return false;
+				}
+
 				progress.Report(new KeyValuePair<int, string>(startingPercent + (endingPercent - startingPercent) * counter++ / totalCount, ""));
 				ProcessIcon(iconJToken, 32);
 			}
 			foreach (var iconJToken in iconJObject["fluids"].ToList())
 			{
-				if (token.IsCancellationRequested) return false;
+				if (token.IsCancellationRequested)
+				{
+					return false;
+				}
+
 				progress.Report(new KeyValuePair<int, string>(startingPercent + (endingPercent - startingPercent) * counter++ / totalCount, ""));
 				ProcessIcon(iconJToken, 32);
 			}
 			foreach (var iconJToken in iconJObject["entities"].ToList())
 			{
-				if (token.IsCancellationRequested) return false;
+				if (token.IsCancellationRequested)
+				{
+					return false;
+				}
+
 				progress.Report(new KeyValuePair<int, string>(startingPercent + (endingPercent - startingPercent) * counter++ / totalCount, ""));
 				ProcessIcon(iconJToken, 64);
 			}
 			foreach (var iconJToken in iconJObject["groups"].ToList())
 			{
-				if (token.IsCancellationRequested) return false;
+				if (token.IsCancellationRequested)
+				{
+					return false;
+				}
+
 				progress.Report(new KeyValuePair<int, string>(startingPercent + (endingPercent - startingPercent) * counter++ / totalCount, ""));
 				ProcessIcon(iconJToken, 64);
 			}
@@ -216,7 +251,9 @@ namespace Foreman
 					iicons.Add(picon);
 				}
 				if(!myIconCache.ContainsKey(iconName))
+				{
 					myIconCache.Add(iconName, GetIconAndColor(iicon, iicons, defaultIconSize));
+				}
 			}
 		}
 
@@ -224,22 +261,31 @@ namespace Foreman
 		public IconColorPair GetIconAndColor(IconInfo iinfo, List<IconInfo> iinfos, int defaultCanvasSize)
 		{
 			if (iinfos == null)
+			{
 				iinfos = new List<IconInfo>();
+			}
+
 			double IconCanvasScale = defaultCanvasSize == 32 ? 2 : 1; //just some upscailing for icons (item icons are set at 32x32, but they look better at 64x64)
 			int IconCanvasSize = (int)(defaultCanvasSize * IconCanvasScale);
 
 			if (iinfos.Count == 0) //if there are no icons, use the single icon
+			{
 				iinfos.Add(iinfo);
+			}
 
 			//quick check to ensure it isnt a null icon
 			bool empty = true;
 			foreach (IconInfo ii in iinfos)
 			{
 				if (!string.IsNullOrEmpty(ii.iconPath))
+				{
 					empty = false;
+				}
 			}
 			if (empty)
+			{
 				return new IconColorPair(null, Color.Black);
+			}
 
 			//prepare the canvas - we will add each successive icon/layer on top of it
 			Bitmap canvas = new Bitmap(IconCanvasSize, IconCanvasSize, PixelFormat.Format32bppPArgb);
@@ -261,12 +307,16 @@ namespace Foreman
 
 				Bitmap iconImage = LoadImageFromMod(ii.iconPath, iconDrawSize);
 				if (iconImage == null)
+				{
 					continue;
+				}
 
 				//draw the icon onto a layer (that we will apply tint to and blend with canvas)
 				Bitmap layerSlice = new Bitmap(canvas.Width, canvas.Height, canvas.PixelFormat);
 				using (Graphics g = Graphics.FromImage(layerSlice))
+				{
 					g.DrawImageUnscaled(iconImage, (IconCanvasSize / 2) - (iconDrawSize / 2) + ii.iconOffset.X, (IconCanvasSize / 2) - (iconDrawSize / 2) + ii.iconOffset.Y);
+				}
 
 				//grab the layer data
 				BitmapData layerData = layerSlice.LockBits(new Rectangle(0, 0, canvas.Width, canvas.Height), ImageLockMode.ReadOnly, canvas.PixelFormat);
@@ -308,14 +358,21 @@ namespace Foreman
 			//at this point we need to convert the canvas into a non-alpha multiplied format due to winforms having issues with it
 			Bitmap result = new Bitmap(canvas.Width, canvas.Height, PixelFormat.Format32bppArgb);
 			using (Graphics g = Graphics.FromImage(result))
+			{
 				g.DrawImageUnscaled(canvas, 0, 0);
+			}
 
 			//finally, calculate the average color (yes, it comes out a bit different due to inclusion of transparency)
 			Color averageColor = GetAverageColor(result);
 			if (averageColor.GetBrightness() > 0.9)
+			{
 				result = AddBorder(result); //if the image is too bright, add a border to it. Honestly, this is never done anymore - it was useful before layer blending was fixed and some icons came out... white.
+			}
+
 			if (averageColor.GetBrightness() > 0.7)
+			{
 				averageColor = Color.FromArgb(255, (int)(averageColor.R * 0.7), (int)(averageColor.G * 0.7), (int)(averageColor.B * 0.7));
+			}
 
 			return new IconColorPair(result, averageColor);
 		}
@@ -323,10 +380,15 @@ namespace Foreman
 		private Bitmap LoadImageFromMod(string fileName, int resultSize = 32) //NOTE: must make sure we use pre-multiplied alpha
 		{
 			if (String.IsNullOrEmpty(fileName))
+			{
 				return null;
+			}
+
 			fileName = fileName.ToLower().Replace("/", "\\");
 			while (fileName.IndexOf("\\\\") != -1) //found this error in krastorio - apparently factorio ignores multiple slashes in file name
+			{
 				fileName = fileName.Replace("\\\\", "\\");
+			}
 
 			//if the image isnt currently in the cache, process it and add it to cache
 			if (!bitmapCache.ContainsKey(fileName))
@@ -368,7 +430,9 @@ namespace Foreman
 			}
 
 			if (bitmapCache[fileName] == null)
+			{
 				return null;
+			}
 
 			//get the requested image from the cache and draw it to correct size.
 			Bitmap image = bitmapCache[fileName];
@@ -385,7 +449,9 @@ namespace Foreman
 		private Color GetAverageColor(Bitmap icon)
 		{
 			if (icon == null)
+			{
 				return Color.Black;
+			}
 
 			BitmapData iconData = icon.LockBits(new Rectangle(0, 0, icon.Width, icon.Height), ImageLockMode.ReadOnly, icon.PixelFormat);
 			int bytesPerPixel = Bitmap.GetPixelFormatSize(icon.PixelFormat) / 8;
@@ -486,12 +552,18 @@ namespace Foreman
 					archiveFileLinks = null;
 
 					foreach (Bitmap bitmap in bitmapCache.Values)
+					{
 						bitmap?.Dispose();
+					}
+
 					bitmapCache.Clear();
 					bitmapCache = null;
 
 					foreach (ZipArchive zip in openedArchives)
+					{
 						zip.Dispose();
+					}
+
 					openedArchives.Clear();
 					openedArchives = null;
 				}
