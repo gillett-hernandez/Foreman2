@@ -137,8 +137,8 @@ namespace Foreman
 
 		public BaseNodeElement GetNodeAtPoint(Point point) //returns first such node (in case of stacking)
 		{
-			//done in a 2 stage process -> first we do a rough check on the node's location (if it is within the 500x300 zone centered on the given point, it goes to part 2)
-			//							-> then we do a full element.containsPoint check
+			//done in a 2 stage process -> first we do a rough check on the point's location (point within a node's area + 50 boundary on all sides), it goes to part 2)
+			//							-> then we do a full element.containsPoint check which includes both the node and any added segments (such as item frames)
 
 			for (int i = nodeElements.Count - 1; i >= 0; i--)
 			{
@@ -309,7 +309,7 @@ namespace Foreman
 			{
 				ProcessNodeRequest(null, new RecipeRequestArgs(NodeType.Passthrough, null));
 				DisposeLinkDrag();
-				Graph.UpdateNodeStates();
+				Graph.UpdateNodeStates(false);
 				Invalidate();
 			}
 			else
@@ -333,7 +333,7 @@ namespace Foreman
 				{
 					SubwindowOpen = false;
 					DisposeLinkDrag();
-					Graph.UpdateNodeStates();
+					Graph.UpdateNodeStates(false);
 					Invalidate();
 				};
 
@@ -375,7 +375,7 @@ namespace Foreman
 			SetSelection(newPassthroughNodes);
 
 			DisposeLinkDrag();
-			Graph.UpdateNodeStates();
+			Graph.UpdateNodeStates(false);
 			Invalidate();
 		}
 
@@ -664,11 +664,11 @@ namespace Foreman
 				{
 					if (element.Item is Fluid)
 					{
-						element.LinkWidth = (float)Math.Min((minLinkWidth + (maxLinkWidth - minLinkWidth) * (element.ConsumerElement.DisplayedNode.GetConsumeRate(element.Item) / fluidMax)), maxLinkWidth);
+						element.LinkWidth = (float)Math.Min((minLinkWidth + (maxLinkWidth - minLinkWidth) * (element.DisplayedLink.Throughput / fluidMax)), maxLinkWidth);
 					}
 					else
 					{
-						element.LinkWidth = (float)Math.Min((minLinkWidth + (maxLinkWidth - minLinkWidth) * (element.ConsumerElement.DisplayedNode.GetConsumeRate(element.Item) / itemMax)), maxLinkWidth);
+						element.LinkWidth = (float)Math.Min((minLinkWidth + (maxLinkWidth - minLinkWidth) * (element.DisplayedLink.Throughput / itemMax)), maxLinkWidth);
 					}
 				}
 			}
@@ -1153,11 +1153,13 @@ namespace Foreman
 
 		protected override bool ProcessCmdKey(ref Message msg, Keys keyData) //arrow keys to move the current selection
 		{
-			bool processed = false;
+			bool should_invalidate = true;
 			int moveUnit = (Grid.CurrentGridUnit > 0) ? Grid.CurrentGridUnit : 6;
+			int panUnit = (int)(10 / ViewScale);
 			if ((Control.ModifierKeys & Keys.Shift) == Keys.Shift) //large move
 			{
 				moveUnit = (Grid.CurrentMajorGridUnit > Grid.CurrentGridUnit) ? Grid.CurrentMajorGridUnit : moveUnit * 4;
+				panUnit *= 5;
 			}
 
 			if ((keyData & Keys.KeyCode) == Keys.Left)
@@ -1166,8 +1168,6 @@ namespace Foreman
 				{
 					node.SetLocation(new Point(node.X - moveUnit, node.Y));
 				}
-
-				processed = true;
 			}
 			else if ((keyData & Keys.KeyCode) == Keys.Right)
 			{
@@ -1175,8 +1175,6 @@ namespace Foreman
 				{
 					node.SetLocation(new Point(node.X + moveUnit, node.Y));
 				}
-
-				processed = true;
 			}
 			else if ((keyData & Keys.KeyCode) == Keys.Up)
 			{
@@ -1184,8 +1182,6 @@ namespace Foreman
 				{
 					node.SetLocation(new Point(node.X, node.Y - moveUnit));
 				}
-
-				processed = true;
 			}
 			else if ((keyData & Keys.KeyCode) == Keys.Down)
 			{
@@ -1193,11 +1189,33 @@ namespace Foreman
 				{
 					node.SetLocation(new Point(node.X, node.Y + moveUnit));
 				}
-
-				processed = true;
+			}
+			else if ((keyData & Keys.KeyCode) == Keys.W && !SubwindowOpen)
+			{
+				ViewOffset += new Size(0, panUnit);
+				UpdateGraphBounds();
+			}
+			else if ((keyData & Keys.KeyCode) == Keys.A && !SubwindowOpen)
+			{
+				ViewOffset += new Size(panUnit, 0);
+				UpdateGraphBounds();
+			}
+			else if ((keyData & Keys.KeyCode) == Keys.S && !SubwindowOpen)
+			{
+				ViewOffset += new Size(0, -panUnit);
+				UpdateGraphBounds();
+			}
+			else if ((keyData & Keys.KeyCode) == Keys.D && !SubwindowOpen)
+			{
+				ViewOffset += new Size(-panUnit, 0);
+				UpdateGraphBounds();
+			}
+			else
+			{
+				should_invalidate = false;
 			}
 
-			if (processed)
+			if (should_invalidate)
 			{
 				Invalidate();
 				return true;
@@ -1206,6 +1224,11 @@ namespace Foreman
 		}
 
 		//----------------------------------------------Viewpoint events
+
+		private void BGTimer_Tick(object sender, EventArgs e)
+		{
+			//if (key)
+		}
 
 		private void ProductionGraphViewer_Resized(object sender, EventArgs e)
 		{
@@ -1347,6 +1370,8 @@ namespace Foreman
 				form.Left = ParentForm.Left + 150;
 				form.Top = ParentForm.Top + 200;
 				DialogResult result = form.ShowDialog(); //LOAD FACTORIO DATA
+				if (DCache != null)
+					DCache.Clear();
 				DCache = form.GetDataCache();
 				if (result == DialogResult.Abort)
 				{
@@ -1358,6 +1383,8 @@ namespace Foreman
 						form2.Left = ParentForm.Left + 150;
 						form2.Top = ParentForm.Top + 200;
 						DialogResult result2 = form2.ShowDialog(); //LOAD default preset
+						if (DCache != null)
+							DCache.Clear();
 						DCache = form2.GetDataCache();
 						if (result2 == DialogResult.Abort)
 						{

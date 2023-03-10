@@ -533,7 +533,7 @@ namespace Foreman
 					Properties.Settings.Default.ShowUnavailable = options.DEV_ShowUnavailableItems;
 					Properties.Settings.Default.Save();
 
-					GraphViewer.Graph.UpdateNodeStates();
+					GraphViewer.Graph.UpdateNodeStates(true);
 					GraphViewer.Graph.UpdateNodeValues();
 
 					if (options.RequireReload)
@@ -563,6 +563,11 @@ namespace Foreman
 		{
 			Point location = GraphViewer.ScreenToGraph(new Point(GraphViewer.Width / 2, GraphViewer.Height / 2));
 			GraphViewer.AddItem(new Point(15, 15), location);
+		}
+
+		private void HelpButton_Click(object sender, EventArgs e)
+		{
+			System.Diagnostics.Process.Start("https://github.com/DanielKote/Foreman2");
 		}
 
 		//---------------------------------------------------------Key & Mouse events

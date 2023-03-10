@@ -140,8 +140,10 @@ namespace Foreman
 			BeaconsConst = 0;
 		}
 
-		public override void UpdateState()
+		public override void UpdateState(bool makeDirty = true)
 		{
+			if (makeDirty)
+				IsClean = false;
 			NodeState oldState = State;
 			State = GetUpdatedState();
 			if (oldState != State)
@@ -743,40 +745,37 @@ namespace Foreman
 				Trace.Fail("Cant ask for average generator temperature for a non-generator!");
 			}
 
-			return GetAverageTemperature(MyNode, MyNode.BaseRecipe.IngredientList[0]);
-			double GetAverageTemperature(BaseNode node, Item item)
+			return GetAverageTemperature(this, MyNode.BaseRecipe.IngredientList[0]);
+			double GetAverageTemperature(ReadOnlyBaseNode node, Item item)
 			{
-				if (node is PassthroughNode || node == MyNode)
+				if (node is ReadOnlyPassthroughNode || node == this)
 				{
 					double totalFlow = 0;
 					double totalTemperatureFlow = 0;
 					double totalTemperature = 0;
-					foreach (NodeLink link in node.InputLinks) //Throughput node: all same item. Generator node: only input is the fluid item.
+					foreach (ReadOnlyNodeLink link in node.InputLinks) //Throughput node: all same item. Generator node: only input is the fluid item.
 					{
 						totalFlow += link.Throughput;
-						double temperature = GetAverageTemperature(link.SupplierNode, item);
+						double temperature = GetAverageTemperature(link.Supplier, item);
 						totalTemperatureFlow += temperature * link.Throughput;
 						totalTemperature += temperature;
 					}
 					if (totalFlow == 0)
 					{
-						if (node.InputLinks.Count == 0)
+						if (node.InputLinks.Count() == 0)
 						{
 							return SelectedAssembler.OperationTemperature;
 						}
 						else
 						{
-							return totalTemperature / node.InputLinks.Count;
+							return totalTemperature / node.InputLinks.Count();
 						}
 					}
 					return totalTemperatureFlow / totalFlow;
 				}
-				else if (node is SupplierNode)
-				{
+				else if (node is ReadOnlySupplierNode)
 					return SelectedAssembler.OperationTemperature; //assume supplier is optimal temperature (cant exactly set to infinity or something as that would just cause the final result to be infinity)
-				}
-				else if (node is RecipeNode rnode)
-				{
+				else if (node is ReadOnlyRecipeNode rnode) {
 					return rnode.BaseRecipe.ProductTemperatureMap[item];
 				}
 
@@ -1058,38 +1057,45 @@ namespace Foreman
 
 		//-----------------------------------------------------------------------Set functions
 
-		public void SetPriority(bool lowPriority) { MyNode.LowPriority = lowPriority; }
+		public void SetPriority(bool lowPriority) { MyNode.LowPriority = lowPriority; MyNode.UpdateState(); }
 
 		public override void SetDesiredRate(double rate) { Trace.Fail("Desired rate set requested from recipe node!"); }
-		public void SetDesiredAssemblerCount(double count) { if (MyNode.DesiredAssemblerCount != count)
+		public void SetDesiredAssemblerCount(double count) {
+			if (MyNode.DesiredAssemblerCount != count)
 			{
 				MyNode.DesiredAssemblerCount = count;
+				MyNode.UpdateState();
 			}
 		}
 
 		public void SetNeighbourCount(double count) { if (MyNode.NeighbourCount != count)
 			{
 				MyNode.NeighbourCount = count;
+				MyNode.UpdateState();
 			}
 		}
 		public void SetExtraProductivityBonus(double bonus) { if (MyNode.ExtraProductivityBonus != bonus)
 			{
 				MyNode.ExtraProductivityBonus = bonus;
+				MyNode.UpdateState();
 			}
 		}
 		public void SetBeaconCount(double count) { if (MyNode.BeaconCount != count)
 			{
 				MyNode.BeaconCount = count;
+				MyNode.UpdateState();
 			}
 		}
 		public void SetBeaconsPerAssembler(double beacons) { if (MyNode.BeaconsPerAssembler != beacons)
 			{
 				MyNode.BeaconsPerAssembler = beacons;
+				MyNode.UpdateState();
 			}
 		}
 		public void SetBeaconsCont(double beacons) { if (MyNode.BeaconsConst != beacons)
 			{
 				MyNode.BeaconsConst = beacons;
+				MyNode.UpdateState();
 			}
 		}
 
@@ -1182,6 +1188,7 @@ namespace Foreman
 
 				MyNode.Fuel = fuel;
 				MyNode.MyGraph.FuelSelector.UseFuel(fuel);
+				MyNode.UpdateState();
 			}
 		}
 
