@@ -340,8 +340,9 @@ namespace Foreman
 					unvisitedNodes.Remove(currentNode);
 				}
 
-				if (!allClean || includeCleanComponents)
+				if (!allClean || includeCleanComponents){
 					connectedComponents.Add(newSet);
+				}
 			}
 			return connectedComponents;
 		}

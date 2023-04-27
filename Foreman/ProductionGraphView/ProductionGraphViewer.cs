@@ -379,6 +379,44 @@ namespace Foreman
 			Invalidate();
 		}
 
+		public ReadOnlyPassthroughNode BreakoutPassthroughNode(ReadOnlyBaseNode parent, LinkType linkType, Size offset, Item item)
+		{
+			List<BaseNodeElement> newPassthroughNodes = new List<BaseNodeElement>();
+			// PassthroughNodeElement passthroughNode = selectedNodes.Cast<PassthroughNodeElement>().First();
+			
+
+
+			// PassthroughNodeWidth
+			int yoffset = linkType == LinkType.Input ? 96 : -96;
+			yoffset *= parent.NodeDirection == NodeDirection.Up ? 1 : -1;
+			yoffset += offset.Height;
+
+			ReadOnlyPassthroughNode newNode = Graph.CreatePassthroughNode(item, new Point(parent.Location.X + offset.Width, parent.Location.Y + yoffset));
+
+
+			
+			PassthroughNodeController controller = (PassthroughNodeController)Graph.RequestNodeController(newNode);
+			controller.SetDirection(parent.NodeDirection);
+
+			if (linkType == LinkType.Input)
+			{
+				Graph.CreateLink(newNode, parent, item);
+			}
+			else
+			{
+				Graph.CreateLink(parent, newNode, item);
+			}
+
+			newPassthroughNodes.Add(nodeElementDictionary[newNode]);
+			
+			SetSelection(newPassthroughNodes);
+
+			DisposeLinkDrag();
+			Graph.UpdateNodeStates(false);
+			Invalidate();
+			return newNode;
+		}
+
 		public void TryDeleteSelectedNodes()
 		{
 			bool proceed = true;
@@ -851,23 +889,30 @@ namespace Foreman
 					{
 						viewBeingDragged = false;
 					}
-					else if (currentDragOperation == DragOperation.None && element == null) //right click on an empty space -> show add item/recipe menu
+					else if (currentDragOperation == DragOperation.None && element == null)
 					{
-						Point screenPoint = new Point(e.Location.X - 150, 15);
-						screenPoint.X = Math.Max(15, Math.Min(Width - 650, screenPoint.X)); //want to position the recipe selector such that it is well visible.
+						//if () //right click on an empty space -> show add item/recipe menu
+						//{
+							Point screenPoint = new Point(e.Location.X - 150, 15);
+							screenPoint.X = Math.Max(15, Math.Min(Width - 650, screenPoint.X)); //want to position the recipe selector such that it is well visible.
 
-						rightClickMenu.MenuItems.Clear();
-						rightClickMenu.MenuItems.Add(new MenuItem("Add Item",
-							new EventHandler((o, ee) =>
-							{
-								AddItem(screenPoint, ScreenToGraph(e.Location));
-							})));
-						rightClickMenu.MenuItems.Add(new MenuItem("Add Recipe",
-							new EventHandler((o, ee) =>
-							{
-								AddRecipe(screenPoint, null, ScreenToGraph(e.Location), NewNodeType.Disconnected);
-							})));
-						rightClickMenu.Show(this, e.Location);
+							rightClickMenu.MenuItems.Clear();
+							rightClickMenu.MenuItems.Add(new MenuItem("Add Item",
+								new EventHandler((o, ee) =>
+								{
+									AddItem(screenPoint, ScreenToGraph(e.Location));
+								})));
+							rightClickMenu.MenuItems.Add(new MenuItem("Add Recipe",
+								new EventHandler((o, ee) =>
+								{
+									AddRecipe(screenPoint, null, ScreenToGraph(e.Location), NewNodeType.Disconnected);
+								})));
+							rightClickMenu.Show(this, e.Location);
+						//}
+						//else { 
+						//	// right click on nonnull element
+						//}
+						
 					}
 					else if(currentDragOperation != DragOperation.Selection)
 					{
@@ -1370,8 +1415,9 @@ namespace Foreman
 				form.Left = ParentForm.Left + 150;
 				form.Top = ParentForm.Top + 200;
 				DialogResult result = form.ShowDialog(); //LOAD FACTORIO DATA
-				if (DCache != null)
+				if (DCache != null){
 					DCache.Clear();
+				}
 				DCache = form.GetDataCache();
 				if (result == DialogResult.Abort)
 				{
@@ -1383,8 +1429,9 @@ namespace Foreman
 						form2.Left = ParentForm.Left + 150;
 						form2.Top = ParentForm.Top + 200;
 						DialogResult result2 = form2.ShowDialog(); //LOAD default preset
-						if (DCache != null)
+						if (DCache != null){
 							DCache.Clear();
+						}
 						DCache = form2.GetDataCache();
 						if (result2 == DialogResult.Abort)
 						{

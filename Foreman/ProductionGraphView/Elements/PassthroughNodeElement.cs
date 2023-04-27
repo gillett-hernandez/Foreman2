@@ -99,6 +99,34 @@ namespace Foreman
 		protected override void AddRClickMenuOptions(bool nodeInSelection)
 		{
 			RightClickMenu.Items.Add(new ToolStripSeparator());
+			//RightClickMenu.Items.Add(new ToolStripMenuItem("Collapse passthrough node", null,
+			//		new EventHandler((o, e) =>
+			//		{
+			//			RightClickMenu.Close();
+			//			// make new passthrough node, positioned above this itemtab element with the correct item type
+			//			// connect all connections to the appropriate input or output
+			//			// delete all connections to the original node
+			//			// connect the passthrough node to the original node
+			//			// graphViewer.AddPassthroughNodesFromSelection(LinkType, (Size)Point.Subtract(graph_point, (Size)myParent.Location));
+			//			ReadOnlyPassthroughNode newNode = graphViewer.BreakoutPassthroughNode(DisplayedNode, LinkType, (Size)Point.Subtract(graph_point, (Size)myParent.Location), Item);
+
+
+			//			foreach (ReadOnlyNodeLink link in connections)
+			//			{
+			//				if (LinkType == LinkType.Output)
+			//				{
+			//					graphViewer.Graph.CreateLink(newNode, link.Consumer, Item);
+			//				}
+			//				else
+			//				{
+			//					graphViewer.Graph.CreateLink(link.Supplier, newNode, Item);
+			//				}
+			//				graphViewer.Graph.DeleteLink(link);
+			//			}
+
+			//			graphViewer.Graph.UpdateNodeValues();
+			//		}))
+			//{ Enabled = connections.Count > 0 });
 			if (DisplayedNode.SimpleDraw)
 			{
 				RightClickMenu.Items.Add(new ToolStripMenuItem("Dont simple-draw node", null,

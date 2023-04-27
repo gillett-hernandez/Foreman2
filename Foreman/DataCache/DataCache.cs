@@ -390,8 +390,9 @@ namespace Foreman
 
 			if (iconCache != null)
 			{
-				foreach (var iconset in iconCache.Values)
+				foreach (var iconset in iconCache.Values){
 					iconset.Icon.Dispose();
+				}
 				iconCache.Clear();
 			}
 
@@ -526,8 +527,8 @@ namespace Foreman
 						recipe = missingRecipe;
 					}
 				}
-				if (recipeLinks.ContainsKey(recipeShort.RecipeID))
-					;
+				//if (recipeLinks.ContainsKey(recipeShort.RecipeID))
+				//	;
 				recipeLinks.Add(recipeShort.RecipeID, recipe);
 			}
 			return recipeLinks;

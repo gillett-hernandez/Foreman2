@@ -176,15 +176,20 @@ namespace Foreman
 
 		public override void MouseUp(Point graph_point, MouseButtons button, bool wasDragged)
 		{
+
 			if (button == MouseButtons.Right)
 			{
+				
 				List<ReadOnlyNodeLink> connections = new List<ReadOnlyNodeLink>();
 				if (LinkType == LinkType.Input)
 				{
+					// right clicked on an input connection
 					connections.AddRange(DisplayedNode.InputLinks.Where(l => l.Item == Item));
+					
 				}
 				else //if (LinkType == LinkType.Output)
 				{
+					// right clicked on an output connection
 					connections.AddRange(DisplayedNode.OutputLinks.Where(l => l.Item == Item));
 				}
 
@@ -200,6 +205,35 @@ namespace Foreman
 						graphViewer.Graph.UpdateNodeValues();
 					}))
 				{ Enabled = connections.Count > 0 });
+				RightClickMenu.Items.Add(new ToolStripMenuItem("Break into passthrough node", null,
+					new EventHandler((o, e) =>
+					{
+						RightClickMenu.Close();
+						// make new passthrough node, positioned above this itemtab element with the correct item type
+						// connect all connections to the appropriate input or output
+						// delete all connections to the original node
+						// connect the passthrough node to the original node
+						// graphViewer.AddPassthroughNodesFromSelection(LinkType, (Size)Point.Subtract(graph_point, (Size)myParent.Location));
+						ReadOnlyPassthroughNode newNode = graphViewer.BreakoutPassthroughNode(DisplayedNode, LinkType, (Size)Point.Subtract(graph_point, (Size)myParent.Location), Item);
+
+
+						foreach (ReadOnlyNodeLink link in connections)
+						{
+							if (LinkType == LinkType.Output)
+							{
+								graphViewer.Graph.CreateLink(newNode, link.Consumer, Item);
+							}
+							else
+							{
+								graphViewer.Graph.CreateLink(link.Supplier, newNode, Item);
+							}
+							graphViewer.Graph.DeleteLink(link);
+						}
+
+						graphViewer.Graph.UpdateNodeValues();
+					}))
+				{ Enabled = connections.Count > 0 });
+				
 
 				RightClickMenu.Show(graphViewer, graphViewer.GraphToScreen(graph_point));
 			}

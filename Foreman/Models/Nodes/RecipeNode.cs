@@ -142,8 +142,9 @@ namespace Foreman
 
 		public override void UpdateState(bool makeDirty = true)
 		{
-			if (makeDirty)
+			if (makeDirty){
 				IsClean = false;
+			}
 			NodeState oldState = State;
 			State = GetUpdatedState();
 			if (oldState != State)
@@ -773,8 +774,9 @@ namespace Foreman
 					}
 					return totalTemperatureFlow / totalFlow;
 				}
-				else if (node is ReadOnlySupplierNode)
+				else if (node is ReadOnlySupplierNode){
 					return SelectedAssembler.OperationTemperature; //assume supplier is optimal temperature (cant exactly set to infinity or something as that would just cause the final result to be infinity)
+				}
 				else if (node is ReadOnlyRecipeNode rnode) {
 					return rnode.BaseRecipe.ProductTemperatureMap[item];
 				}
