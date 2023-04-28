@@ -99,34 +99,50 @@ namespace Foreman
 		protected override void AddRClickMenuOptions(bool nodeInSelection)
 		{
 			RightClickMenu.Items.Add(new ToolStripSeparator());
-			//RightClickMenu.Items.Add(new ToolStripMenuItem("Collapse passthrough node", null,
-			//		new EventHandler((o, e) =>
-			//		{
-			//			RightClickMenu.Close();
-			//			// make new passthrough node, positioned above this itemtab element with the correct item type
-			//			// connect all connections to the appropriate input or output
-			//			// delete all connections to the original node
-			//			// connect the passthrough node to the original node
-			//			// graphViewer.AddPassthroughNodesFromSelection(LinkType, (Size)Point.Subtract(graph_point, (Size)myParent.Location));
-			//			ReadOnlyPassthroughNode newNode = graphViewer.BreakoutPassthroughNode(DisplayedNode, LinkType, (Size)Point.Subtract(graph_point, (Size)myParent.Location), Item);
+			RightClickMenu.Items.Add(new ToolStripMenuItem("Dissolve passthrough node", null,
+					new EventHandler((o, e) =>
+					{
+						RightClickMenu.Close();
+
+						// for each input link, check the output source of that link and connect it to all the output links' cooresponding input destinations
+						// un-bundles the passthrough node.
+						// be very careful using this on passthrough nodes that have multiple to multiple connections.
+
+						List<ReadOnlyBaseNode> consumers = new List<ReadOnlyBaseNode>();
+						List<ReadOnlyBaseNode> suppliers = new List<ReadOnlyBaseNode>();
 
 
-			//			foreach (ReadOnlyNodeLink link in connections)
-			//			{
-			//				if (LinkType == LinkType.Output)
-			//				{
-			//					graphViewer.Graph.CreateLink(newNode, link.Consumer, Item);
-			//				}
-			//				else
-			//				{
-			//					graphViewer.Graph.CreateLink(link.Supplier, newNode, Item);
-			//				}
-			//				graphViewer.Graph.DeleteLink(link);
-			//			}
+						foreach (ReadOnlyNodeLink link in DisplayedNode.InputLinks) {
+							suppliers.Add(link.Supplier);
+						}
 
-			//			graphViewer.Graph.UpdateNodeValues();
-			//		}))
-			//{ Enabled = connections.Count > 0 });
+						//DisplayedNode.Outputs
+						
+						
+						foreach (ReadOnlyNodeLink link in DisplayedNode.OutputLinks)
+						{
+							consumers.Add(link.Consumer);
+						}
+
+						foreach (ReadOnlyBaseNode supplier in suppliers) {
+							foreach (ReadOnlyBaseNode consumer in consumers) {
+								if (supplier != consumer) {
+									graphViewer.Graph.CreateLink(supplier, consumer, DisplayedNode.PassthroughItem);
+								}
+								
+							}
+						}
+
+						graphViewer.Graph.DeleteNode(DisplayedNode);
+
+
+						graphViewer.Graph.UpdateNodeValues();
+				}
+				)
+				)
+				{ Enabled = DisplayedNode.OutputLinks.Count() > 0 && DisplayedNode.InputLinks.Count() > 0 }
+			);
+
 			if (DisplayedNode.SimpleDraw)
 			{
 				RightClickMenu.Items.Add(new ToolStripMenuItem("Dont simple-draw node", null,
