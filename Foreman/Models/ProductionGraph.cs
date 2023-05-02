@@ -97,21 +97,18 @@ namespace Foreman
 
 		public enum GraphOperation
 		{
-			AddNode,
+			CreateNode,
 			DeleteNode,
 			MoveNode,
 			CreateLinks,
 			DeleteLinks,
 		}
+
+		// if there were proper discriminated unions like in rust, i would use those
+		// but unfortunately those are tricky and annoying to do in C# so instead we use Nullable where necessary to use nulls for data that the current variant can not fill
+		
 		public struct GraphOperationData
 		{
-
-			// preconditions/guarantees per GraphOperation type
-			// if type is AddNode, location will be nonnull, and node will be nonnull
-			// if type is DeleteNode, location will be nonnull, and node will be nonnull
-			// if type is MoveNode, priorlocation will be nonnull, location will be nonnull, and node will be nonnull
-			// if type is CreateLinks, modifiedLinks will be nonnull and nonempty
-			// if type is DeleteLinks, modifiedLinks will be nonnull and nonempty
 			public GraphOperation operationType;
 			public Nullable<Point> priorLocation;
 			public Nullable<Point> location;
@@ -193,7 +190,7 @@ namespace Foreman
 			{
 				redoDirty = true;
 				undoOperationStack.Add(new GraphOperationData(
-					GraphOperation.AddNode,
+					GraphOperation.CreateNode,
 					null,
 					location,
 					NodeType.Consumer,
@@ -226,7 +223,7 @@ namespace Foreman
 			{
 				redoDirty = true;
 				undoOperationStack.Add(new GraphOperationData(
-					GraphOperation.AddNode,
+					GraphOperation.CreateNode,
 					null,
 					location,
 					NodeType.Supplier,
@@ -258,7 +255,7 @@ namespace Foreman
 			{
 				redoDirty = true;
 				undoOperationStack.Add(new GraphOperationData(
-					GraphOperation.AddNode,
+					GraphOperation.CreateNode,
 					null,
 					location,
 					NodeType.Passthrough,
@@ -304,10 +301,9 @@ namespace Foreman
 			RecipeNode node = new RecipeNode(this, nodeID, recipe);
 			if (addToUndo)
 			{
-
 				redoDirty = true;
 				undoOperationStack.Add(new GraphOperationData(
-					GraphOperation.AddNode,
+					GraphOperation.CreateNode,
 					null,
 					location,
 					NodeType.Recipe,
@@ -384,6 +380,7 @@ namespace Foreman
 
 		public void DeleteNode(ReadOnlyBaseNode node, bool addToUndo = true)
 		{
+			node = idToNode[node.NodeID];
 			if (!roToNode.ContainsKey(node))
 			{
 				Trace.Fail(string.Format("Node deletion called on a node ({0}) that isnt part of the graph!", node.ToString()));
@@ -564,7 +561,7 @@ namespace Foreman
 
 				switch (last_operation.operationType)
 				{
-					case GraphOperation.AddNode:
+					case GraphOperation.CreateNode:
 						{
 							// added a node, so delete that same node
 							DeleteNode(last_operation.node, false);
@@ -643,6 +640,8 @@ namespace Foreman
 				// since a new operation was recorded onto the undo
 				redoOperationStack.Clear();
 				redoDirty = false;
+				// early return is just symbolic / to be explicit since the conditional will eval to false anyways
+				return;
 			}
 			int length = redoOperationStack.Count;
 			if (length > 0)
@@ -660,7 +659,7 @@ namespace Foreman
 							DeleteNode(last_operation.node, false);
 							break;
 						}
-					case GraphOperation.AddNode:
+					case GraphOperation.CreateNode:
 						{
 							// redo adding a node
 							switch (last_operation.nodeType)
