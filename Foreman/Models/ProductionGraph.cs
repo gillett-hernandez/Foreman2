@@ -9,6 +9,7 @@ using System.Text;
 
 namespace Foreman
 {
+
 	public enum NodeType { Supplier, Consumer, Passthrough, Recipe }
 	public enum LinkType { Input, Output }
 
@@ -94,11 +95,63 @@ namespace Foreman
 			}
 		}
 
+		public enum GraphOperation
+		{
+			AddNode,
+			DeleteNode,
+			MoveNode,
+			CreateLinks,
+			DeleteLinks,
+		}
+		public struct GraphOperationData
+		{
+
+			// preconditions/guarantees per GraphOperation type
+			// if type is AddNode, location will be nonnull, and node will be nonnull
+			// if type is DeleteNode, location will be nonnull, and node will be nonnull
+			// if type is MoveNode, priorlocation will be nonnull, location will be nonnull, and node will be nonnull
+			// if type is CreateLinks, modifiedLinks will be nonnull and nonempty
+			// if type is DeleteLinks, modifiedLinks will be nonnull and nonempty
+			public GraphOperation operationType;
+			public Nullable<Point> priorLocation;
+			public Nullable<Point> location;
+
+			public Nullable<NodeType> nodeType;
+			public ReadOnlyBaseNode node;
+			public Item item;
+			public Recipe recipe;
+			// if type is CreateLinks, then modifiedLinks is the list of created links
+			// likewise if it's DeleteLinks, then modifiedLinks is the list of deleted links
+			public List<ReadOnlyNodeLink> modifiedLinks;
+			public GraphOperationData(GraphOperation optype, Nullable<Point> priorlocation, Nullable<Point> location, Nullable<NodeType> nodetype, Item item, Recipe recipe, ReadOnlyBaseNode node, List<ReadOnlyNodeLink> links)
+			{
+				this.operationType = optype;
+				this.priorLocation = priorlocation;
+				this.location = location;
+				this.nodeType = nodetype;
+				this.item = item;
+				this.recipe = recipe;
+				this.node = node;
+				this.modifiedLinks = links;
+			}
+		}
+
 		private HashSet<BaseNode> nodes;
 		private HashSet<NodeLink> nodeLinks;
+		private List<NodeType> nodeTypes;
 		private Dictionary<ReadOnlyBaseNode, BaseNode> roToNode;
 		private Dictionary<ReadOnlyNodeLink, NodeLink> roToLink;
 		private int lastNodeID;
+
+		// push operations to the stack
+		// pop operations and invert them to undo
+		// delete elements from the bottom of the stack when the cardinality exceeds the limit (set in settings)
+		private List<GraphOperationData> undoOperationStack;
+
+		// when undoing, push undone operations to the redo stack
+		// to redo, pop from the stack and perform the inverse, adding that operation back to the undo stack
+		// delete elements from the bottom of the stack when the cardinality exceeds the limit (set in settings)
+		private List<GraphOperationData> redoOperationStack;
 
 		public ProductionGraph()
 		{
@@ -111,6 +164,9 @@ namespace Foreman
 			nodeLinks = new HashSet<NodeLink>();
 			roToNode = new Dictionary<ReadOnlyBaseNode, BaseNode>();
 			roToLink = new Dictionary<ReadOnlyNodeLink, NodeLink>();
+			undoOperationStack = new List<GraphOperationData>();
+			redoOperationStack = new List<GraphOperationData>();
+			nodeTypes = new List<NodeType>();
 			lastNodeID = 0;
 
 			AssemblerSelector = new AssemblerSelector();
@@ -118,11 +174,30 @@ namespace Foreman
 			FuelSelector = new FuelSelector();
 		}
 
-		public BaseNodeController RequestNodeController(ReadOnlyBaseNode node) { if(roToNode.ContainsKey(node)) { return roToNode[node].Controller; } return null; }
+		public BaseNodeController RequestNodeController(ReadOnlyBaseNode node) { if (roToNode.ContainsKey(node)) { return roToNode[node].Controller; } return null; }
 
-		public ReadOnlyConsumerNode CreateConsumerNode(Item item, Point location)
+		private int GetNewNodeID()
 		{
-			ConsumerNode node = new ConsumerNode(this, lastNodeID++, item);
+			return lastNodeID++;
+		}
+
+		public ReadOnlyConsumerNode CreateConsumerNode(Item item, Point location, int nodeID, bool addToUndo = true)
+		{
+
+			ConsumerNode node = new ConsumerNode(this, nodeID, item);
+			if (addToUndo)
+			{
+				undoOperationStack.Add(new GraphOperationData(
+					GraphOperation.AddNode,
+					null,
+					location,
+					NodeType.Consumer,
+					item,
+					null,
+					(ReadOnlyBaseNode)node.ReadOnlyNode,
+					new List<ReadOnlyNodeLink>()
+				));
+			}
 			node.Location = location;
 			node.NodeDirection = DefaultNodeDirection;
 			nodes.Add(node);
@@ -131,10 +206,28 @@ namespace Foreman
 			NodeAdded?.Invoke(this, new NodeEventArgs(node.ReadOnlyNode));
 			return (ReadOnlyConsumerNode)node.ReadOnlyNode;
 		}
-
-		public ReadOnlySupplierNode CreateSupplierNode(Item item, Point location)
+		public ReadOnlyConsumerNode CreateConsumerNode(Item item, Point location)
 		{
-			SupplierNode node = new SupplierNode(this, lastNodeID++, item);
+			nodeTypes.Add(NodeType.Consumer);
+			return CreateConsumerNode(item, location, GetNewNodeID());
+		}
+
+		public ReadOnlySupplierNode CreateSupplierNode(Item item, Point location, int nodeID, bool addToUndo = true)
+		{
+			SupplierNode node = new SupplierNode(this, nodeID, item);
+			if (addToUndo)
+			{
+				undoOperationStack.Add(new GraphOperationData(
+					GraphOperation.AddNode,
+					null,
+					location,
+					NodeType.Supplier,
+					item,
+					null,
+					(ReadOnlyBaseNode)node.ReadOnlyNode,
+					new List<ReadOnlyNodeLink>()
+				));
+			}
 			node.Location = location;
 			node.NodeDirection = DefaultNodeDirection;
 			nodes.Add(node);
@@ -143,10 +236,28 @@ namespace Foreman
 			NodeAdded?.Invoke(this, new NodeEventArgs(node.ReadOnlyNode));
 			return (ReadOnlySupplierNode)node.ReadOnlyNode;
 		}
-
-		public ReadOnlyPassthroughNode CreatePassthroughNode(Item item, Point location)
+		public ReadOnlySupplierNode CreateSupplierNode(Item item, Point location)
 		{
-			PassthroughNode node = new PassthroughNode(this, lastNodeID++, item);
+			nodeTypes.Add(NodeType.Supplier);
+			return CreateSupplierNode(item, location, GetNewNodeID());
+		}
+
+		public ReadOnlyPassthroughNode CreatePassthroughNode(Item item, Point location, int nodeID, bool addToUndo = true)
+		{
+			PassthroughNode node = new PassthroughNode(this, nodeID, item);
+			if (addToUndo)
+			{
+				undoOperationStack.Add(new GraphOperationData(
+					GraphOperation.AddNode,
+					null,
+					location,
+					NodeType.Passthrough,
+					item,
+					null,
+					(ReadOnlyBaseNode)node.ReadOnlyNode,
+					new List<ReadOnlyNodeLink>()
+				));
+			}
 			node.Location = location;
 			node.NodeDirection = DefaultNodeDirection;
 			node.SimpleDraw = DefaultToSimplePassthroughNodes;
@@ -157,14 +268,47 @@ namespace Foreman
 			return (ReadOnlyPassthroughNode)node.ReadOnlyNode;
 		}
 
-		public ReadOnlyRecipeNode CreateRecipeNode(Recipe recipe, Point location) { return CreateRecipeNode(recipe, location, null); }
-		private ReadOnlyRecipeNode CreateRecipeNode(Recipe recipe, Point location, Action<RecipeNode> nodeSetupAction) //node setup action is used to populate the node prior to informing everyone of its creation
+		public ReadOnlyPassthroughNode CreatePassthroughNode(Item item, Point location)
 		{
-			RecipeNode node = new RecipeNode(this, lastNodeID++, recipe);
+			nodeTypes.Add(NodeType.Passthrough);
+			return CreatePassthroughNode(item, location, GetNewNodeID());
+		}
+
+		public ReadOnlyRecipeNode CreateRecipeNode(Recipe recipe, Point location)
+		{
+
+			nodeTypes.Add(NodeType.Recipe);
+			return CreateRecipeNode(recipe, location, GetNewNodeID(), null);
+		}
+
+		public ReadOnlyRecipeNode CreateRecipeNode(Recipe recipe, Point location, Action<RecipeNode> nodeSetupAction)
+		{
+			nodeTypes.Add(NodeType.Recipe);
+			return CreateRecipeNode(recipe, location, GetNewNodeID(), nodeSetupAction);
+		}
+
+		public ReadOnlyRecipeNode CreateRecipeNode(Recipe recipe, Point location, int nodeID, bool addToUndo = true) { return CreateRecipeNode(recipe, location, nodeID, null, addToUndo); }
+		private ReadOnlyRecipeNode CreateRecipeNode(Recipe recipe, Point location, int nodeID, Action<RecipeNode> nodeSetupAction, bool addToUndo = true) //node setup action is used to populate the node prior to informing everyone of its creation
+		{
+			RecipeNode node = new RecipeNode(this, nodeID, recipe);
+			if (addToUndo)
+			{
+				undoOperationStack.Add(new GraphOperationData(
+					GraphOperation.AddNode,
+					null,
+					location,
+					NodeType.Recipe,
+					null,
+					recipe,
+					(ReadOnlyBaseNode)node.ReadOnlyNode,
+					new List<ReadOnlyNodeLink>()
+				));
+			}
+
 			node.Location = location;
 			node.NodeDirection = DefaultNodeDirection;
 			nodeSetupAction?.Invoke(node);
-			if(nodeSetupAction == null)
+			if (nodeSetupAction == null)
 			{
 				RecipeNodeController rnController = (RecipeNodeController)node.Controller;
 				rnController.AutoSetAssembler();
@@ -177,7 +321,7 @@ namespace Foreman
 			return (ReadOnlyRecipeNode)node.ReadOnlyNode;
 		}
 
-		public ReadOnlyNodeLink CreateLink(ReadOnlyBaseNode supplier, ReadOnlyBaseNode consumer, Item item)
+		public ReadOnlyNodeLink CreateLink(ReadOnlyBaseNode supplier, ReadOnlyBaseNode consumer, Item item, bool addToUndo = true)
 		{
 			if (!roToNode.ContainsKey(supplier) || !roToNode.ContainsKey(consumer) || !supplier.Outputs.Contains(item) || !consumer.Inputs.Contains(item))
 			{
@@ -193,6 +337,24 @@ namespace Foreman
 			BaseNode consumerNode = roToNode[consumer];
 
 			NodeLink link = new NodeLink(this, supplierNode, consumerNode, item);
+
+			if (addToUndo)
+			{
+				undoOperationStack.Add(new GraphOperationData(
+					GraphOperation.CreateLinks,
+					null,
+					null,
+					null,
+					null,
+					null,
+					null,
+					new List<ReadOnlyNodeLink>
+					{
+						link.ReadOnlyLink
+					}
+				));
+			}
+
 			supplierNode.OutputLinks.Add(link);
 			consumerNode.InputLinks.Add(link);
 			LinkChangeUpdateImpactedNodeStates(link, LinkType.Input);
@@ -204,21 +366,87 @@ namespace Foreman
 			return link.ReadOnlyLink;
 		}
 
-		public void DeleteNode(ReadOnlyBaseNode node)
+		public void DeleteNode(ReadOnlyBaseNode node, bool addToUndo = true)
 		{
 			if (!roToNode.ContainsKey(node))
 			{
 				Trace.Fail(string.Format("Node deletion called on a node ({0}) that isnt part of the graph!", node.ToString()));
 			}
 
+
 			foreach (ReadOnlyNodeLink link in node.InputLinks.ToList())
 			{
-				DeleteLink(link);
+				DeleteLink(link, addToUndo);
 			}
 
 			foreach (ReadOnlyNodeLink link in node.OutputLinks.ToList())
 			{
-				DeleteLink(link);
+				DeleteLink(link, addToUndo);
+			}
+
+			if (addToUndo)
+			{
+				NodeType nodetype = nodeTypes[node.NodeID];
+				switch (nodetype)
+				{
+					case NodeType.Supplier:
+						{
+							undoOperationStack.Add(new GraphOperationData(
+								GraphOperation.DeleteNode,
+								null,
+								node.Location,
+								nodetype,
+								((ReadOnlySupplierNode)node).SuppliedItem,
+								null,
+								node,
+								new List<ReadOnlyNodeLink>()
+							));
+							break;
+						}
+					case NodeType.Consumer:
+						{
+							undoOperationStack.Add(new GraphOperationData(
+								GraphOperation.DeleteNode,
+								null,
+								node.Location,
+								nodetype,
+								((ReadOnlyConsumerNode)node).ConsumedItem,
+								null,
+								node,
+								new List<ReadOnlyNodeLink>()
+							));
+							break;
+						}
+					case NodeType.Passthrough:
+						{
+							undoOperationStack.Add(new GraphOperationData(
+								GraphOperation.DeleteNode,
+								null,
+								node.Location,
+								nodetype,
+								((ReadOnlyPassthroughNode)node).PassthroughItem,
+								null,
+								node,
+								new List<ReadOnlyNodeLink>()
+							));
+							break;
+						}
+					case NodeType.Recipe:
+						{
+							undoOperationStack.Add(new GraphOperationData(
+								GraphOperation.DeleteNode,
+								null,
+								node.Location,
+								nodetype,
+								null,
+								((ReadOnlyRecipeNode)node).BaseRecipe,
+								node,
+								new List<ReadOnlyNodeLink>()
+							));
+							break;
+						}
+				}
+
 			}
 
 			nodes.Remove(roToNode[node]);
@@ -226,20 +454,35 @@ namespace Foreman
 			NodeDeleted?.Invoke(this, new NodeEventArgs(node));
 		}
 
-		public void DeleteNodes(IEnumerable<ReadOnlyBaseNode> nodes)
+		public void DeleteNodes(IEnumerable<ReadOnlyBaseNode> nodes, bool addToUndo = true)
 		{
 			foreach (ReadOnlyBaseNode node in nodes)
 			{
-				DeleteNode(node);
+				DeleteNode(node, addToUndo);
 			}
 		}
 
-		public void DeleteLink(ReadOnlyNodeLink link)
+		public void DeleteLink(ReadOnlyNodeLink link, bool addToUndo = true)
 		{
 			if (!roToLink.ContainsKey(link) || !roToNode.ContainsKey(link.Consumer) || !roToNode.ContainsKey(link.Supplier))
 			{
 				Trace.Fail(string.Format("Link deletion called with a link ({0}) that isnt part of the graph, or whose node(s) ({1}), ({2}) is/are not part of the graph!", link.ToString(), link.Consumer.ToString(), link.Supplier.ToString()));
 			}
+
+			if (addToUndo)
+			{
+				undoOperationStack.Add(new GraphOperationData(
+					GraphOperation.DeleteLinks,
+					null,
+					null,
+					null,
+					null,
+					null,
+					null,
+					new List<ReadOnlyNodeLink> { link }
+				));
+			}
+
 
 			NodeLink nodeLink = roToLink[link];
 			nodeLink.ConsumerNode.InputLinks.Remove(nodeLink);
@@ -261,6 +504,105 @@ namespace Foreman
 
 			SerializeNodeIdSet = null;
 			lastNodeID = 0;
+		}
+
+		public void UndoOperation()
+		{
+			// need to add flag to all common operations such that we can prevent re-recording stuff we do to Undo into the undo log
+			// i.e. without a flag, when you undo an AddNode it will call DeleteNode, which will immediately add DeleteNode to the undo stack
+			// we want undos and redos to not affect the undo and redo stacks except by transferring between them
+			// also, when the user does any other action that isn't a undo or redo we need to clear the redo stack as it will become invalid.
+
+			// also need to maybe handle Breakout and Dissolve uniquely? or just leave them be as aggregate actions.
+			int length = undoOperationStack.Count;
+			if (length > 0)
+			{
+				// we have a valid operation to undo
+				GraphOperationData last_operation = undoOperationStack.Last();
+				undoOperationStack.RemoveAt(length - 1);
+				redoOperationStack.Add(last_operation);
+
+				switch (last_operation.operationType)
+				{
+					case GraphOperation.AddNode:
+						{
+							// added a node, so delete that same node
+							DeleteNode(last_operation.node, false);
+							break;
+						}
+					case GraphOperation.DeleteNode:
+						{
+							// deleted a node, so add it back
+							// also need to add back all affected links
+
+							switch (last_operation.nodeType)
+							{
+								case NodeType.Supplier:
+									{
+										CreateSupplierNode(last_operation.item, last_operation.location.Value, last_operation.node.NodeID, false);
+										break;
+
+									}
+								case NodeType.Consumer:
+									{
+										CreateConsumerNode(last_operation.item, last_operation.location.Value, last_operation.node.NodeID, false);
+										break;
+
+									}
+								case NodeType.Passthrough:
+									{
+										CreatePassthroughNode(last_operation.item, last_operation.location.Value, last_operation.node.NodeID, false);
+										break;
+
+									}
+								case NodeType.Recipe:
+									{
+										CreateRecipeNode(last_operation.recipe, last_operation.location.Value, last_operation.node.NodeID, false);
+										break;
+
+									}
+							}
+
+							foreach (ReadOnlyNodeLink link in last_operation.modifiedLinks)
+							{
+								CreateLink(link.Supplier, link.Consumer, link.Item, false);
+							}
+							break;
+						}
+					case GraphOperation.MoveNode:
+						{
+							// undo move
+							break;
+						}
+					case GraphOperation.CreateLinks:
+						{
+							// undo create links
+							foreach (ReadOnlyNodeLink link in last_operation.modifiedLinks)
+							{
+								DeleteLink(link, false);
+							}
+							break;
+						}
+					case GraphOperation.DeleteLinks:
+						{
+							// undo delete links
+							foreach (ReadOnlyNodeLink link in last_operation.modifiedLinks)
+							{
+								CreateLink(link.Supplier, link.Consumer, link.Item, false);
+							}
+							break;
+						}
+				}
+			}
+		}
+
+		public void RedoOperation()
+		{
+			if (redoOperationStack.Count > 0)
+			{
+				// we have a valid operation to undo
+
+			}
 		}
 
 		public void UpdateNodeStates(bool markAllAsDirty)
@@ -293,9 +635,10 @@ namespace Foreman
 			}
 		}
 
-		public IEnumerable<IEnumerable<ReadOnlyBaseNode>> GetConnectedNodeGroups(bool includeCleanComponents) {
-				foreach (IEnumerable<BaseNode> group in GetConnectedComponents(includeCleanComponents)) { yield return group.Select(node => node.ReadOnlyNode); } 
-			}
+		public IEnumerable<IEnumerable<ReadOnlyBaseNode>> GetConnectedNodeGroups(bool includeCleanComponents)
+		{
+			foreach (IEnumerable<BaseNode> group in GetConnectedComponents(includeCleanComponents)) { yield return group.Select(node => node.ReadOnlyNode); }
+		}
 
 		private IEnumerable<IEnumerable<BaseNode>> GetConnectedComponents(bool includeCleanComponents) //used to break the graph into groups (in case there are multiple disconnected groups) for simpler solving. Clean components refer to node groups where all the nodes inside the group havent had any changes since last solve operation
 		{
@@ -340,7 +683,8 @@ namespace Foreman
 					unvisitedNodes.Remove(currentNode);
 				}
 
-				if (!allClean || includeCleanComponents){
+				if (!allClean || includeCleanComponents)
+				{
 					connectedComponents.Add(newSet);
 				}
 			}
@@ -678,7 +1022,7 @@ namespace Foreman
 
 					newNode.NodeDirection = (NodeDirection)(int)nodeJToken["Direction"];
 
-					if(nodeJToken["KeyNode"] != null)
+					if (nodeJToken["KeyNode"] != null)
 					{
 						newNode.KeyNode = true;
 						newNode.KeyNodeTitle = (string)nodeJToken["KeyNode"];

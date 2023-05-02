@@ -75,7 +75,9 @@ namespace Foreman
 		public virtual void UpdateState(bool makeDirty = true)
 		{
 			if(makeDirty)
+			{
 				IsClean = false;
+			}
 			NodeState originalState = State;
 			State = AllLinksValid ? AllLinksConnected? NodeState.Clean : NodeState.MissingLink : NodeState.Error;
 			if (State != originalState)

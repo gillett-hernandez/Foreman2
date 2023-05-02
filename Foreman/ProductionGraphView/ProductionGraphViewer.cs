@@ -1147,6 +1147,14 @@ namespace Foreman
 						}
 					}
 				}
+				else if (e.KeyCode == Keys.Z && (e.Modifiers & Keys.Control) == Keys.Control && (e.Modifiers & Keys.Shift) == Keys.Shift) //redo
+				{
+					Graph.RedoOperation();
+				}
+				else if (e.KeyCode == Keys.Z && (e.Modifiers & Keys.Control) == Keys.Control) //undo
+				{
+					Graph.UndoOperation();
+				}
 				else if (e.KeyCode == Keys.V && (e.Modifiers & Keys.Control) == Keys.Control) //paste
 				{
 					try

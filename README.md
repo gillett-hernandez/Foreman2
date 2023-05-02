@@ -1,4 +1,22 @@
 # Foreman 2.0 #
+
+## Preface ##
+
+Hi, this preface was written by Gillett specifically for my fork. I started this fork originally because Foreman2 was not being actively developed and I found that it did not work with the latest Py mods (PyAE). So I fixed that, fixed other crashes that were reported, and lately I've been adding minor features where I find them appropriate/helpful.
+
+### Differences from DanielKote/Foreman2 ###
+
+* Breakout passthrough node feature when right clicking on a input or output item tab. Reroutes all output or input connections through a new passthrough node, and connects that passthrough node to the item tab you clicked.
+* Dissolve passthrough node feature when right clicking a passthrough node. Deletes the passthrough node while preserving all the connections it had.
+* Undo and Redo stack - supports undoing and redoing an arbitrary number of times, though by default this is limited to 100.
+
+### Support ###
+
+Buy me a [coffee](https://ko-fi.com/nacly) if you appreciate what I've done.
+
+## Back to your regularly scheduled readme ##
+
+
 ![1: Foreman 2.0](https://puu.sh/Im6D4/5a42f137e2.jpg)
 
 This is a relatively simple program for generating flowcharts for production lines in the game [Factorio](https://www.factorio.com/).
