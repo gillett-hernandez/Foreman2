@@ -551,7 +551,7 @@
 			this.VersionLabel.Name = "VersionLabel";
 			this.VersionLabel.Size = new System.Drawing.Size(115, 130);
 			this.VersionLabel.TabIndex = 18;
-			this.VersionLabel.Text = "Foreman2 fork - v2.1.6";
+			this.VersionLabel.Text = "Foreman2 fork - v2.2.0";
 			this.VersionLabel.TextAlign = System.Drawing.ContentAlignment.TopRight;
 			// 
 			// MainForm

@@ -145,6 +145,7 @@ namespace Foreman
 		private Dictionary<ReadOnlyBaseNode, BaseNode> roToNode;
 		private Dictionary<ReadOnlyNodeLink, NodeLink> roToLink;
 		private int lastNodeID;
+		public List<ReadOnlyBaseNode> movedNodes;
 
 		private bool redoDirty = false;
 
@@ -172,6 +173,7 @@ namespace Foreman
 			idToRONode = new Dictionary<int, ReadOnlyBaseNode>();
 			undoOperationStack = new List<GraphOperationData>();
 			redoOperationStack = new List<GraphOperationData>();
+			movedNodes = new List<ReadOnlyBaseNode>();
 			nodeTypes = new List<NodeType>();
 			lastNodeID = 0;
 
@@ -637,6 +639,8 @@ namespace Foreman
 					case GraphOperation.MoveNode:
 						{
 							// undo move
+							roToNode[idToRONode[last_operation.node.NodeID]].Location = last_operation.priorLocation.Value;
+							movedNodes.Add(idToRONode[last_operation.node.NodeID]);
 							break;
 						}
 					case GraphOperation.CreateLinks:
@@ -659,6 +663,8 @@ namespace Foreman
 						}
 				}
 			}
+
+			UpdateNodeValues();
 		}
 
 		public void RedoOperation()
@@ -748,6 +754,8 @@ namespace Foreman
 					case GraphOperation.MoveNode:
 						{
 							// redo move
+							roToNode[idToRONode[last_operation.node.NodeID]].Location = last_operation.location.Value;
+							movedNodes.Add(idToRONode[last_operation.node.NodeID]);
 							break;
 						}
 					case GraphOperation.DeleteLinks:
@@ -771,6 +779,8 @@ namespace Foreman
 				}
 
 			}
+
+			UpdateNodeValues();
 		}
 
 		public void UpdateNodeStates(bool markAllAsDirty)

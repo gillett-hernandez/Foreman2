@@ -357,6 +357,7 @@ namespace Foreman
 
 		public void AddPassthroughNodesFromSelection(LinkType linkType, Size offset)
 		{
+			Graph.SetUndoCheckpoint();
 			List<BaseNodeElement> newPassthroughNodes = new List<BaseNodeElement>();
 			foreach(PassthroughNodeElement passthroughNode in selectedNodes)
 			{
@@ -400,7 +401,7 @@ namespace Foreman
 
 
 			// PassthroughNodeWidth
-			int yoffset = linkType == LinkType.Input ? 96 : -96;
+			int yoffset = 3 * (linkType == LinkType.Input ? 96 : -96);
 			yoffset *= parent.NodeDirection == NodeDirection.Up ? 1 : -1;
 			yoffset += offset.Height;
 
@@ -440,6 +441,7 @@ namespace Foreman
 
 			if (proceed)
 			{
+				Graph.SetUndoCheckpoint();
 				foreach (BaseNodeElement node in selectedNodes.ToList())
 				{
 					Graph.DeleteNode(node.DisplayedNode);
@@ -904,32 +906,27 @@ namespace Foreman
 					}
 					else if (currentDragOperation == DragOperation.None && element == null)
 					{
-						//if () //right click on an empty space -> show add item/recipe menu
-						//{
-							Point screenPoint = new Point(e.Location.X - 150, 15);
-							screenPoint.X = Math.Max(15, Math.Min(Width - 650, screenPoint.X)); //want to position the recipe selector such that it is well visible.
+						Point screenPoint = new Point(e.Location.X - 150, 15);
+						screenPoint.X = Math.Max(15, Math.Min(Width - 650, screenPoint.X)); //want to position the recipe selector such that it is well visible.
 
-							rightClickMenu.MenuItems.Clear();
-							rightClickMenu.MenuItems.Add(new MenuItem("Add Item",
-								new EventHandler((o, ee) =>
-								{
+						rightClickMenu.MenuItems.Clear();
+						rightClickMenu.MenuItems.Add(new MenuItem("Add Item",
+							new EventHandler((o, ee) =>
+							{
 
-									AddItem(screenPoint, ScreenToGraph(e.Location));
-								})));
-							rightClickMenu.MenuItems.Add(new MenuItem("Add Recipe",
-								new EventHandler((o, ee) =>
-								{
-									AddRecipe(screenPoint, null, ScreenToGraph(e.Location), NewNodeType.Disconnected);
-								})));
-							rightClickMenu.Show(this, e.Location);
-						//}
-						//else { 
-						//	// right click on nonnull element
-						//}
+								AddItem(screenPoint, ScreenToGraph(e.Location));
+							})));
+						rightClickMenu.MenuItems.Add(new MenuItem("Add Recipe",
+							new EventHandler((o, ee) =>
+							{
+								AddRecipe(screenPoint, null, ScreenToGraph(e.Location), NewNodeType.Disconnected);
+							})));
+						rightClickMenu.Show(this, e.Location);
 						
 					}
 					else if(currentDragOperation != DragOperation.Selection)
 					{
+
 						element?.MouseUp(graph_location, e.Button, (currentDragOperation == DragOperation.Item));
 					}
 
@@ -988,6 +985,13 @@ namespace Foreman
 					}
 					else if (!viewBeingDragged)
 					{
+						// release of left click, spot to finalize node movement operation in undo stack
+						//Graph.SetUndoCheckpoint();
+						//foreach (BaseNodeElement node in selectedNodes.Where(node => node != MouseDownElement))
+						//{
+						//	Graph.MoveNode(node.DisplayedNode.NodeID, startPoint, endPoint);
+						//	node.SetLocation(new Point(node.X + endPoint.X - startPoint.X, node.Y + endPoint.Y - startPoint.Y));
+						//}
 						element?.MouseUp(graph_location, e.Button, (currentDragOperation == DragOperation.Item));
 					}
 
@@ -1042,10 +1046,8 @@ namespace Foreman
 							Point endPoint = MouseDownElement.Location;
 							if (startPoint != endPoint)
 							{
-								Graph.SetUndoCheckpoint();
 								foreach (BaseNodeElement node in selectedNodes.Where(node => node != MouseDownElement))
 								{
-									Graph.MoveNode(node.DisplayedNode.NodeID, startPoint, endPoint);
 									node.SetLocation(new Point(node.X + endPoint.X - startPoint.X, node.Y + endPoint.Y - startPoint.Y));
 								}
 							}
@@ -1156,10 +1158,24 @@ namespace Foreman
 				else if (e.KeyCode == Keys.Z && (e.Modifiers & Keys.Control) == Keys.Control && (e.Modifiers & Keys.Shift) == Keys.Shift) //redo
 				{
 					Graph.RedoOperation();
+					foreach (ReadOnlyBaseNode movedNode in Graph.movedNodes) {
+						BaseNodeElement element = nodeElementDictionary[movedNode];
+						element.SetLocation(movedNode.Location);
+					}
+					Invalidate();
+					Graph.movedNodes.Clear();
 				}
 				else if (e.KeyCode == Keys.Z && (e.Modifiers & Keys.Control) == Keys.Control) //undo
 				{
 					Graph.UndoOperation();
+					foreach (ReadOnlyBaseNode movedNode in Graph.movedNodes)
+					{
+						BaseNodeElement element = nodeElementDictionary[movedNode];
+						element.SetLocation(movedNode.Location);
+						
+					}
+					Invalidate();
+					Graph.movedNodes.Clear();
 				}
 				else if (e.KeyCode == Keys.V && (e.Modifiers & Keys.Control) == Keys.Control) //paste
 				{
