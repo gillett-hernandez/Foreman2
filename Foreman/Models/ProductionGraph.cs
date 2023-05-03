@@ -102,6 +102,7 @@ namespace Foreman
 			MoveNode,
 			CreateLinks,
 			DeleteLinks,
+			PseudoStop
 		}
 
 		// if there were proper discriminated unions like in rust, i would use those
@@ -120,6 +121,7 @@ namespace Foreman
 			// if type is CreateLinks, then modifiedLinks is the list of created links
 			// likewise if it's DeleteLinks, then modifiedLinks is the list of deleted links
 			public List<ReadOnlyNodeLink> modifiedLinks;
+
 			public GraphOperationData(GraphOperation optype, Nullable<Point> priorlocation, Nullable<Point> location, Nullable<NodeType> nodetype, Item item, Recipe recipe, ReadOnlyBaseNode node, List<ReadOnlyNodeLink> links)
 			{
 				this.operationType = optype;
@@ -130,6 +132,9 @@ namespace Foreman
 				this.recipe = recipe;
 				this.node = node;
 				this.modifiedLinks = links;
+			}
+			public static GraphOperationData PseudoStop() {
+				return new GraphOperationData(GraphOperation.PseudoStop, null, null, null, null, null, null, null);
 			}
 		}
 
@@ -180,6 +185,10 @@ namespace Foreman
 		private int GetNewNodeID()
 		{
 			return lastNodeID++;
+		}
+
+		public void SetUndoCheckpoint() {
+			undoOperationStack.Add(GraphOperationData.PseudoStop());
 		}
 
 		public ReadOnlyConsumerNode CreateConsumerNode(Item item, Point location, int nodeID, bool addToUndo = true)
@@ -471,6 +480,7 @@ namespace Foreman
 
 		public void DeleteNodes(IEnumerable<ReadOnlyBaseNode> nodes, bool addToUndo = true)
 		{
+			SetUndoCheckpoint();
 			foreach (ReadOnlyBaseNode node in nodes)
 			{
 				DeleteNode(node, addToUndo);
@@ -553,9 +563,11 @@ namespace Foreman
 				redoDirty = false;
 			}
 			int length = undoOperationStack.Count;
-			if (length > 0)
+			bool breakLoop = false;
+			while (length > 0 && !breakLoop)
 			{
 				// we have a valid operation to undo
+				
 				GraphOperationData last_operation = undoOperationStack.Last();
 				undoOperationStack.RemoveAt(length - 1);
 				
@@ -563,6 +575,10 @@ namespace Foreman
 
 				switch (last_operation.operationType)
 				{
+					case GraphOperation.PseudoStop: {
+						breakLoop = true;
+						break;
+					}
 					case GraphOperation.CreateNode:
 						{
 							// added a node, so delete that same node
@@ -632,6 +648,7 @@ namespace Foreman
 							break;
 						}
 				}
+				length = undoOperationStack.Count;
 			}
 		}
 
@@ -646,7 +663,9 @@ namespace Foreman
 				return;
 			}
 			int length = redoOperationStack.Count;
-			if (length > 0)
+
+			bool breakLoop = false;
+			while (length > 0 && !breakLoop)
 			{
 				// we have a valid operation to redo
 				GraphOperationData last_operation = redoOperationStack.Last();
@@ -655,6 +674,11 @@ namespace Foreman
 
 				switch (last_operation.operationType)
 				{
+					case GraphOperation.PseudoStop:
+						{
+							breakLoop = true;
+							break;
+						}
 					case GraphOperation.DeleteNode:
 						{
 							// redo deleting a node
@@ -722,6 +746,8 @@ namespace Foreman
 							break;
 						}
 				}
+
+				length = redoOperationStack.Count;
 			}
 		}
 

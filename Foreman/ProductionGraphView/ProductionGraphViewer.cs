@@ -183,6 +183,7 @@ namespace Foreman
 			ItemChooserPanel itemChooser = new ItemChooserPanel(this, drawOrigin);
 			itemChooser.ItemRequested += (o, itemRequestArgs) =>
 			{
+
 				AddRecipe(drawOrigin, itemRequestArgs.Item, newLocation, NewNodeType.Disconnected);
 			};
 			itemChooser.PanelClosed += (o, e) => { SubwindowOpen = false; };
@@ -217,6 +218,7 @@ namespace Foreman
 			void ProcessNodeRequest(object o, RecipeRequestArgs recipeRequestArgs)
 			{
 				ReadOnlyBaseNode newNode = null;
+				Graph.SetUndoCheckpoint();
 				switch (recipeRequestArgs.NodeType)
 				{
 					case NodeType.Consumer:
@@ -911,6 +913,7 @@ namespace Foreman
 							rightClickMenu.MenuItems.Add(new MenuItem("Add Item",
 								new EventHandler((o, ee) =>
 								{
+
 									AddItem(screenPoint, ScreenToGraph(e.Location));
 								})));
 							rightClickMenu.MenuItems.Add(new MenuItem("Add Recipe",
@@ -1141,6 +1144,7 @@ namespace Foreman
 
 					if (e.KeyCode == Keys.X) //cut
 					{
+						Graph.SetUndoCheckpoint();
 						foreach (BaseNodeElement node in selectedNodes.ToList())
 						{
 							Graph.DeleteNode(node.DisplayedNode);
@@ -1190,9 +1194,11 @@ namespace Foreman
 				switch (e.KeyCode)
 				{
 					case Keys.Delete:
+					{
 						TryDeleteSelectedNodes();
 						e.Handled = true;
 						break;
+					}
 				}
 			}
 			else if (currentDragOperation == DragOperation.Selection) //possible changes to selection type

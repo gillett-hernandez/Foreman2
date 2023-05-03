@@ -111,7 +111,6 @@ namespace Foreman
 						List<ReadOnlyBaseNode> consumers = new List<ReadOnlyBaseNode>();
 						List<ReadOnlyBaseNode> suppliers = new List<ReadOnlyBaseNode>();
 
-
 						foreach (ReadOnlyNodeLink link in DisplayedNode.InputLinks) {
 							suppliers.Add(link.Supplier);
 						}
@@ -124,6 +123,8 @@ namespace Foreman
 							consumers.Add(link.Consumer);
 						}
 
+
+						graphViewer.Graph.SetUndoCheckpoint();
 						foreach (ReadOnlyBaseNode supplier in suppliers) {
 							foreach (ReadOnlyBaseNode consumer in consumers) {
 								if (supplier != consumer) {

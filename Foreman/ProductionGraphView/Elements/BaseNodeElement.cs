@@ -369,6 +369,7 @@ namespace Foreman
 						new EventHandler((o, e) =>
 						{
 							RightClickMenu.Close();
+							graphViewer.Graph.SetUndoCheckpoint();
 							graphViewer.Graph.DeleteNode(DisplayedNode);
 							graphViewer.Graph.UpdateNodeValues();
 						})));
@@ -378,6 +379,7 @@ namespace Foreman
 						new EventHandler((o, e) =>
 						{
 							RightClickMenu.Close();
+							graphViewer.Graph.SetUndoCheckpoint();
 							graphViewer.TryDeleteSelectedNodes();
 						})));
 				}
