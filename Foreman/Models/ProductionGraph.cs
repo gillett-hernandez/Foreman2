@@ -562,14 +562,13 @@ namespace Foreman
 				redoOperationStack.Clear();
 				redoDirty = false;
 			}
-			int length = undoOperationStack.Count;
 			bool breakLoop = false;
-			while (length > 0 && !breakLoop)
+			while (undoOperationStack.Count > 0 && !breakLoop)
 			{
 				// we have a valid operation to undo
 				
 				GraphOperationData last_operation = undoOperationStack.Last();
-				undoOperationStack.RemoveAt(length - 1);
+				undoOperationStack.RemoveAt(undoOperationStack.Count - 1);
 				
 				redoOperationStack.Add(last_operation);
 
@@ -648,7 +647,6 @@ namespace Foreman
 							break;
 						}
 				}
-				length = undoOperationStack.Count;
 			}
 		}
 
@@ -662,14 +660,28 @@ namespace Foreman
 				// early return is just symbolic / to be explicit since the conditional will eval to false anyways
 				return;
 			}
-			int length = redoOperationStack.Count;
+
+			
 
 			bool breakLoop = false;
-			while (length > 0 && !breakLoop)
+			
+			if (redoOperationStack.Count > 1 && redoOperationStack.Last().operationType == GraphOperation.PseudoStop) {
+				// pseudostop on first entry
+				// skip it
+				GraphOperationData last_operation = redoOperationStack.Last();
+				redoOperationStack.RemoveAt(redoOperationStack.Count - 1);
+				undoOperationStack.Add(last_operation);
+			}
+			
+			
+			// proceed as normal
+			
+
+			while (redoOperationStack.Count > 0 && !breakLoop)
 			{
 				// we have a valid operation to redo
 				GraphOperationData last_operation = redoOperationStack.Last();
-				redoOperationStack.RemoveAt(length - 1);
+				redoOperationStack.RemoveAt(redoOperationStack.Count - 1);
 				undoOperationStack.Add(last_operation);
 
 				switch (last_operation.operationType)
@@ -747,7 +759,6 @@ namespace Foreman
 						}
 				}
 
-				length = redoOperationStack.Count;
 			}
 		}
 

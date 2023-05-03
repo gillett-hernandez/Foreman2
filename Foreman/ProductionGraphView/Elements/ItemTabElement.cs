@@ -214,6 +214,8 @@ namespace Foreman
 						// delete all connections to the original node
 						// connect the passthrough node to the original node
 						// graphViewer.AddPassthroughNodesFromSelection(LinkType, (Size)Point.Subtract(graph_point, (Size)myParent.Location));
+
+						graphViewer.Graph.SetUndoCheckpoint();
 						ReadOnlyPassthroughNode newNode = graphViewer.BreakoutPassthroughNode(DisplayedNode, LinkType, (Size)Point.Subtract(graph_point, (Size)myParent.Location), Item);
 
 
