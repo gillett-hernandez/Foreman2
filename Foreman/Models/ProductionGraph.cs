@@ -136,7 +136,7 @@ namespace Foreman
 		private HashSet<BaseNode> nodes;
 		private HashSet<NodeLink> nodeLinks;
 		private List<NodeType> nodeTypes;
-		private Dictionary<int, ReadOnlyBaseNode> idToNode;
+		private Dictionary<int, ReadOnlyBaseNode> idToRONode;
 		private Dictionary<ReadOnlyBaseNode, BaseNode> roToNode;
 		private Dictionary<ReadOnlyNodeLink, NodeLink> roToLink;
 		private int lastNodeID;
@@ -164,7 +164,7 @@ namespace Foreman
 			nodeLinks = new HashSet<NodeLink>();
 			roToNode = new Dictionary<ReadOnlyBaseNode, BaseNode>();
 			roToLink = new Dictionary<ReadOnlyNodeLink, NodeLink>();
-			idToNode = new Dictionary<int, ReadOnlyBaseNode>();
+			idToRONode = new Dictionary<int, ReadOnlyBaseNode>();
 			undoOperationStack = new List<GraphOperationData>();
 			redoOperationStack = new List<GraphOperationData>();
 			nodeTypes = new List<NodeType>();
@@ -203,7 +203,7 @@ namespace Foreman
 			node.Location = location;
 			node.NodeDirection = DefaultNodeDirection;
 			
-			idToNode[nodeID] = node.ReadOnlyNode;
+			idToRONode[nodeID] = node.ReadOnlyNode;
 			nodes.Add(node);
 			roToNode.Add(node.ReadOnlyNode, node);
 			node.UpdateState();
@@ -235,7 +235,7 @@ namespace Foreman
 			}
 			node.Location = location;
 			node.NodeDirection = DefaultNodeDirection;
-			idToNode[nodeID] = node.ReadOnlyNode;
+			idToRONode[nodeID] = node.ReadOnlyNode;
 			nodes.Add(node);
 			roToNode.Add(node.ReadOnlyNode, node);
 			node.UpdateState();
@@ -268,7 +268,7 @@ namespace Foreman
 			node.Location = location;
 			node.NodeDirection = DefaultNodeDirection;
 			node.SimpleDraw = DefaultToSimplePassthroughNodes;
-			idToNode[nodeID] = node.ReadOnlyNode;
+			idToRONode[nodeID] = node.ReadOnlyNode;
 			nodes.Add(node);
 			roToNode.Add(node.ReadOnlyNode, node);
 			node.UpdateState();
@@ -324,7 +324,7 @@ namespace Foreman
 				rnController.AutoSetAssemblerModules();
 			}
 			nodes.Add(node);
-			idToNode[nodeID] = node.ReadOnlyNode;
+			idToRONode[nodeID] = node.ReadOnlyNode;
 			roToNode.Add(node.ReadOnlyNode, node);
 			node.UpdateState();
 			NodeAdded?.Invoke(this, new NodeEventArgs(node.ReadOnlyNode));
@@ -380,7 +380,7 @@ namespace Foreman
 
 		public void DeleteNode(ReadOnlyBaseNode node, bool addToUndo = true)
 		{
-			node = idToNode[node.NodeID];
+			node = idToRONode[node.NodeID];
 			if (!roToNode.ContainsKey(node))
 			{
 				Trace.Fail(string.Format("Node deletion called on a node ({0}) that isnt part of the graph!", node.ToString()));
@@ -483,9 +483,11 @@ namespace Foreman
 
 		public void DeleteLink(ReadOnlyBaseNode supplier, ReadOnlyBaseNode consumer, Item item, bool addToUndo = true)
 		{
+			supplier = idToRONode[supplier.NodeID];
+			consumer = idToRONode[consumer.NodeID];
 			if (!roToNode.ContainsKey(consumer) || !roToNode.ContainsKey(supplier))
 			{
-				Trace.Fail(string.Format("Link deletion called with a link that isnt part of the graph, or whose node(s) ({0}), ({1}) is/are not part of the graph!", consumer.ToString(), supplier.ToString()));
+				Trace.Fail(string.Format("Link deletion called with a link with a supplier or consumer that are not part of the graph. sup ({0}), con ({1})", supplier.ToString(), consumer.ToString()));
 			}
 
 			if (supplier.OutputLinks.Any(l => l.Item == item && l.Consumer == consumer)) //check for an already existing connection
@@ -542,7 +544,7 @@ namespace Foreman
 			// [DONE] we want undos and redos to not affect the undo and redo stacks except by transferring between them
 			// [DONE] also, when the user does any other action that isn't a undo or redo we need to clear the redo stack as it will become invalid.
 
-			// also need to maybe handle Breakout and Dissolve uniquely? or just leave them be as aggregate actions.
+			// how to handle aggregate actions? i.e. if the user deletes the graph and presses ctrl z, it should bring back everything
 
 			if (redoDirty)
 			{
@@ -625,7 +627,7 @@ namespace Foreman
 							// undo delete links
 							foreach (ReadOnlyNodeLink link in last_operation.modifiedLinks)
 							{
-								CreateLink(idToNode[link.Supplier.NodeID], idToNode[link.Consumer.NodeID], link.Item, false);
+								CreateLink(idToRONode[link.Supplier.NodeID], idToRONode[link.Consumer.NodeID], link.Item, false);
 							}
 							break;
 						}
@@ -715,7 +717,7 @@ namespace Foreman
 							// redo create links
 							foreach (ReadOnlyNodeLink link in last_operation.modifiedLinks)
 							{
-								CreateLink(idToNode[link.Supplier.NodeID], idToNode[link.Consumer.NodeID], link.Item, false);
+								CreateLink(idToRONode[link.Supplier.NodeID], idToRONode[link.Consumer.NodeID], link.Item, false);
 							}
 							break;
 						}
