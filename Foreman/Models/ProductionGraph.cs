@@ -536,6 +536,17 @@ namespace Foreman
 			}
 		}
 
+		public void MoveNode(int nodeID, Point start, Point end, bool addToUndo = true) {
+
+			//BaseNodeElement node = idToRONode[nodeID];
+			ReadOnlyBaseNode node = idToRONode[nodeID];
+			Point location = new Point(node.Location.X + end.X - start.X, node.Location.Y + end.Y - start.Y);
+			if (addToUndo) {
+				undoOperationStack.Add(new GraphOperationData(GraphOperation.MoveNode, node.Location, location, null, null, null, node, null));
+			}
+
+		}
+
 		public void ClearGraph()
 		{
 			foreach (BaseNode node in nodes.ToList())

@@ -1042,8 +1042,10 @@ namespace Foreman
 							Point endPoint = MouseDownElement.Location;
 							if (startPoint != endPoint)
 							{
+								Graph.SetUndoCheckpoint();
 								foreach (BaseNodeElement node in selectedNodes.Where(node => node != MouseDownElement))
 								{
+									Graph.MoveNode(node.DisplayedNode.NodeID, startPoint, endPoint);
 									node.SetLocation(new Point(node.X + endPoint.X - startPoint.X, node.Y + endPoint.Y - startPoint.Y));
 								}
 							}
@@ -1163,6 +1165,7 @@ namespace Foreman
 				{
 					try
 					{
+						Graph.SetUndoCheckpoint();
 						JObject json = JObject.Parse(Clipboard.GetText());
 						ImportNodesFromJson(json, ScreenToGraph(PointToClient(Cursor.Position)));
 					}
