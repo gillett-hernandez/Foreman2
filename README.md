@@ -11,6 +11,10 @@ Hi, this preface was written by Gillett specifically for my fork. I started this
 * Undo and Redo stack - supports undoing and redoing an arbitrary number of times.
 	* known issue regarding undoing and redoing. if you change the fuel for a recipe node such that the burn result changes, breaking the connection from that burn result tab, and then press undo, it will cause an error. I'll be working on this so hopefully in the future this will no longer be an issue, but I felt that releasing this feature despite that issue would be worth it.
 
+### Community and announcements and stuff ###
+
+I made a [discord](https://discord.gg/dqfc7BdZRV) for this fork and/or Foreman2 in general. Feel free to join if you use the program and want to share your crazy graphs or report bugs.
+
 ### Support ###
 
 Buy me a [coffee](https://ko-fi.com/nacly) if you appreciate what I've done. Everything helps.
