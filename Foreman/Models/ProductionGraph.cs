@@ -539,13 +539,18 @@ namespace Foreman
 		}
 
 		public void RecordNodeMovement(int nodeID, Point start, Point end) {
-
+			redoDirty = true;
 			//BaseNodeElement node = idToRONode[nodeID];
 			ReadOnlyBaseNode node = idToRONode[nodeID];
 			//Point location = new Point(node.Location.X + end.X - start.X, node.Location.Y + end.Y - start.Y);
 			undoOperationStack.Add(new GraphOperationData(GraphOperation.MoveNode, start, end, null, null, null, node, null));
 			
 
+		}
+
+		public void ResetHistory() {
+			undoOperationStack.Clear();
+			redoOperationStack.Clear();
 		}
 
 		public void ClearGraph()
@@ -555,8 +560,7 @@ namespace Foreman
 				DeleteNode(node.ReadOnlyNode);
 			}
 
-			undoOperationStack.Clear();
-			redoOperationStack.Clear();
+			ResetHistory();
 			nodeTypes.Clear();
 			idToRONode.Clear();
 
@@ -1242,6 +1246,7 @@ namespace Foreman
 				DeleteNodes(newNodeCollection.newNodes);
 				return new NewNodeCollection();
 			}
+
 			return newNodeCollection;
 		}
 	}

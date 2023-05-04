@@ -70,6 +70,7 @@ namespace Foreman
 		private DraggedLinkElement draggedLinkElement;
 
 		private Point mouseDownStartScreenPoint;
+		private Nullable<Point> mouseDownStartNodeLocation;
 		private MouseButtons downButtons; //we use this to ensure that any mouse operations only count if they started on this panel
 
 		private Point ViewDragOriginPoint;
@@ -867,7 +868,11 @@ namespace Foreman
 			Point graph_location = ScreenToGraph(e.Location);
 
 			GraphElement clickedElement = (GraphElement)draggedLinkElement ?? GetNodeAtPoint(ScreenToGraph(e.Location));
+			
 			clickedElement?.MouseDown(graph_location, e.Button);
+
+
+			mouseDownStartNodeLocation = clickedElement?.Location;
 
 			if (e.Button == MouseButtons.Middle || (e.Button == MouseButtons.Right))
 			{
@@ -987,7 +992,8 @@ namespace Foreman
 					{
 						if (currentDragOperation == DragOperation.Item)
 						{
-							Point startPoint = ScreenToGraph(PointToClient(mouseDownStartScreenPoint));
+							//Point startPoint = ScreenToGraph(PointToClient(mouseDownStartScreenPoint));
+							Point startPoint = mouseDownStartNodeLocation.Value;
 							Point endPoint = MouseDownElement.Location;
 							if (selectedNodes.Contains(MouseDownElement)) //dragging a group
 							{
@@ -1711,6 +1717,9 @@ namespace Foreman
 			//upgrade graph & values
 			UpdateGraphBounds();
 			Graph.UpdateNodeValues();
+
+			// force clear stacks since we want to start from a fresh slate.
+			Graph.ResetHistory();
 			this.Focus();
 			Invalidate();
 		}
