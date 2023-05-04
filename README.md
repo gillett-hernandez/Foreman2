@@ -8,14 +8,14 @@ Hi, this preface was written by Gillett specifically for my fork. I started this
 
 * Breakout passthrough node feature when right clicking on a input or output item tab. Reroutes all output or input connections through a new passthrough node, and connects that passthrough node to the item tab you clicked.
 * Dissolve passthrough node feature when right clicking a passthrough node. Deletes the passthrough node while preserving all the connections it had.
-* Undo and Redo stack - supports undoing and redoing an arbitrary number of times, though by default this is limited to 100.
+* Undo and Redo stack - supports undoing and redoing an arbitrary number of times.
+	* known issue regarding undoing and redoing. if you change the fuel for a recipe node such that the burn result changes, breaking the connection from that burn result tab, and then press undo, it will cause an error. I'll be working on this so hopefully in the future this will no longer be an issue, but I felt that releasing this feature despite that issue would be worth it.
 
 ### Support ###
 
-Buy me a [coffee](https://ko-fi.com/nacly) if you appreciate what I've done.
+Buy me a [coffee](https://ko-fi.com/nacly) if you appreciate what I've done. Everything helps.
 
 ## Back to your regularly scheduled readme ##
-
 
 ![1: Foreman 2.0](https://puu.sh/Im6D4/5a42f137e2.jpg)
 
