@@ -27,7 +27,7 @@ namespace Foreman
 		public bool ArrowsOnLinks { get; set; }
 		public bool IconsOnly { get; set; }
 		public int IconsSize { get; set; }
-		public int IconsDrawSize { get { return ViewScale > ((double)IconsSize / 96)? 96 : (int)(IconsSize / ViewScale); } }
+		public int IconsDrawSize { get { return ViewScale > ((double)IconsSize / 96) ? 96 : (int)(IconsSize / ViewScale); } }
 
 		public int NodeCountForSimpleView { get; set; } //if the number of elements to draw is over this amount then the drawing functions will switch to simple view draws (mostly for FPS during zoomed out views)
 		public bool ShowRecipeToolTip { get; set; }
@@ -193,7 +193,7 @@ namespace Foreman
 
 		public void AddRecipe(Point drawOrigin, Item baseItem, Point newLocation, NewNodeType nNodeType, BaseNodeElement originElement = null, bool offsetLocationToItemTabLevel = false)
 		{
-			if(string.IsNullOrEmpty(DCache.PresetName))
+			if (string.IsNullOrEmpty(DCache.PresetName))
 			{
 				DisposeLinkDrag();
 				MessageBox.Show("The current preset (" + Properties.Settings.Default.CurrentPresetName + ") is corrupt.");
@@ -359,7 +359,7 @@ namespace Foreman
 		{
 			Graph.SetUndoCheckpoint();
 			List<BaseNodeElement> newPassthroughNodes = new List<BaseNodeElement>();
-			foreach(PassthroughNodeElement passthroughNode in selectedNodes)
+			foreach (PassthroughNodeElement passthroughNode in selectedNodes)
 			{
 				NodeDirection newNodeDirection = !SmartNodeDirection ? Graph.DefaultNodeDirection :
 					draggedLinkElement.Type != BaseLinkElement.LineType.UShape ? passthroughNode.DisplayedNode.NodeDirection :
@@ -377,11 +377,11 @@ namespace Foreman
 
 				if (linkType == LinkType.Input)
 				{
-					Graph.CreateLink(newNode, passthroughNode.DisplayedNode, passthroughItem );
+					Graph.CreateLink(newNode, passthroughNode.DisplayedNode, passthroughItem);
 				}
 				else
 				{
-					Graph.CreateLink(passthroughNode.DisplayedNode, newNode, passthroughItem );
+					Graph.CreateLink(passthroughNode.DisplayedNode, newNode, passthroughItem);
 				}
 
 				newPassthroughNodes.Add(nodeElementDictionary[newNode]);
@@ -397,7 +397,7 @@ namespace Foreman
 		{
 			List<BaseNodeElement> newPassthroughNodes = new List<BaseNodeElement>();
 			// PassthroughNodeElement passthroughNode = selectedNodes.Cast<PassthroughNodeElement>().First();
-			
+
 
 
 			// PassthroughNodeWidth
@@ -408,7 +408,7 @@ namespace Foreman
 			ReadOnlyPassthroughNode newNode = Graph.CreatePassthroughNode(item, new Point(parent.Location.X + offset.Width, parent.Location.Y + yoffset));
 
 
-			
+
 			PassthroughNodeController controller = (PassthroughNodeController)Graph.RequestNodeController(newNode);
 			controller.SetDirection(parent.NodeDirection);
 
@@ -422,7 +422,7 @@ namespace Foreman
 			}
 
 			newPassthroughNodes.Add(nodeElementDictionary[newNode]);
-			
+
 			SetSelection(newPassthroughNodes);
 
 			DisposeLinkDrag();
@@ -689,7 +689,7 @@ namespace Foreman
 			selectionPen.Width = 2 / ViewScale;
 
 			//grid
-			if(!FullGraph)
+			if (!FullGraph)
 			{
 				Grid.Paint(graphics, ViewScale, VisibleGraphBounds, (currentDragOperation == DragOperation.Item) ? MouseDownElement as BaseNodeElement : null);
 			}
@@ -743,7 +743,7 @@ namespace Foreman
 			int visibleElements = GetPaintingOrder().Count(e => e.Visible && e is BaseNodeElement);
 			foreach (GraphElement element in GetPaintingOrder())
 			{
-				element.Paint(graphics, FullGraph? NodeDrawingStyle.PrintStyle : IconsOnly? NodeDrawingStyle.IconsOnly : (visibleElements > NodeCountForSimpleView || ViewScale < 0.2)? NodeDrawingStyle.Simple : NodeDrawingStyle.Regular); //if viewscale is 0.2, then the text, images, etc being drawn are ~1/5th the size: aka: ~6x6 pixel images, etc. Use simple draw. Also simple draw if too many objects
+				element.Paint(graphics, FullGraph ? NodeDrawingStyle.PrintStyle : IconsOnly ? NodeDrawingStyle.IconsOnly : (visibleElements > NodeCountForSimpleView || ViewScale < 0.2) ? NodeDrawingStyle.Simple : NodeDrawingStyle.Regular); //if viewscale is 0.2, then the text, images, etc being drawn are ~1/5th the size: aka: ~6x6 pixel images, etc. Use simple draw. Also simple draw if too many objects
 			}
 
 			//selection zone
@@ -922,9 +922,9 @@ namespace Foreman
 								AddRecipe(screenPoint, null, ScreenToGraph(e.Location), NewNodeType.Disconnected);
 							})));
 						rightClickMenu.Show(this, e.Location);
-						
+
 					}
-					else if(currentDragOperation != DragOperation.Selection)
+					else if (currentDragOperation != DragOperation.Selection)
 					{
 
 						element?.MouseUp(graph_location, e.Button, (currentDragOperation == DragOperation.Item));
@@ -985,6 +985,31 @@ namespace Foreman
 					}
 					else if (!viewBeingDragged)
 					{
+						if (currentDragOperation == DragOperation.Item)
+						{
+							Point startPoint = ScreenToGraph(PointToClient(mouseDownStartScreenPoint));
+							Point endPoint = MouseDownElement.Location;
+							if (selectedNodes.Contains(MouseDownElement)) //dragging a group
+							{
+								if (startPoint != endPoint)
+								{
+									Graph.SetUndoCheckpoint();
+									foreach (BaseNodeElement node in selectedNodes)
+									{
+										Graph.RecordNodeMovement(node.DisplayedNode.NodeID, node.Location - (Size)(endPoint - (Size)startPoint), node.Location);
+									}
+								}
+							}
+							else if (MouseDownElement is DraggedLinkElement link)// dragging single item
+							{
+								// do nothing
+							}
+							else {
+								Graph.SetUndoCheckpoint();
+								Graph.RecordNodeMovement(((BaseNodeElement)MouseDownElement).DisplayedNode.NodeID, startPoint, endPoint);
+							}
+
+						}
 						// release of left click, spot to finalize node movement operation in undo stack
 						//Graph.SetUndoCheckpoint();
 						//foreach (BaseNodeElement node in selectedNodes.Where(node => node != MouseDownElement))
@@ -992,6 +1017,7 @@ namespace Foreman
 						//	Graph.MoveNode(node.DisplayedNode.NodeID, startPoint, endPoint);
 						//	node.SetLocation(new Point(node.X + endPoint.X - startPoint.X, node.Y + endPoint.Y - startPoint.Y));
 						//}
+
 						element?.MouseUp(graph_location, e.Button, (currentDragOperation == DragOperation.Item));
 					}
 
@@ -1157,8 +1183,9 @@ namespace Foreman
 				}
 				else if (e.KeyCode == Keys.Z && (e.Modifiers & Keys.Control) == Keys.Control && (e.Modifiers & Keys.Shift) == Keys.Shift) //redo
 				{
-					Graph.RedoOperation();
-					foreach (ReadOnlyBaseNode movedNode in Graph.movedNodes) {
+					Graph.RedoOperations();
+					foreach (ReadOnlyBaseNode movedNode in Graph.movedNodes)
+					{
 						BaseNodeElement element = nodeElementDictionary[movedNode];
 						element.SetLocation(movedNode.Location);
 					}
@@ -1167,12 +1194,12 @@ namespace Foreman
 				}
 				else if (e.KeyCode == Keys.Z && (e.Modifiers & Keys.Control) == Keys.Control) //undo
 				{
-					Graph.UndoOperation();
+					Graph.UndoOperations();
 					foreach (ReadOnlyBaseNode movedNode in Graph.movedNodes)
 					{
 						BaseNodeElement element = nodeElementDictionary[movedNode];
 						element.SetLocation(movedNode.Location);
-						
+
 					}
 					Invalidate();
 					Graph.movedNodes.Clear();
@@ -1213,11 +1240,11 @@ namespace Foreman
 				switch (e.KeyCode)
 				{
 					case Keys.Delete:
-					{
-						TryDeleteSelectedNodes();
-						e.Handled = true;
-						break;
-					}
+						{
+							TryDeleteSelectedNodes();
+							e.Handled = true;
+							break;
+						}
 				}
 			}
 			else if (currentDragOperation == DragOperation.Selection) //possible changes to selection type
@@ -1459,7 +1486,8 @@ namespace Foreman
 				form.Left = ParentForm.Left + 150;
 				form.Top = ParentForm.Top + 200;
 				DialogResult result = form.ShowDialog(); //LOAD FACTORIO DATA
-				if (DCache != null){
+				if (DCache != null)
+				{
 					DCache.Clear();
 				}
 				DCache = form.GetDataCache();
@@ -1473,7 +1501,8 @@ namespace Foreman
 						form2.Left = ParentForm.Left + 150;
 						form2.Top = ParentForm.Top + 200;
 						DialogResult result2 = form2.ShowDialog(); //LOAD default preset
-						if (DCache != null){
+						if (DCache != null)
+						{
 							DCache.Clear();
 						}
 						DCache = form2.GetDataCache();
@@ -1538,7 +1567,7 @@ namespace Foreman
 					else
 					{
 						//errors found. even though the name fits, but the preset seems to be the wrong one. Proceed with searching for best-fit
-						if(errors != null)
+						if (errors != null)
 						{
 							presetErrors.Add(errors);
 						}

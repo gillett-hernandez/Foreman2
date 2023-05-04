@@ -538,14 +538,13 @@ namespace Foreman
 			}
 		}
 
-		public void MoveNode(int nodeID, Point start, Point end, bool addToUndo = true) {
+		public void RecordNodeMovement(int nodeID, Point start, Point end) {
 
 			//BaseNodeElement node = idToRONode[nodeID];
 			ReadOnlyBaseNode node = idToRONode[nodeID];
-			Point location = new Point(node.Location.X + end.X - start.X, node.Location.Y + end.Y - start.Y);
-			if (addToUndo) {
-				undoOperationStack.Add(new GraphOperationData(GraphOperation.MoveNode, node.Location, location, null, null, null, node, null));
-			}
+			//Point location = new Point(node.Location.X + end.X - start.X, node.Location.Y + end.Y - start.Y);
+			undoOperationStack.Add(new GraphOperationData(GraphOperation.MoveNode, start, end, null, null, null, node, null));
+			
 
 		}
 
@@ -556,11 +555,16 @@ namespace Foreman
 				DeleteNode(node.ReadOnlyNode);
 			}
 
+			undoOperationStack.Clear();
+			redoOperationStack.Clear();
+			nodeTypes.Clear();
+			idToRONode.Clear();
+
 			SerializeNodeIdSet = null;
 			lastNodeID = 0;
 		}
 
-		public void UndoOperation()
+		public void UndoOperations()
 		{
 			// [DONE] need to add flag to all common operations such that we can prevent re-recording stuff we do to Undo into the undo log
 			// i.e. without a flag, when you undo an AddNode it will call DeleteNode, which will immediately add DeleteNode to the undo stack
@@ -667,7 +671,7 @@ namespace Foreman
 			UpdateNodeValues();
 		}
 
-		public void RedoOperation()
+		public void RedoOperations()
 		{
 			if (redoDirty)
 			{
