@@ -441,6 +441,7 @@ namespace Foreman
 						{
 							currentStep++;
 							ItemQualityPair lastProduct = currentProduct;
+							
 							currentMultiplier *= currentProduct.Quality.NextProbability;
 							currentProduct = new ItemQualityPair(item, currentProduct.Quality.NextQuality);
 							if (currentMultiplier == 0)
@@ -584,9 +585,13 @@ namespace Foreman
 		{
 			double multiplier = 0.0f;
 			foreach (ModuleQualityPair module in AssemblerModules)
+			{
 				multiplier += module.Module.GetQualityBonus(module.Quality);
+			}
 			foreach (ModuleQualityPair beaconModule in BeaconModules)
+			{
 				multiplier += beaconModule.Module.GetQualityBonus(beaconModule.Quality) * SelectedBeacon.Beacon.GetBeaconEffectivity(SelectedBeacon.Quality, BeaconCount) * BeaconCount;
+			}
 
 			return Math.Max(0.0f, multiplier);
 		}

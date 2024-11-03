@@ -740,8 +740,9 @@ namespace Foreman
 				(string)objJToken["localised_name"],
 				(string)objJToken["order"]);
 
-			if (iconCache.ContainsKey((string)objJToken["icon_name"]))
+			if (iconCache.ContainsKey((string)objJToken["icon_name"])) {
 				quality.SetIconAndColor(iconCache[(string)objJToken["icon_name"]]);
+			}
 
 			quality.Available = !(bool)objJToken["hidden"];
 			quality.Enabled = quality.Available; //can be set via science packs, but this requires modifying datacache... so later
@@ -751,8 +752,9 @@ namespace Foreman
 			quality.MiningDrillResourceDrainMultiplier = (double)objJToken["mining_drill_resource_drain_multiplier"];
 			quality.NextProbability = objJToken["next_probability"] != null ? (double)objJToken["next_probability"] : 0;
 
-			if (quality.NextProbability != 0)
+			if (quality.NextProbability != 0) {
 				nextQualities.Add(quality, (string)objJToken["next"]);
+			}
 
 			qualities.Add(quality.Name, quality);
 		}
@@ -928,10 +930,12 @@ namespace Foreman
 				(string)objJToken["name"],
 				(string)objJToken["localised_name"]);
 
-			if (iconCache.ContainsKey((string)objJToken["icon_name"]))
+			if (iconCache.ContainsKey((string)objJToken["icon_name"])){
 				module.SetIconAndColor(iconCache[(string)objJToken["icon_name"]]);
-			else if (iconCache.ContainsKey((string)objJToken["icon_alt_name"]))
+			}
+			else if (iconCache.ContainsKey((string)objJToken["icon_alt_name"])){
 				module.SetIconAndColor(iconCache[(string)objJToken["icon_alt_name"]]);
+			}
 
 			module.SpeedBonus = Math.Truncate((double)objJToken["module_effects"]["speed"] * 100) / 100;
 			module.ProductivityBonus = Math.Truncate((double)objJToken["module_effects"]["productivity"] * 100) / 100;

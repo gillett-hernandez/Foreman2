@@ -105,7 +105,7 @@ namespace Foreman
 				if (DisplayedNode.GetQualityMultiplier() > 0)
 				{
 					graphics.DrawString("Speed:\nProd:\nPower:\nQuality:", infoFont, textBrush, trans.X + Width + 2, trans.Y);
-					graphics.DrawString(string.Format("{0:P0}\n{1:P0}\n{2:P0}\n{3:P0}", DisplayedNode.GetSpeedMultiplier(), DisplayedNode.GetProductivityMultiplier(), DisplayedNode.GetConsumptionMultiplier(), DisplayedNode.GetQualityMultiplier()), infoFont, textBrush, trans.X + Width + 26, trans.Y);
+					graphics.DrawString(string.Format("{0:P0}\n{1:P0}\n{2:P0}\n{3:P1}", DisplayedNode.GetSpeedMultiplier(), DisplayedNode.GetProductivityMultiplier(), DisplayedNode.GetConsumptionMultiplier(), 0.1 * DisplayedNode.GetQualityMultiplier()), infoFont, textBrush, trans.X + Width + 26, trans.Y);
 				}
 				else
 				{

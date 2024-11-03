@@ -576,7 +576,7 @@ namespace Foreman
 						string.Format("   Speed bonus:        {0}\n", module.GetSpeedBonus().ToString("%0")) +
 						string.Format("   Efficiency bonus:   {0}\n", (-module.GetConsumptionBonus()).ToString("%0")) +
 						string.Format("   Pollution bonus:    {0}", module.GetPolutionBonus().ToString("%0")) +
-	                    string.Format("   Quality bonus:      {0}", module.GetQualityBonus().ToString("%0"));
+	                    string.Format("   Quality bonus:      {0}", (0.1 * module.GetQualityBonus()).ToString("%1"));
                     string right = "";
 					if (compareTypeTT)
 					{
@@ -586,7 +586,7 @@ namespace Foreman
 						string.Format("   Speed bonus:        {0}\n", rmodule.GetSpeedBonus().ToString("%0")) +
 						string.Format("   Efficiency bonus:   {0}\n", (-rmodule.GetConsumptionBonus()).ToString("%0")) +
                         string.Format("   Pollution bonus:    {0}", rmodule.GetPolutionBonus().ToString("%0")) +
-                        string.Format("   Quality bonus:      {0}", rmodule.GetQualityBonus().ToString("%0"));
+                        string.Format("   Quality bonus:      {0}", (0.1 * rmodule.GetQualityBonus()).ToString("%1"));
                     }
                     TextToolTip.SetText(left, right);
 					TextToolTip.Show((Control)sender, location);

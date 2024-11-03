@@ -406,7 +406,9 @@ namespace Foreman
 			AssemblerSpeedPercentLabel.Text = nodeData.GetSpeedMultiplier().ToString("P0");
 			AssemblerProductivityPercentLabel.Text = nodeData.GetProductivityMultiplier().ToString("P0");
 			AssemblerPollutionPercentLabel.Text = nodeData.GetPollutionMultiplier().ToString("P0");
-			AssemblerQualityPercentLabel.Text = nodeData.GetQualityMultiplier().ToString("P0");
+			// since multiplier gets multiplied down by nextprobability even on step 0 when calculating quality outputs, something with 0.1 multiplier is effectively 0.01 == 1%
+			// we need to match in-game so as to not confuse the user
+			AssemblerQualityPercentLabel.Text = (0.1f * nodeData.GetQualityMultiplier()).ToString("P1");
 
 			bool isAssembler = (nodeData.SelectedAssembler.Assembler.EntityType == EntityType.Assembler || nodeData.SelectedAssembler.Assembler.EntityType == EntityType.Miner || nodeData.SelectedAssembler.Assembler.EntityType == EntityType.OffshorePump);
 			AssemblerSpeedTitleLabel.Visible = isAssembler;

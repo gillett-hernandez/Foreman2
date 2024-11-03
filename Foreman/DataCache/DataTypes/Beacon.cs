@@ -16,9 +16,13 @@ namespace Foreman
 		public double GetBeaconEffectivity(Quality quality, double beaconCount)
 		{
 			if (beaconCount <= 0)
+			{
 				return 0;
-			if(beaconCount > 999)
+			}
+			if (beaconCount > 999)
+			{
 				beaconCount = 999;
+			}
 
 			int baseCount = (int)Math.Truncate(beaconCount);
 			double remainder = beaconCount - baseCount;
@@ -45,7 +49,7 @@ namespace Foreman
 		public BeaconPrototype(DataCache dCache, string name, string friendlyName, EnergySource source, bool isMissing = false) : base(dCache, name, friendlyName, EntityType.Beacon, source, isMissing)
 		{
 			profile = new double[1000];
-			for(int i = 1; i < profile.Length; i++) { profile[i] = 0.5f; }
+			for (int i = 1; i < profile.Length; i++) { profile[i] = 0.5f; }
 			DistributionEffectivity = 0.5f;
 			DistributionEffectivityQualityBoost = 0f;
 		}
