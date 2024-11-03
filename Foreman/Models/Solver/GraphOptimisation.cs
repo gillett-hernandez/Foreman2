@@ -98,30 +98,24 @@ namespace Foreman
 			//add in the connections from the inputs of the node to any links connected to those inputs, grouped by item. There is no errors allowed here -> sum of link throughputs MUST equal the amount consumed.
 			foreach (var itemInputs in InputLinks.GroupBy(x => x.Item))
 			{
-				Item item = itemInputs.Key;
+				ItemQualityPair item = itemInputs.Key;
 				solver.AddInputRatio(this, item, itemInputs, inputRateFor(item));
 			}
-			//add in a forced 0 for passthrough nodes that have no inputs (prevents such nodes from acting as 'free' inputs)
-			if (this is PassthroughNode pNode && !InputLinks.Any())
-			{
-				solver.AddInputRatio(this, pNode.PassthroughItem, InputLinks, inputRateFor(pNode.PassthroughItem));
-			}
 
-			//add in the connections for the outputs of the node to any links connected to those outputs, grouped by item. Errors are only allowed for recipe nodes (too much produced -> accumulating in node), though it will be marked as 'overproducing'. All other nodes allow no errors (sum of link thorughputs MUST equal the amount produced)
-			foreach (var itemOutputs in OutputLinks.GroupBy(x => x.Item))
+            //add in the connections for the outputs of the node to any links connected to those outputs, grouped by item. Errors are only allowed for recipe nodes (too much produced -> accumulating in node), though it will be marked as 'overproducing'. All other nodes allow no errors (sum of link thorughputs MUST equal the amount produced)
+            foreach (var itemOutputs in OutputLinks.GroupBy(x => x.Item))
 			{
-				Item item = itemOutputs.Key;
+				ItemQualityPair item = itemOutputs.Key;
 				solver.AddOutputRatio(this, item, itemOutputs, outputRateFor(item));
 			}
 
-			//specific for passthrough nodes, we set the throughput to zero if there are no outputs. This guarantees no accumulation of resources at endpoint passthrough nodes (which dont link to anything) without the explicit requiement to connect them to output nodes manually set to 0.
-			if (this is PassthroughNode && !OutputLinks.Any())
-			{
-				solver.SetZero(this as PassthroughNode);
+			//add in a forced 0 for passthrough nodes that have no inputs or no outputs (prevents such nodes from acting as 'free' inputs or outputs)
+			if (this is PassthroughNode pNode && (!InputLinks.Any() || !OutputLinks.Any())) {
+                solver.SetZero(pNode);
 			}
 		}
 
-		internal abstract double inputRateFor(Item item);
-		internal abstract double outputRateFor(Item item);
+		internal abstract double inputRateFor(ItemQualityPair item);
+		internal abstract double outputRateFor(ItemQualityPair item);
 	}
 }

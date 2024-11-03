@@ -11,6 +11,8 @@ namespace Foreman
 {
 	public static class VersionUpdater
 	{
+		public const int CurrentVersion = 7;
+
 		//at some point we need to come back here and actuall fill in the version updater from the base foreman to the current version.
 
 
@@ -278,15 +280,28 @@ namespace Foreman
 
 			if ((int)original["Version"] < 5)
 			{
-				//Version update 2 -> 5:
+				//Version update 2 -> 6:
 				//	No changes in main save (all changes are within the graph)
-				original["Version"] = 5;
+				original["Version"] = 6;
 			}
+			
+			if ((int)original["Version"] == 6)
+			{
+				//Version update 7:
+				//  Added EnabledQualities
 
-			return original;
+				JArray qualities = new JArray();
+				foreach(Quality quality in cache.Qualities.Values.Where(q => q.Enabled))
+					qualities.Add(quality.Name);
+				original["EnabledQualities"] = qualities;
+
+                original["Version"] = 7;
+            }
+
+            return original;
 		}
 
-		public static JToken UpdateGraph(JToken original)
+		public static JObject UpdateGraph(JObject original, DataCache cache)
 		{
 			if (original["Version"] == null || original["Object"] == null || (string)original["Object"] != "ProductionGraph")
 			{
@@ -349,7 +364,89 @@ namespace Foreman
 				original["Solver_LowPriorityPower"] = 2f;
 			}
 
-			return original;
+			if ((int)original["Version"] == 5)
+			{
+                //Version update 5 -> 6:
+                //  All nodes now feature a unified 'DesiredSetValue' that replaces the "DesiredAssemblers" from recipe nodes and "DesiredRatePerSec" from all other nodes
+                //  This value is specific to each node type (ex: recipe = #assemblers, spoil = #stacks, grow = #tiles, most other nodes = #throughput/s)
+
+				//  Also a new group was added to represent plant processes (IncludedPlantProcesses) - old saves will not have anything here, so just a blank node is fine
+
+                foreach(JToken nodeJToken in original["Nodes"])
+                {
+                    if (nodeJToken["DesiredAssemblers"] != null)
+                        nodeJToken["DesiredSetValue"] = (double)nodeJToken["DesiredAssemblers"];
+                    //if (nodeJToken["DesiredRatePerSec"] != null)
+                    //    nodeJToken["DesiredSetValue"] = (double)nodeJToken["DesiredRatePerSec"];
+					if (nodeJToken["DesiredRate"] != null)
+						nodeJToken["DesiredSetValue"] = (double)nodeJToken["DesiredRate"];
+                }
+
+				original["IncludedPlantProcesses"] = new JArray();
+
+                original["Version"] = 6;
+            }
+
+			if ((int)original["Version"] == 6)
+			{
+				//Version update 6 -> 7:
+				//  Added 'included qualities'  (list of included qualities set as name = level, include only the 'default' normal quality)
+				//  Added 'maxQualityIterations'  (int value representing max number of quality tiers a recipe node will output with quality modules)
+				//  Added quality options for recipes, assemblers, beacons, modules, and items
+
+				JArray qualities = new JArray();
+				JObject qualityJObject = new JObject
+                {
+                    { "Key", "normal" },
+                    { "Value", 0 }
+                };
+				qualities.Add(qualityJObject);
+
+				original["IncludedQualities"] = qualities;
+				original["MaxQualitySteps"] = 5; //5 is the base number of quality modules in factorio, so its a nice value (using the current max length value could cause issues when combined with those '200 quality' mods)
+				original["DefaultQulity"] = cache.DefaultQuality.Name;
+
+                foreach (JToken nodeJToken in original["Nodes"])
+				{
+					switch ((NodeType)(int)nodeJToken["NodeType"])
+					{
+						case NodeType.Passthrough:
+						case NodeType.Supplier:
+						case NodeType.Consumer:
+						case NodeType.Spoil:
+						case NodeType.Plant:
+                            nodeJToken["BaseQuality"] = cache.DefaultQuality.Name;
+							break;
+
+						case NodeType.Recipe:
+                            nodeJToken["RecipeQuality"] = cache.DefaultQuality.Name;
+                            nodeJToken["AssemblerQuality"] = cache.DefaultQuality.Name;
+
+							JArray newAssemblerModules = new JArray();
+							foreach (JToken module in nodeJToken["AssemblerModules"])
+								newAssemblerModules.Add(new JObject { ["Name"] = (string)module, ["Quality"] = cache.DefaultQuality.Name});
+							nodeJToken["AssemblerModules"] = newAssemblerModules;
+
+							if (nodeJToken["Beacon"] != null)
+							{
+								nodeJToken["BeaconQuality"] = cache.DefaultQuality.Name;
+								JArray newBeaconModules = new JArray();
+								foreach (JToken module in nodeJToken["BeaconModules"])
+									newBeaconModules.Add(new JObject { ["Name"] = (string)module, ["Quality"] = cache.DefaultQuality.Name });
+								nodeJToken["BeaconModules"] = newBeaconModules;
+							}
+
+                            break;
+					}
+				}
+
+				foreach (JToken linkJToken in original["NodeLinks"])
+					linkJToken["Quality"] = cache.DefaultQuality.Name;
+
+                original["Version"] = 7;
+            }
+
+            return original;
 		}
 	}
 }

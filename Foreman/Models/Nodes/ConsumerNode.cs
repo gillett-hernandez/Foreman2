@@ -2,63 +2,112 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 
 namespace Foreman
 {
 	public class ConsumerNode : BaseNode
 	{
-		private readonly BaseNodeController controller;
-		public override BaseNodeController Controller { get { return controller; } }
+        public enum Errors
+        {
+            Clean = 0b_0000_0000_0000,
+            ItemMissing = 0b_0000_0000_0001,
+            QualityMissing = 0b_0000_0000_0010,
+            InvalidLinks = 0b_1000_0000_0000
+        }
+        public enum Warnings
+        {
+            Clean = 0b_0000_0000_0000,
+            ItemUnavailable = 0b_0000_0000_0001,
+			ItemDisabled = 0b_0000_0000_0010,
+			QualityUnavailable = 0b_0000_0000_0100,
+            QualityDisabled = 0b_0000_0000_1000
+        }
+        public Errors ErrorSet { get; private set; }
+        public Warnings WarningSet { get; private set; }
 
-		public readonly Item ConsumedItem;
+        private readonly BaseNodeController controller;
+		public override BaseNodeController Controller { get{ return controller; } }
 
-		public override IEnumerable<Item> Inputs { get { yield return ConsumedItem; } }
-		public override IEnumerable<Item> Outputs { get { return new Item[0]; } }
+		public readonly ItemQualityPair ConsumedItem;
 
-		public ConsumerNode(ProductionGraph graph, int nodeID, Item item) : base(graph, nodeID)
+		public override IEnumerable<ItemQualityPair> Inputs { get { yield return ConsumedItem; } }
+		public override IEnumerable<ItemQualityPair> Outputs { get { return new ItemQualityPair[0]; } }
+
+		public ConsumerNode(ProductionGraph graph, int nodeID, ItemQualityPair item) : base(graph, nodeID)
 		{
 			ConsumedItem = item;
 			controller = ConsumerNodeController.GetController(this);
 			ReadOnlyNode = new ReadOnlyConsumerNode(this);
 		}
 
-		public override void UpdateState(bool makeDirty = true)
-		{
-			if (makeDirty)
-				IsClean = false;
-			NodeState oldState = State;
-			State = (!ConsumedItem.IsMissing && AllLinksValid) ? AllLinksConnected ? NodeState.Clean : NodeState.MissingLink : NodeState.Error;
-			if (oldState != State)
-			{
-				OnNodeStateChanged();
+        internal override NodeState GetUpdatedState()
+        {
+            WarningSet = Warnings.Clean;
+            ErrorSet = Errors.Clean;
+
+			if (ConsumedItem.Item.IsMissing){
+				ErrorSet |= Errors.ItemMissing;
 			}
-		}
+			if (ConsumedItem.Quality.IsMissing){
+				ErrorSet |= Errors.QualityMissing;
+			}
+			if (!AllLinksValid){
+				ErrorSet |= Errors.InvalidLinks;
+			}
 
-		public override double GetConsumeRate(Item item) { return ActualRate; }
-		public override double GetSupplyRate(Item item) { throw new ArgumentException("Consumer does not supply! nothing should be asking for the supply rate"); }
+			if (ErrorSet != Errors.Clean){
+				return NodeState.Error;
+			}
 
-		internal override double inputRateFor(Item item) { return 1; }
-		internal override double outputRateFor(Item item) { throw new ArgumentException("Consumer should not have outputs!"); }
+			if (!ConsumedItem.Quality.Enabled){
+				WarningSet |= Warnings.QualityDisabled;
+			}
+            if (!ConsumedItem.Quality.Available){
+                WarningSet |= Warnings.QualityUnavailable;
+			}
+            if (!ConsumedItem.Item.Available){
+				WarningSet |= Warnings.ItemUnavailable;
+			}
+            if (!ConsumedItem.Item.Enabled){
+                WarningSet |= Warnings.ItemDisabled;
+			}
+
+            if (WarningSet != Warnings.Clean){
+                return NodeState.Warning;
+			}
+            if (AllLinksConnected){
+                return NodeState.Clean;
+			}
+            return NodeState.MissingLink;
+        }
+
+		public override double GetConsumeRate(ItemQualityPair item) { return ActualRate; }
+		public override double GetSupplyRate(ItemQualityPair item) { throw new ArgumentException("Consumer does not supply! nothing should be asking for the supply rate"); }
+
+		internal override double inputRateFor(ItemQualityPair item) { return 1; }
+		internal override double outputRateFor(ItemQualityPair item) { throw new ArgumentException("Consumer should not have outputs!"); }
 
 		public override void GetObjectData(SerializationInfo info, StreamingContext context)
 		{
 			base.GetObjectData(info, context);
 
 			info.AddValue("NodeType", NodeType.Consumer);
-			info.AddValue("Item", ConsumedItem.Name);
+			info.AddValue("Item", ConsumedItem.Item.Name);
+			info.AddValue("BaseQuality", ConsumedItem.Quality.Name);
 			if (RateType == RateType.Manual)
 			{
 				info.AddValue("DesiredRate", DesiredRatePerSec);
 			}
 		}
 
-		public override string ToString() { return string.Format("Consumption node for: {0}", ConsumedItem.Name); }
+		public override string ToString() { return string.Format("Consumption node for: {0} ({1})", ConsumedItem.Item.Name, ConsumedItem.Quality.Name); }
 	}
 
 	public class ReadOnlyConsumerNode : ReadOnlyBaseNode
 	{
-		public Item ConsumedItem => MyNode.ConsumedItem;
+		public ItemQualityPair ConsumedItem => MyNode.ConsumedItem;
 
 		private readonly ConsumerNode MyNode;
 
@@ -67,19 +116,32 @@ namespace Foreman
 		public override List<string> GetErrors()
 		{
 			List<string> errors = new List<string>();
-			if (ConsumedItem.IsMissing)
-			{
-				errors.Add(string.Format("> Item \"{0}\" doesnt exist in preset!", ConsumedItem.FriendlyName));
+			if ((MyNode.ErrorSet & ConsumerNode.Errors.ItemMissing) != 0) {
+				errors.Add(string.Format("> Item \"{0}\" doesnt exist in preset!", ConsumedItem.Item.FriendlyName));
 			}
-			else if (!MyNode.AllLinksValid)
-			{
+            if ((MyNode.ErrorSet & ConsumerNode.Errors.QualityMissing) != 0) {
+                errors.Add(string.Format("> Quality \"{0}\" doesnt exist in preset!", ConsumedItem.Quality.FriendlyName));
+			}
+            if ((MyNode.ErrorSet & ConsumerNode.Errors.InvalidLinks) != 0) {
 				errors.Add("> Some links are invalid!");
 			}
 
 			return errors;
 		}
 
-		public override List<string> GetWarnings() { Trace.Fail("Consumer node never has the warning state!"); return null; }
+		public override List<string> GetWarnings()
+		{
+            List<string> warnings = new List<string>();
+            if ((MyNode.WarningSet & ConsumerNode.Warnings.QualityUnavailable) != 0)
+                warnings.Add(string.Format("> Quality \"{0}\" isnt available in regular gameplay.", ConsumedItem.Quality.FriendlyName));
+            else if ((MyNode.WarningSet & ConsumerNode.Warnings.QualityDisabled) != 0)
+                warnings.Add(string.Format("> Quality \"{0}\" isnt currently enabled.", ConsumedItem.Quality.FriendlyName));
+            if ((MyNode.WarningSet & ConsumerNode.Warnings.ItemDisabled) != 0)
+                warnings.Add(string.Format("> Item \"{0}\" isnt currently enabled.", ConsumedItem.Quality.FriendlyName));
+            if ((MyNode.WarningSet & ConsumerNode.Warnings.ItemUnavailable) != 0)
+                warnings.Add(string.Format("> Item \"{0}\" is unavailable in regular play.", ConsumedItem.Quality.FriendlyName));
+            return warnings;
+		}
 	}
 
 	public class ConsumerNodeController : BaseNodeController
@@ -99,8 +161,7 @@ namespace Foreman
 		public override Dictionary<string, Action> GetErrorResolutions()
 		{
 			Dictionary<string, Action> resolutions = new Dictionary<string, Action>();
-			if (MyNode.ConsumedItem.IsMissing)
-			{
+			if (MyNode.ErrorSet != ConsumerNode.Errors.Clean) {
 				resolutions.Add("Delete node", new Action(() => this.Delete()));
 			}
 			else
@@ -113,6 +174,9 @@ namespace Foreman
 			return resolutions;
 		}
 
-		public override Dictionary<string, Action> GetWarningResolutions() { Trace.Fail("Consumer node never has the warning state!"); return null; }
+		public override Dictionary<string, Action> GetWarningResolutions()
+		{
+			return new Dictionary<string, Action>();
+		}
 	}
 }

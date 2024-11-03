@@ -17,27 +17,28 @@ namespace Foreman
 		IReadOnlyCollection<Module> Modules { get; }
 		IReadOnlyCollection<Item> Fuels { get; }
 		IReadOnlyCollection<Item> AssociatedItems { get; }
+		IReadOnlyDictionary<string, double> Pollution { get; }
 
 		EntityType EntityType { get; }
 		string GetEntityTypeName(bool plural);
 		EnergySource EnergySource { get; }
 		bool IsBurner { get; }
 		bool IsTemperatureFluidBurner { get; }
-		fRange FluidFuelTemperatureRange { get; } 
+		fRange FluidFuelTemperatureRange { get; }
 
-		double GetBaseFuelConsumptionRate(Item fuel, double temperature = double.NaN);
+		double GetBaseFuelConsumptionRate(Item fuel, Quality quality, double temperature = double.NaN);
 
 		bool IsMissing { get; }
 
-		double Speed { get; }
+		double GetSpeed(Quality quality);
 
 		int ModuleSlots { get; }
 
-		double EnergyDrain { get; }
-		double EnergyConsumption { get; }
-		double EnergyProduction { get; }
+		double GetEnergyDrain();
+		double GetEnergyConsumption(Quality quality);
+		double GetEnergyProduction(Quality quality);
+
 		double ConsumptionEffectivity { get; }
-		double Pollution { get; }
 
 		//steam generators
 		double OperationTemperature { get; }
@@ -53,10 +54,12 @@ namespace Foreman
 		public IReadOnlyCollection<Module> Modules { get { return modules; } }
 		public IReadOnlyCollection<Item> Fuels { get { return fuels; } }
 		public IReadOnlyCollection<Item> AssociatedItems { get { return associatedItems; } }
+		public IReadOnlyDictionary<string, double> Pollution { get { return pollution; } }
 
 		internal HashSet<ModulePrototype> modules { get; private set; }
 		internal HashSet<ItemPrototype> fuels { get; private set; }
 		internal List<ItemPrototype> associatedItems { get; private set; } //should honestly only be 1, but knowing modders....
+		internal Dictionary<string, double> pollution { get; private set; }
 
 		public EntityType EntityType { get; private set; }
 		public EnergySource EnergySource { get; internal set; }
@@ -65,19 +68,28 @@ namespace Foreman
 		public bool IsTemperatureFluidBurner { get; set; }
 		public fRange FluidFuelTemperatureRange { get; set; }
 
-		private double speed;
-		public double Speed { get { return speed; } internal set { speed = value == 0 ? 0.001 : value; } }
+		internal Dictionary<Quality, double> speed { get; private set; }
+		internal Dictionary<Quality, double> energyConsumption { get; private set; }
+		internal Dictionary<Quality, double> energyProduction { get; private set; }
+
+		public double GetSpeed(Quality quality) { return speed.ContainsKey(quality)? (speed[quality] > 0 ? speed[quality] : 1) : 1; }
 
 		public int ModuleSlots { get; internal set; }
 		public double NeighbourBonus { get; internal set; }
 
-		public double EnergyDrain { get; internal set; } //per second
-		public double EnergyConsumption { get; internal set; }
-		public double EnergyProduction { get; internal set; }
+		internal double energyDrain;
+		public double GetEnergyDrain() { return energyDrain; }
+		public double GetEnergyConsumption(Quality quality)
+		{
+			if(this is BeaconPrototype)
+				return quality.BeaconPowerMultiplier * (energyConsumption.ContainsKey(quality) ? energyConsumption[quality] : 1000);
+			else
+				return energyConsumption.ContainsKey(quality)? energyConsumption[quality] : 1000;
+		}
+		public double GetEnergyProduction(Quality quality) { return energyConsumption.ContainsKey(quality)? energyProduction[quality] : 0; }
+
 		public double ConsumptionEffectivity { get; internal set; }
 		public double OperationTemperature { get; internal set; }
-
-		public double Pollution { get; internal set; }
 
 		public EntityObjectBasePrototype(DataCache dCache, string name, string friendlyName, EntityType type, EnergySource source, bool isMissing) : base(dCache, name, friendlyName, "-")
 		{
@@ -86,45 +98,44 @@ namespace Foreman
 			modules = new HashSet<ModulePrototype>();
 			fuels = new HashSet<ItemPrototype>();
 			associatedItems = new List<ItemPrototype>();
+			pollution = new Dictionary<string, double>();
+
+			speed = new Dictionary<Quality, double>();
+			energyConsumption = new Dictionary<Quality, double>();
+			energyProduction = new Dictionary<Quality, double>();
 
 			IsMissing = isMissing;
 			EntityType = type;
 			EnergySource = source;
 
 			//just some base defaults -> helps prevent overflow errors during solving if the assembler is a missing entity
-			Speed = 1f;
 			ModuleSlots = 0;
 			NeighbourBonus = 0;
-			EnergyDrain = 0; //passive use (pretty much electricity only)
-			EnergyConsumption = 1000; //default value to prevent issues with missing objects
-			EnergyProduction = 0;
 			ConsumptionEffectivity = 1f;
 			OperationTemperature = double.MaxValue;
 			FluidFuelTemperatureRange = new fRange(double.MinValue, double.MaxValue);
 
-			Pollution = 0;
 		}
 
-		public double GetBaseFuelConsumptionRate(Item fuel, double temperature = double.NaN)
+		public double GetBaseFuelConsumptionRate(Item fuel, Quality quality, double temperature = double.NaN)
 		{
-			if ((EnergySource != EnergySource.Burner && EnergySource != EnergySource.FluidBurner && EnergySource != EnergySource.Heat))
-			{
-				Trace.Fail(string.Format("Cant ask for fuel consumption rate on a non-burner! {0}", this));
-			}
-			else if (!fuels.Contains(fuel))
-			{
-				Trace.Fail(string.Format("Invalid fuel! {0} for entity {1}", fuel, this));
-			}
-			else if (!IsTemperatureFluidBurner)
-			{
-				return EnergyConsumption / (fuel.FuelValue * ConsumptionEffectivity);
-			}
-			else if (!double.IsNaN(temperature) && (fuel is Fluid fluidFuel) && (temperature > fluidFuel.DefaultTemperature) && (fluidFuel.SpecificHeatCapacity > 0)) //temperature burn of liquid
-			{
-				return EnergyConsumption / ((temperature - fluidFuel.DefaultTemperature) * fluidFuel.SpecificHeatCapacity * ConsumptionEffectivity);
-			}
+			if (IsMissing) return 0.01; //prevents failure from importing a recipe node with set fuel without a valid assembler
 
-			return 0.01; // we cant have a 0 consumption rate as that would mess with the solver.
+			if ((EnergySource != EnergySource.Burner && EnergySource != EnergySource.FluidBurner && EnergySource != EnergySource.Heat)){
+				return 0.01; // Trace.Fail(string.Format("Cant ask for fuel consumption rate on a non-burner! {0}", this));
+			}
+			else if (!fuels.Contains(fuel)){
+				return 0.01; // Trace.Fail(string.Format("Invalid fuel! {0} for entity {1}", fuel, this));
+			}
+			else if (!IsTemperatureFluidBurner){
+				return GetEnergyConsumption(quality) / (fuel.FuelValue * ConsumptionEffectivity);
+			}
+			else if (!double.IsNaN(temperature) && (fuel is Fluid fluidFuel) && (temperature > fluidFuel.DefaultTemperature) && (fluidFuel.SpecificHeatCapacity > 0)) {//temperature burn of liquid
+				return GetEnergyConsumption(quality) / ((temperature - fluidFuel.DefaultTemperature) * fluidFuel.SpecificHeatCapacity * ConsumptionEffectivity);
+			}
+			return 0.01;
+
+			//0.01 is returned in case of error and prevents the solver from crashing. These errors will be noted on the node, so dont have to worry about them here.
 		}
 
 		public string GetEntityTypeName(bool plural)

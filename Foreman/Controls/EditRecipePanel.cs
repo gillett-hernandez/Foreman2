@@ -1,10 +1,13 @@
-﻿using System;
+﻿using Google.OrTools.LinearSolver;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
 using System.Drawing;
+using System.Dynamic;
 using System.Linq;
 using System.Windows.Forms;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.TextBox;
 
 namespace Foreman
 {
@@ -30,11 +33,14 @@ namespace Foreman
 		private double RateMultiplier { get { return myGraphViewer.Graph.GetRateMultipler(); } }
 		private string RateName { get { return myGraphViewer.Graph.GetRateName(); } }
 
+		private List<Quality> qualitySelectorIndexSet;
+
 		public EditRecipePanel(ReadOnlyRecipeNode node, ProductionGraphViewer graphViewer)
 		{
 			nodeData = node;
 			nodeController = (RecipeNodeController)graphViewer.Graph.RequestNodeController(node);
 			myGraphViewer = graphViewer;
+			qualitySelectorIndexSet = new List<Quality>();
 
 			InitializeComponent();
 			SetStyle(ControlStyles.OptimizedDoubleBuffer, true);
@@ -47,8 +53,20 @@ namespace Foreman
 
 			LowPriorityCheckBox.Checked = nodeData.LowPriority;
 
-			FixedAssemblerInput.Maximum = (decimal)(ProductionGraph.MaxFactories);
+			FixedAssemblerInput.Maximum = (decimal)(node.MaxDesiredSetValue);
 
+			foreach (Quality quality in graphViewer.DCache.AvailableQualities.Where(q => q.Enabled))
+			{
+				QualitySelector.Items.Add(quality.FriendlyName);
+				qualitySelectorIndexSet.Add(quality);
+			}
+
+            if (QualitySelector.Items.Count == 1)
+                QualitySelector.Enabled = false;
+			Quality defQuality = graphViewer.Graph.DefaultAssemblerQuality;
+			QualitySelector.SelectedIndex = (qualitySelectorIndexSet.IndexOf(defQuality) == -1) ? 0 : qualitySelectorIndexSet.IndexOf(defQuality);
+
+            if (nodeData.BeaconCount % 1 != 0) BeaconCountInput.DecimalPlaces = 1;
 			BeaconCountInput.Value = Math.Min(BeaconCountInput.Maximum, (decimal)nodeData.BeaconCount);
 			BeaconsPerAssemblerInput.Value = Math.Min(BeaconsPerAssemblerInput.Maximum, (decimal)nodeData.BeaconsPerAssembler);
 			ConstantBeaconInput.Value = Math.Min(ConstantBeaconInput.Maximum, (decimal)nodeData.BeaconsConst);
@@ -103,9 +121,12 @@ namespace Foreman
 			BeaconCountInput.ValueChanged += BeaconInput_ValueChanged;
 			BeaconsPerAssemblerInput.ValueChanged += BeaconInput_ValueChanged;
 			ConstantBeaconInput.ValueChanged += BeaconInput_ValueChanged;
-		}
 
-		private void OptionsPanel_MouseWheel(object sender, MouseEventArgs e)
+            QualitySelector.SelectedIndexChanged += QualitySelector_SelectedIndexChanged;
+
+        }
+
+        private void OptionsPanel_MouseWheel(object sender, MouseEventArgs e)
 		{
 			//had to set up this slightly convoluted scrolling option to account for mouse wheel events being WAY too fast -> it would skip from start to end in a single tick, potentially missing out several lines worth of items.
 			Panel sPanel = sender as Panel;
@@ -128,25 +149,25 @@ namespace Foreman
 			{
 				AutoAssemblersOption.Checked = true;
 				FixedAssemblerInput.Enabled = false;
-				FixedAssemblerInput.Value = Math.Min(FixedAssemblerInput.Maximum, (decimal)nodeData.ActualAssemblerCount);
+				FixedAssemblerInput.Value = Math.Min(FixedAssemblerInput.Maximum, (decimal)nodeData.ActualSetValue);
 			}
 			else
 			{
 				FixedAssemblersOption.Checked = true;
 				FixedAssemblerInput.Enabled = true;
-				FixedAssemblerInput.Value = Math.Min(FixedAssemblerInput.Maximum, (decimal)nodeData.DesiredAssemblerCount);
+				FixedAssemblerInput.Value = Math.Min(FixedAssemblerInput.Maximum, (decimal)nodeData.DesiredSetValue);
 			}
 			UpdateFixedFlowInputDecimals(FixedAssemblerInput);
 		}
 
 		private void SetupAssemblerOptions()
 		{
-			CleanTable(AssemblerChoiceTable, nodeData.BaseRecipe.Assemblers.Count(a => a.Enabled));
+			CleanTable(AssemblerChoiceTable, nodeData.BaseRecipe.Recipe.Assemblers.Count(a => a.Enabled));
 
 			AssemblerOptions.Clear();
-			foreach (Assembler assembler in nodeData.BaseRecipe.Assemblers.Where(a => a.Enabled))
+			foreach (Assembler assembler in nodeData.BaseRecipe.Recipe.Assemblers.Where(a => a.Enabled))
 			{
-				Button button = InitializeBaseButton(assembler);
+				Button button = InitializeBaseButton(assembler, qualitySelectorIndexSet[QualitySelector.SelectedIndex]);
 				button.Click += new EventHandler(AssemblerButton_Click);
 
 				AssemblerChoiceTable.Controls.Add(button, AssemblerOptions.Count % (AssemblerChoiceTable.ColumnCount - 1), AssemblerOptions.Count / (AssemblerChoiceTable.ColumnCount - 1));
@@ -161,31 +182,31 @@ namespace Foreman
 			//assembler button colors
 			foreach (Button abutton in AssemblerOptions)
 			{
-				abutton.BackColor = ((Assembler)abutton.Tag == nodeData.SelectedAssembler) ? SelectedColor : (((Assembler)abutton.Tag).IsMissing || !((Assembler)abutton.Tag).Available) ? ErrorColor : AssemblerChoiceTable.BackColor;
+				abutton.BackColor = ((Assembler)abutton.Tag == nodeData.SelectedAssembler.Assembler && qualitySelectorIndexSet[QualitySelector.SelectedIndex] == nodeData.SelectedAssembler.Quality) ? SelectedColor : (((Assembler)abutton.Tag).IsMissing || !((Assembler)abutton.Tag).Available) ? ErrorColor : AssemblerChoiceTable.BackColor;
 			}
 			//neighbour count panel
-			if (nodeData.SelectedAssembler.EntityType != EntityType.Reactor)
+			if (nodeData.SelectedAssembler.Assembler.EntityType != EntityType.Reactor)
 			{
 				NeighbourInput.Visible = false;
 				NeighboursLabel.Visible = false;
 			}
 
 			//extra productivity bonus panel
-			if (nodeData.SelectedAssembler.EntityType != EntityType.Miner && !myGraphViewer.Graph.EnableExtraProductivityForNonMiners)
+			if(nodeData.SelectedAssembler.Assembler.EntityType != EntityType.Miner && !myGraphViewer.Graph.EnableExtraProductivityForNonMiners)
 			{
 				ExtraProductivityInput.Visible = false;
 				ExtraProductivityLabel.Visible = false;
 			}
 
 			//fuel panel
-			FuelTitle.Visible = nodeData.SelectedAssembler.IsBurner;
-			SelectedFuelIcon.Visible = nodeData.SelectedAssembler.IsBurner;
-			FuelOptionsPanel.Visible = nodeData.SelectedAssembler.IsBurner;
+			FuelTitle.Visible = nodeData.SelectedAssembler.Assembler.IsBurner;
+			SelectedFuelIcon.Visible = nodeData.SelectedAssembler.Assembler.IsBurner;
+			FuelOptionsPanel.Visible = nodeData.SelectedAssembler.Assembler.IsBurner;
 			SetupFuelOptions();
 
 			//modules panel
-			List<Module> moduleOptions = nodeData.BaseRecipe.Modules.Intersect(nodeData.SelectedAssembler.Modules).OrderBy(m => m.LFriendlyName).ToList();
-			bool showModules = nodeData.SelectedAssembler.ModuleSlots > 0 && moduleOptions.Count > 0;
+			List<Module> moduleOptions = nodeData.BaseRecipe.Recipe.Modules.Intersect(nodeData.SelectedAssembler.Assembler.Modules).OrderBy(m => m.LFriendlyName).ToList();
+			bool showModules = nodeData.SelectedAssembler.Assembler.ModuleSlots > 0 && moduleOptions.Count > 0;
 			AModulesLabel.Visible = showModules;
 			AModuleOptionsLabel.Visible = showModules;
 			SelectedAModulesPanel.Visible = showModules;
@@ -200,7 +221,7 @@ namespace Foreman
 		private void SetupFuelOptions()
 		{
 
-			List<Item> fuels = nodeData.SelectedAssembler.Fuels.Where(f => f.ProductionRecipes.Any(r => r.Enabled && r.Assemblers.Any(a => a.Enabled))).ToList();
+			List<Item> fuels = nodeData.SelectedAssembler.Assembler.Fuels.Where(f => f.ProductionRecipes.Any(r => r.Enabled && r.Assemblers.Any(a => a.Enabled))).ToList();
 
 			CleanTable(FuelOptionsTable, fuels.Count);
 			FuelOptionsPanel.Height = (int)(FuelOptionsTable.RowStyles[0].Height * (fuels.Count <= 13 ? 1.2 : 2.2));
@@ -208,7 +229,7 @@ namespace Foreman
 			FuelOptions.Clear();
 			foreach (Item fuel in fuels)
 			{
-				Button button = InitializeBaseButton(fuel);
+				Button button = InitializeBaseButton(fuel, myGraphViewer.DCache.DefaultQuality);
 				button.Click += new EventHandler(FuelButton_Click);
 
 				FuelOptionsTable.Controls.Add(button, FuelOptions.Count % (FuelOptionsTable.ColumnCount - 1), FuelOptions.Count / (FuelOptionsTable.ColumnCount - 1));
@@ -232,13 +253,13 @@ namespace Foreman
 
 		private void SetupAssemblerModuleOptions()
 		{
-			List<Module> moduleOptions = nodeData.BaseRecipe.Modules.Intersect(nodeData.SelectedAssembler.Modules).Where(m => m.Enabled).OrderBy(m => m.LFriendlyName).ToList();
+			List<Module> moduleOptions = nodeData.BaseRecipe.Recipe.Modules.Intersect(nodeData.SelectedAssembler.Assembler.Modules).Where(m => m.Enabled).OrderBy(m => m.LFriendlyName).ToList();
 
 			CleanTable(AModulesChoiceTable, moduleOptions.Count);
 			AModuleOptions.Clear();
 			for (int i = 0; i < moduleOptions.Count; i++)
 			{
-				Button button = InitializeBaseButton(moduleOptions[i]);
+				Button button = InitializeBaseButton(moduleOptions[i], qualitySelectorIndexSet[QualitySelector.SelectedIndex]);
 				if (!moduleOptions[i].Available)
 				{
 					button.BackColor = ErrorColor;
@@ -255,21 +276,18 @@ namespace Foreman
 
 		private void UpdateAssemblerModules()
 		{
-			foreach (Button mbutton in AModuleOptions)
-			{
-				mbutton.Enabled = nodeData.AssemblerModules.Count < nodeData.SelectedAssembler.ModuleSlots;
+			foreach (Button mbutton in AModuleOptions) {
+				mbutton.Enabled = nodeData.AssemblerModules.Count < nodeData.SelectedAssembler.Assembler.ModuleSlots;
 			}
-
-			List<Module> moduleOptions = nodeData.BaseRecipe.Modules.Intersect(nodeData.SelectedAssembler.Modules).OrderBy(m => m.LFriendlyName).ToList();
+			List<Module> moduleOptions = nodeData.BaseRecipe.Recipe.Modules.Intersect(nodeData.SelectedAssembler.Assembler.Modules).OrderBy(m => m.LFriendlyName).ToList();
 
 			CleanTable(SelectedAModulesTable, nodeData.AssemblerModules.Count);
 
 			AssemblerModules.Clear();
 			for (int i = 0; i < nodeData.AssemblerModules.Count; i++)
 			{
-				Button button = InitializeBaseButton(nodeData.AssemblerModules[i]);
-				if (nodeData.AssemblerModules[i].IsMissing || !nodeData.AssemblerModules[i].Available || !nodeData.AssemblerModules[i].Enabled || !moduleOptions.Contains(nodeData.AssemblerModules[i]) || i >= nodeData.SelectedAssembler.ModuleSlots)
-				{
+				Button button = InitializeBaseButton(nodeData.AssemblerModules[i].Module, nodeData.AssemblerModules[i].Quality);
+				if (nodeData.AssemblerModules[i].Module.IsMissing || !nodeData.AssemblerModules[i].Module.Available || !nodeData.AssemblerModules[i].Module.Enabled || !moduleOptions.Contains(nodeData.AssemblerModules[i].Module) || i >= nodeData.SelectedAssembler.Assembler.ModuleSlots) {
 					button.BackColor = ErrorColor;
 				}
 
@@ -279,7 +297,7 @@ namespace Foreman
 				AssemblerModules.Add(button);
 			}
 
-			AModulesLabel.Text = string.Format("Modules ({0}/{1}):", nodeData.AssemblerModules.Count, nodeData.SelectedAssembler.ModuleSlots);
+			AModulesLabel.Text = string.Format("Modules ({0}/{1}):", nodeData.AssemblerModules.Count, nodeData.SelectedAssembler.Assembler.ModuleSlots);
 			UpdateAssemblerInfo();
 		}
 
@@ -290,7 +308,7 @@ namespace Foreman
 			BeaconOptions.Clear();
 			foreach (Beacon beacon in myGraphViewer.DCache.Beacons.Values.Where(b => b.Enabled))
 			{
-				Button button = InitializeBaseButton(beacon);
+				Button button = InitializeBaseButton(beacon, qualitySelectorIndexSet[QualitySelector.SelectedIndex]);
 				button.Click += new EventHandler(BeaconButton_Click);
 
 				BeaconChoiceTable.Controls.Add(button, BeaconOptions.Count % (BeaconChoiceTable.ColumnCount - 1), BeaconOptions.Count / (BeaconChoiceTable.ColumnCount - 1));
@@ -302,17 +320,15 @@ namespace Foreman
 
 		private void UpdateBeacon()
 		{
-			foreach (Button bbutton in BeaconOptions)
-			{
-				bbutton.BackColor = (((Beacon)bbutton.Tag) == nodeData.SelectedBeacon) ? SelectedColor : (((Beacon)bbutton.Tag).IsMissing || !((Beacon)bbutton.Tag).Available) ? ErrorColor : BeaconChoiceTable.BackColor;
+			foreach (Button bbutton in BeaconOptions){
+				bbutton.BackColor = (((Beacon)bbutton.Tag) == nodeData.SelectedBeacon.Beacon && qualitySelectorIndexSet[QualitySelector.SelectedIndex] == nodeData.SelectedBeacon.Quality) ? SelectedColor : (((Beacon)bbutton.Tag).IsMissing || !((Beacon)bbutton.Tag).Available) ? ErrorColor : BeaconChoiceTable.BackColor;
 			}
-
 			//modules panel
-			List<Module> moduleOptions = nodeData.SelectedBeacon == null ? new List<Module>() : nodeData.BaseRecipe.Modules.Intersect(nodeData.SelectedAssembler.Modules).Intersect(nodeData.SelectedBeacon.Modules).OrderBy(m => m.LFriendlyName).ToList();
-			bool showModules = nodeData.SelectedBeacon != null && nodeData.SelectedBeacon.ModuleSlots > 0 && moduleOptions.Count > 0;
+			List<Module> moduleOptions = nodeData.SelectedBeacon.Beacon == null ? new List<Module>() : nodeData.BaseRecipe.Recipe.Modules.Intersect(nodeData.SelectedAssembler.Assembler.Modules).Intersect(nodeData.SelectedBeacon.Beacon.Modules).OrderBy(m => m.LFriendlyName).ToList();
+			bool showModules = nodeData.SelectedBeacon.Beacon != null && nodeData.SelectedBeacon.Beacon.ModuleSlots > 0 && moduleOptions.Count > 0;
 
-			BeaconValuesTable.Visible = nodeData.SelectedBeacon != null;
-			BeaconInfoTable.Visible = nodeData.SelectedBeacon != null;
+			BeaconValuesTable.Visible = nodeData.SelectedBeacon.Beacon != null;
+			BeaconInfoTable.Visible = nodeData.SelectedBeacon.Beacon != null;
 
 			BModulesLabel.Visible = showModules;
 			BModuleOptionsLabel.Visible = showModules;
@@ -321,22 +337,21 @@ namespace Foreman
 			SetupBeaconModuleOptions();
 
 			//beacon values
-			if (nodeData.SelectedBeacon != null)
-			{
+			if (nodeData.SelectedBeacon.Beacon != null) {
 				SetBeaconValues(true);
 			}
 		}
 
 		private void SetupBeaconModuleOptions()
 		{
-			List<Module> moduleOptions = nodeData.SelectedBeacon == null ? new List<Module>() : nodeData.BaseRecipe.Modules.Intersect(nodeData.SelectedAssembler.Modules).Intersect(nodeData.SelectedBeacon.Modules).Where(m => m.Enabled).OrderBy(m => m.LFriendlyName).ToList();
-			int moduleSlots = nodeData.SelectedBeacon == null ? 0 : nodeData.SelectedBeacon.ModuleSlots;
+			List<Module> moduleOptions = nodeData.SelectedBeacon.Beacon == null ? new List<Module>() : nodeData.BaseRecipe.Recipe.Modules.Intersect(nodeData.SelectedAssembler.Assembler.Modules).Intersect(nodeData.SelectedBeacon.Beacon.Modules).Where(m => m.Enabled).OrderBy(m => m.LFriendlyName).ToList();
+			int moduleSlots = nodeData.SelectedBeacon.Beacon == null ? 0 : nodeData.SelectedBeacon.Beacon.ModuleSlots;
 
 			CleanTable(BModulesChoiceTable, moduleOptions.Count);
 			BModuleOptions.Clear();
 			for (int i = 0; i < moduleOptions.Count; i++)
 			{
-				Button button = InitializeBaseButton(moduleOptions[i]);
+				Button button = InitializeBaseButton(moduleOptions[i], qualitySelectorIndexSet[QualitySelector.SelectedIndex]);
 				if (!moduleOptions[i].Available)
 				{
 					button.BackColor = ErrorColor;
@@ -353,22 +368,19 @@ namespace Foreman
 
 		private void UpdateBeaconModules()
 		{
-			foreach (Button mbutton in BModuleOptions)
-			{
-				mbutton.Enabled = nodeData.BeaconModules.Count < nodeData.SelectedBeacon.ModuleSlots;
+			foreach (Button mbutton in BModuleOptions){
+				mbutton.Enabled = nodeData.BeaconModules.Count < nodeData.SelectedBeacon.Beacon.ModuleSlots;
 			}
-
-			List<Module> moduleOptions = nodeData.SelectedBeacon == null ? new List<Module>() : nodeData.BaseRecipe.Modules.Intersect(nodeData.SelectedAssembler.Modules).Intersect(nodeData.SelectedBeacon.Modules).OrderBy(m => m.LFriendlyName).ToList();
-			int moduleSlots = nodeData.SelectedBeacon == null ? 0 : nodeData.SelectedBeacon.ModuleSlots;
+			List<Module> moduleOptions = nodeData.SelectedBeacon.Beacon == null ? new List<Module>() : nodeData.BaseRecipe.Recipe.Modules.Intersect(nodeData.SelectedAssembler.Assembler.Modules).Intersect(nodeData.SelectedBeacon.Beacon.Modules).OrderBy(m => m.LFriendlyName).ToList();
+			int moduleSlots = nodeData.SelectedBeacon.Beacon == null ? 0 : nodeData.SelectedBeacon.Beacon.ModuleSlots;
 
 			CleanTable(SelectedBModulesTable, nodeData.BeaconModules.Count);
 
 			BeaconModules.Clear();
 			for (int i = 0; i < nodeData.BeaconModules.Count; i++)
 			{
-				Button button = InitializeBaseButton(nodeData.BeaconModules[i]);
-				if (nodeData.BeaconModules[i].IsMissing || !nodeData.BeaconModules[i].Available || !nodeData.BeaconModules[i].Enabled || !moduleOptions.Contains(nodeData.BeaconModules[i]) || i >= moduleSlots)
-				{
+				Button button = InitializeBaseButton(nodeData.BeaconModules[i].Module, nodeData.BeaconModules[i].Quality);
+				if (nodeData.BeaconModules[i].Module.IsMissing || !nodeData.BeaconModules[i].Module.Available || !nodeData.BeaconModules[i].Module.Enabled || !moduleOptions.Contains(nodeData.BeaconModules[i].Module) || i >= moduleSlots) {
 					button.BackColor = ErrorColor;
 				}
 
@@ -386,30 +398,34 @@ namespace Foreman
 
 		private void UpdateAssemblerInfo()
 		{
-			AssemblerRateLabel.Text = string.Format("# of {0}:", nodeData.SelectedAssembler.GetEntityTypeName(true));
-			AssemblerTitle.Text = string.Format("{0}: {1}", nodeData.SelectedAssembler.GetEntityTypeName(false), nodeData.SelectedAssembler.FriendlyName);
+			AssemblerRateLabel.Text = string.Format("# of {0}:", nodeData.SelectedAssembler.Assembler.GetEntityTypeName(true));
+			AssemblerTitle.Text = string.Format("{0}: {1}", nodeData.SelectedAssembler.Assembler.GetEntityTypeName(false), nodeData.SelectedAssembler.Assembler.FriendlyName);
 			SelectedAssemblerIcon.Image = nodeData.SelectedAssembler.Icon;
 
 			AssemblerEnergyPercentLabel.Text = nodeData.GetConsumptionMultiplier().ToString("P0");
 			AssemblerSpeedPercentLabel.Text = nodeData.GetSpeedMultiplier().ToString("P0");
 			AssemblerProductivityPercentLabel.Text = nodeData.GetProductivityMultiplier().ToString("P0");
 			AssemblerPollutionPercentLabel.Text = nodeData.GetPollutionMultiplier().ToString("P0");
+			AssemblerQualityPercentLabel.Text = nodeData.GetQualityMultiplier().ToString("P0");
 
-			bool isAssembler = (nodeData.SelectedAssembler.EntityType == EntityType.Assembler || nodeData.SelectedAssembler.EntityType == EntityType.Miner || nodeData.SelectedAssembler.EntityType == EntityType.OffshorePump);
+			bool isAssembler = (nodeData.SelectedAssembler.Assembler.EntityType == EntityType.Assembler || nodeData.SelectedAssembler.Assembler.EntityType == EntityType.Miner || nodeData.SelectedAssembler.Assembler.EntityType == EntityType.OffshorePump);
 			AssemblerSpeedTitleLabel.Visible = isAssembler;
 			AssemblerSpeedLabel.Visible = isAssembler;
 			AssemblerSpeedPercentLabel.Visible = isAssembler;
 			AssemblerProductivityTitleLabel.Visible = isAssembler;
 			AssemblerProductivityPercentLabel.Visible = isAssembler;
+			AssemblerPollutionTitleLabel.Visible= isAssembler;
 			AssemblerPollutionPercentLabel.Visible = isAssembler;
-			bool isGenerator = nodeData.SelectedAssembler.EntityType == EntityType.Generator;
+			AssemblerQualityTitleLabel.Visible = isAssembler;
+			AssemblerQualityPercentLabel.Visible = isAssembler;
+
+			bool isGenerator = nodeData.SelectedAssembler.Assembler.EntityType == EntityType.Generator;
 			GeneratorTemperatureLabel.Visible = isGenerator;
 			GeneratorTemperatureRangeLabel.Visible = isGenerator;
 
 			AssemblerSpeedLabel.Text = string.Format("{0} ({1} crafts / {2})", nodeData.GetAssemblerSpeed().ToString("0.##"), nodeData.GetTotalCrafts().ToString("0.#"), RateName);
 
-			if (nodeData.SelectedAssembler.IsBurner && nodeData.Fuel != null)
-			{
+			if (nodeData.SelectedAssembler.Assembler.IsBurner && nodeData.Fuel != null) {
 				AssemblerEnergyLabel.Text = string.Format("{0} ({1} fuel / {2})", GraphicsStuff.DoubleToEnergy(nodeData.GetAssemblerEnergyConsumption(), "W"), GraphicsStuff.DoubleToString(nodeData.GetTotalAssemblerFuelConsumption()), RateName);
 			}
 			else
@@ -423,7 +439,7 @@ namespace Foreman
 			{
 				double minTemp = nodeData.GetGeneratorMinimumTemperature();
 				double maxTemp = nodeData.GetGeneratorMaximumTemperature();
-				double operationalTemp = nodeData.SelectedAssembler.OperationTemperature;
+				double operationalTemp = nodeData.SelectedAssembler.Assembler.OperationTemperature;
 				double effectivity = nodeData.GetGeneratorEffectivity();
 
 				if (double.IsInfinity(maxTemp))
@@ -442,25 +458,25 @@ namespace Foreman
 
 		private void UpdateBeaconInfo()
 		{
-			BeaconTitle.Text = string.Format("Beacon: {0}", nodeData.SelectedBeacon == null ? "-none-" : nodeData.SelectedBeacon.FriendlyName);
-			SelectedBeaconIcon.Image = nodeData.SelectedBeacon?.Icon;
+			BeaconTitle.Text = string.Format("Beacon: {0}", nodeData.SelectedBeacon.Beacon == null ? "-none-" : nodeData.SelectedBeacon.Beacon.FriendlyName);
+			SelectedBeaconIcon.Image = nodeData.SelectedBeacon.Icon;
 
-			BeaconEnergyLabel.Text = nodeData.SelectedBeacon == null ? "0J" : GraphicsStuff.DoubleToEnergy(nodeData.GetBeaconEnergyConsumption(), "W");
-			BeaconModuleCountLabel.Text = nodeData.SelectedBeacon == null ? "0" : nodeData.SelectedBeacon.ModuleSlots.ToString();
-			BeaconEfficiencyLabel.Text = nodeData.SelectedBeacon == null ? "0%" : nodeData.SelectedBeacon.BeaconEffectivity.ToString("P0");
+			BeaconEnergyLabel.Text = nodeData.SelectedBeacon.Beacon == null ? "0J" : GraphicsStuff.DoubleToEnergy(nodeData.GetBeaconEnergyConsumption(), "W");
+			BeaconModuleCountLabel.Text = nodeData.SelectedBeacon.Beacon == null ? "0" : nodeData.SelectedBeacon.Beacon.ModuleSlots.ToString();
+			BeaconEfficiencyLabel.Text = nodeData.SelectedBeacon.Beacon == null ? "0%" : nodeData.SelectedBeacon.Beacon.GetBeaconEffectivity(nodeData.SelectedBeacon.Quality, nodeData.BeaconCount).ToString("P0");
 			TotalBeaconsLabel.Text = nodeData.GetTotalBeacons().ToString();
-			TotalBeaconEnergyLabel.Text = nodeData.SelectedBeacon == null ? "0J" : GraphicsStuff.DoubleToEnergy(nodeData.GetTotalBeaconElectricalConsumption(), "W");
+			TotalBeaconEnergyLabel.Text = nodeData.SelectedBeacon.Beacon == null ? "0J" : GraphicsStuff.DoubleToEnergy(nodeData.GetTotalBeaconElectricalConsumption(), "W");
 		}
 
 		//------------------------------------------------------------------------------------------------------Helper functions
 
-		private Button InitializeBaseButton(DataObjectBase obj)
+		private Button InitializeBaseButton(DataObjectBase obj, Quality quality)
 		{
 			NFButton button = new NFButton();
 			//button.BackColor = RecipeNode.SelectedAssembler == assembler? Color.DarkOrange : assembler.Available? Color.Gray : Color.DarkRed;
 			button.ForeColor = Color.Gray;
 			button.BackgroundImageLayout = ImageLayout.Zoom;
-			button.BackgroundImage = obj.Icon;
+			button.BackgroundImage = quality == myGraphViewer.DCache.DefaultQuality? obj.Icon : IconCacheProcessor.CombinedQualityIcon(obj.Icon, quality.Icon);
 			button.UseVisualStyleBackColor = false;
 			button.FlatStyle = FlatStyle.Flat;
 			button.FlatAppearance.BorderSize = 0;
@@ -518,7 +534,8 @@ namespace Foreman
 		private void AssemblerButton_Click(object sender, EventArgs e)
 		{
 			Assembler newAssembler = ((Button)sender).Tag as Assembler;
-			nodeController.SetAssembler(newAssembler);
+			Quality quality = qualitySelectorIndexSet[QualitySelector.SelectedIndex];
+			nodeController.SetAssembler(new AssemblerQualityPair(newAssembler, quality));
 			myGraphViewer.Graph.UpdateNodeValues();
 			UpdateAssembler();
 
@@ -564,16 +581,13 @@ namespace Foreman
 			}
 
 			Module newModule = ((Button)sender).Tag as Module;
+            Quality quality = qualitySelectorIndexSet[QualitySelector.SelectedIndex];
 
-			if (e.Button == MouseButtons.Left)
-			{
-				nodeController.AddAssemblerModule(newModule);
-			}
-			else if (e.Button == MouseButtons.Right)
-			{
-				nodeController.AddAssemblerModules(newModule);
-			}
-			else
+            if (e.Button == MouseButtons.Left) {
+				nodeController.AddAssemblerModule(new ModuleQualityPair(newModule, quality));
+			} else if (e.Button == MouseButtons.Right) {
+				nodeController.AddAssemblerModules(new ModuleQualityPair(newModule, quality));
+			} else
 			{
 				return;
 			}
@@ -584,15 +598,14 @@ namespace Foreman
 		private void BeaconButton_Click(object sender, EventArgs e)
 		{
 			Beacon newBeacon = ((Button)sender).Tag as Beacon;
-			if (nodeData.SelectedBeacon == newBeacon)
-			{
-				nodeController.SetBeacon(null);
-			}
-			else
-			{
-				nodeController.SetBeacon(newBeacon);
-			}
+            Quality quality = qualitySelectorIndexSet[QualitySelector.SelectedIndex];
+            BeaconQualityPair newBeaconQP = new BeaconQualityPair(newBeacon, quality);
 
+			if (nodeData.SelectedBeacon == newBeaconQP) {
+				nodeController.ClearBeacon();
+			} else {
+				nodeController.SetBeacon(newBeaconQP);
+			}
 			myGraphViewer.Graph.UpdateNodeValues();
 			UpdateBeacon();
 		}
@@ -630,16 +643,14 @@ namespace Foreman
 			}
 
 			Module newModule = ((Button)sender).Tag as Module;
+            Quality quality = qualitySelectorIndexSet[QualitySelector.SelectedIndex];
 
-			if (e.Button == MouseButtons.Left)
-			{
-				nodeController.AddBeaconModule(newModule);
-			}
-			else if (e.Button == MouseButtons.Right)
-			{
-				nodeController.AddBeaconModules(newModule);
-			}
-			else
+            if (e.Button == MouseButtons.Left) {
+				nodeController.AddBeaconModule(new ModuleQualityPair(newModule, quality));
+
+			} else if (e.Button == MouseButtons.Right) {
+				nodeController.AddBeaconModules(new ModuleQualityPair(newModule, quality));
+			} else
 			{
 				return;
 			}
@@ -682,9 +693,9 @@ namespace Foreman
 
 		private void SetFixedRate()
 		{
-			if (nodeData.DesiredAssemblerCount != (double)FixedAssemblerInput.Value)
+			if (nodeData.DesiredSetValue != (double)FixedAssemblerInput.Value)
 			{
-				nodeController.SetDesiredAssemblerCount((double)FixedAssemblerInput.Value);
+				nodeController.SetDesiredSetValue((double)FixedAssemblerInput.Value);
 				myGraphViewer.Graph.UpdateNodeValues();
 
 				UpdateAssemblerInfo();
@@ -700,7 +711,7 @@ namespace Foreman
 			if (nodeData.RateType != updatedRateType)
 			{
 				nodeController.SetRateType(updatedRateType);
-				nodeController.SetDesiredAssemblerCount((double)FixedAssemblerInput.Value);
+				nodeController.SetDesiredSetValue((double)FixedAssemblerInput.Value);
 				myGraphViewer.Graph.UpdateNodeValues();
 
 				UpdateAssemblerInfo();
@@ -790,5 +801,15 @@ namespace Foreman
 			SetBeaconValues(sender == BeaconCountInput);
 			UpdateFixedFlowInputDecimals(sender as NumericUpDown, 2);
 		}
-	}
+
+        private void QualitySelector_SelectedIndexChanged(object sender, EventArgs e)
+        {
+			SetupAssemblerOptions();
+			SetupAssemblerModuleOptions();
+			SetupBeaconOptions();
+			SetupBeaconModuleOptions();
+
+			myGraphViewer.Graph.DefaultAssemblerQuality = qualitySelectorIndexSet[QualitySelector.SelectedIndex];
+        }
+    }
 }

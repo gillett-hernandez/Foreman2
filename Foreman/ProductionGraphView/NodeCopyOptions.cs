@@ -11,14 +11,14 @@ namespace Foreman
 	[Serializable]
 	public class NodeCopyOptions : ISerializable
 	{
-		public readonly Assembler Assembler;
-		public readonly IReadOnlyList<Module> AssemblerModules;
+		public readonly AssemblerQualityPair Assembler;
+		public readonly IReadOnlyList<ModuleQualityPair> AssemblerModules;
 		public readonly Item Fuel;
 		public readonly double NeighbourCount;
 		public readonly double ExtraProductivityBonus;
 
-		public readonly Beacon Beacon;
-		public readonly IReadOnlyList<Module> BeaconModules;
+		public readonly BeaconQualityPair Beacon;
+		public readonly IReadOnlyList<ModuleQualityPair> BeaconModules;
 		public readonly double BeaconCount;
 		public readonly double BeaconsPerAssembler;
 		public readonly double BeaconsConst;
@@ -26,10 +26,10 @@ namespace Foreman
 		public NodeCopyOptions(ReadOnlyRecipeNode node)
 		{
 			Assembler = node.SelectedAssembler;
-			AssemblerModules = new List<Module>(node.AssemblerModules);
+			AssemblerModules = new List<ModuleQualityPair>(node.AssemblerModules);
 			Fuel = node.Fuel;
 			Beacon = node.SelectedBeacon;
-			BeaconModules = new List<Module>(node.BeaconModules);
+			BeaconModules = new List<ModuleQualityPair>(node.BeaconModules);
 			BeaconCount = node.BeaconCount;
 			BeaconsPerAssembler = node.BeaconsPerAssembler;
 			BeaconsConst = node.BeaconsConst;
@@ -37,7 +37,7 @@ namespace Foreman
 			ExtraProductivityBonus = node.ExtraProductivity;
 		}
 
-		private NodeCopyOptions(Assembler assembler, List<Module> assemblerModules, double neighbourCount, double extraProductivityBonus, Item fuel, Beacon beacon, List<Module> beaconModules, double beaconCount, double beaconsPerA, double beaconsCont)
+		private NodeCopyOptions(AssemblerQualityPair assembler, List<ModuleQualityPair> assemblerModules, double neighbourCount, double extraProductivityBonus, Item fuel, BeaconQualityPair beacon, List<ModuleQualityPair> beaconModules, double beaconCount, double beaconsPerA, double beaconsCont)
 		{
 			Assembler = assembler;
 			AssemblerModules = assemblerModules;
@@ -65,14 +65,46 @@ namespace Foreman
 			}
 
 			bool beacons = json["Beacon"] != null;
-			NodeCopyOptions nco = new NodeCopyOptions(
-				cache.Assemblers.ContainsKey((string)json["Assembler"]) ? cache.Assemblers[(string)json["Assembler"]] : null,
-				new List<Module>(json["AModules"].Where(j => cache.Modules.ContainsKey((string)j)).Select(j => cache.Modules[(string)j])),
+			Assembler assembler = cache.Assemblers.ContainsKey((string)json["Assembler"]) ? cache.Assemblers[(string)json["Assembler"]] : null;
+			Quality assemblerQuality = cache.Qualities.ContainsKey((string)json["AssemblerQuality"]) ? cache.Qualities[(string)json["AssemblerQuality"]] : null;
+			AssemblerQualityPair assemberQP = new AssemblerQualityPair(assembler, assemblerQuality ?? cache.DefaultQuality);
+
+			Beacon beacon = (beacons && cache.Beacons.ContainsKey((string)json["Beacon"])) ? cache.Beacons[(string)json["Beacon"]] : null;
+			Quality beaconQuality = (beacons && cache.Qualities.ContainsKey((string)json["BeaconQuality"])) ? cache.Qualities[(string)json["BeaconQuality"]] : null;
+			BeaconQualityPair beaconQP = new BeaconQualityPair(beacon, beaconQuality ?? cache.DefaultQuality);
+
+			List<ModuleQualityPair> aModules = new List<ModuleQualityPair>();
+			foreach(JToken moduleToken in json["AModules"])
+			{
+				string moduleName = (string)moduleToken["Name"];
+				string moduleQuality = (string)moduleToken["Quality"];
+				Module module = cache.Modules.ContainsKey(moduleName) ? cache.Modules[moduleName] : null;
+				Quality quality = cache.Qualities.ContainsKey(moduleQuality) ? cache.Qualities[moduleQuality] : cache.DefaultQuality;
+				if (module != null)
+					aModules.Add(new ModuleQualityPair(module, quality));
+			}
+
+            List<ModuleQualityPair> bModules = new List<ModuleQualityPair>();
+            foreach (JToken moduleToken in json["BModules"])
+            {
+                string moduleName = (string)moduleToken["Name"];
+                string moduleQuality = (string)moduleToken["Quality"];
+                Module module = cache.Modules.ContainsKey(moduleName) ? cache.Modules[moduleName] : null;
+                Quality quality = cache.Qualities.ContainsKey(moduleQuality) ? cache.Qualities[moduleQuality] : cache.DefaultQuality;
+                if (module != null)
+                    bModules.Add(new ModuleQualityPair(module, quality));
+            }
+
+			Item fuel = (json["Fuel"] != null && cache.Items.ContainsKey((string)json["Fuel"])) ? cache.Items[(string)json["Fuel"]] : null;
+
+            NodeCopyOptions nco = new NodeCopyOptions(
+				assemberQP,
+				aModules,
 				(double)json["Neighbours"],
 				(double)json["ExtraProductivity"],
-				(json["Fuel"] != null && cache.Items.ContainsKey((string)json["Fuel"])) ? cache.Items[(string)json["Fuel"]] : null,
-				(beacons && cache.Beacons.ContainsKey((string)json["Beacon"])) ? cache.Beacons[(string)json["Beacon"]] : null,
-				new List<Module>(json["BModules"].Where(j => cache.Modules.ContainsKey((string)j)).Select(j => cache.Modules[(string)j])),
+				fuel,
+				beaconQP,
+				bModules,
 				beacons ? (double)json["BeaconCount"] : 0,
 				beacons ? (double)json["BeaconsPA"] : 0,
 				beacons ? (double)json["BeaconsC"] : 0);
@@ -83,21 +115,23 @@ namespace Foreman
 		{
 			info.AddValue("Version", Properties.Settings.Default.ForemanVersion);
 			info.AddValue("Object", "NodeCopyOptions");
-			info.AddValue("Assembler", Assembler.Name);
+			info.AddValue("Assembler", Assembler.Assembler.Name);
+			info.AddValue("AssemblerQuality", Assembler.Quality.Name);
 
 			info.AddValue("Neighbours", NeighbourCount);
 			info.AddValue("ExtraProductivity", ExtraProductivityBonus);
-			info.AddValue("AModules", AssemblerModules.Select(m => m.Name));
-			info.AddValue("BModules", BeaconModules.Select(m => m.Name));
+			info.AddValue("AModules", AssemblerModules);
+			info.AddValue("BModules", BeaconModules);
 
 			if (Fuel != null)
 			{
 				info.AddValue("Fuel", Fuel.Name);
 			}
 
-			if (Beacon != null)
+			if (Beacon.Beacon != null)
 			{
-				info.AddValue("Beacon", Beacon.Name);
+				info.AddValue("Beacon", Beacon.Beacon.Name);
+				info.AddValue("BeaconQuality", Beacon.Quality.Name);
 				info.AddValue("BeaconCount", BeaconCount);
 				info.AddValue("BeaconsPA", BeaconsPerAssembler);
 				info.AddValue("BeaconsC", BeaconsConst);

@@ -158,7 +158,7 @@ namespace Foreman
 			}
 		}
 
-		//set the node to be zero (used for passthrough nodes with no outputs)
+		//set the node to be zero (used for passthrough nodes with missing input or output)
 		public void SetZero(PassthroughNode node)
 		{
 			Variable nodeVar = variableFor(node);
@@ -169,21 +169,21 @@ namespace Foreman
 		// Constrain a ratio on the output side of a node. This is done for each unique item, and constrains the producted item (based on the node rate) to be equal to the amount of the item transported away by the links
 		// Due to the possibility of an overflow, we introduce an 'overflow' variable here that accounts for any extra items produced that cant be consumed by the nodes above.
 		//	BUT! this is done only for recipe nodes! all other nodes cant have overflows!
-		public void AddOutputRatio(BaseNode node, Item item, IEnumerable<NodeLink> links, double rate)
+		public void AddOutputRatio(BaseNode node, ItemQualityPair item, IEnumerable<NodeLink> links, double rate)
 		{
 			Debug.Assert(links.All(x => x.SupplierNode == node));
-			AddIORatio(node, item, links, rate, node is RecipeNode);
+			AddIORatio(node, item, links, rate, node is RecipeNode || node is SpoilNode || node is PlantNode);
 		}
 
 		// Constrain a ratio on the input side of a node. Done for each unique item, and constrains the consumed item (based on the node rate) to be equal to the amount of the item provided by the links.
 		// unlike with the outputs, we dont have any error/overflow variables here. the numbers MUST equal
-		public void AddInputRatio(BaseNode node, Item item, IEnumerable<NodeLink> links, double rate)
+		public void AddInputRatio(BaseNode node, ItemQualityPair item, IEnumerable<NodeLink> links, double rate)
 		{
 			Debug.Assert(links.All(x => x.ConsumerNode == node));
 			AddIORatio(node, item, links, rate, false);
 		}
 
-		private void AddIORatio(BaseNode node, Item item, IEnumerable<NodeLink> links, double rate, bool includeErrorVariable)
+		private void AddIORatio(BaseNode node, ItemQualityPair item, IEnumerable<NodeLink> links, double rate, bool includeErrorVariable)
 		{
 			Constraint constraint = MakeConstraint(0, 0);
 			Variable rateVariable = variableFor(node);
@@ -210,12 +210,7 @@ namespace Foreman
 
 		private Variable variableFor(NodeLink inputLink)
 		{
-			return variableFor(inputLink, makeName("link", "S(" + inputLink.ConsumerNode.NodeID + ")", "C(" + inputLink.ConsumerNode.NodeID + ")", inputLink.Item.FriendlyName));
-		}
-
-		private string makeName(params object[] components)
-		{
-			return string.Join(":", components).ToLower().Replace(" ", "-");
+			return variableFor(inputLink, makeName("link", "S(" + inputLink.ConsumerNode.NodeID + ")", "C(" + inputLink.ConsumerNode.NodeID + ")", inputLink.Item.ToString()));
 		}
 
 		private Variable variableFor(BaseNode node, RateType type = RateType.ACTUAL)
@@ -223,7 +218,7 @@ namespace Foreman
 			return variableFor(Tuple.Create(node, type), makeName("node", type, node.NodeID, node.ToString()));
 		}
 
-		private Variable VariableForOverflow(BaseNode node, Item item)
+		private Variable VariableForOverflow(BaseNode node, ItemQualityPair item)
 		{
 			return variableFor(Tuple.Create(node, item), makeName("node-overflow", node.NodeID, node.ToString(), item.ToString()));
 		}
@@ -255,8 +250,13 @@ namespace Foreman
 			return this.counter += 1;
 		}
 
-		// A human-readable description of the constraints. Useful for debugging.
-		public override string ToString()
+        private string makeName(params object[] components)
+        {
+            return string.Join(":", components).ToLower().Replace(" ", "-");
+        }
+
+        // A human-readable description of the constraints. Useful for debugging.
+        public override string ToString()
 		{
 			return solver.ToString();
 		}

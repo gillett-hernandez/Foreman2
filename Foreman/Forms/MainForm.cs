@@ -7,18 +7,21 @@ using Newtonsoft.Json.Linq;
 using System.Drawing;
 using System.Linq;
 using System.Text;
+using System.Runtime.CompilerServices;
 
 namespace Foreman
 {
 	public partial class MainForm : Form
 	{
-		internal const string DefaultPreset = "Factorio 1.1 Vanilla";
+		internal const string DefaultPreset = "Factorio 2.0 Vanilla";
+		internal string DefaultAppName;
 		private string savefilePath = null;
 
 		public MainForm()
 		{
 			InitializeComponent();
 			this.DoubleBuffered = true;
+			DefaultAppName = this.Text;
 			SetStyle(ControlStyles.SupportsTransparentBackColor, true);
 		}
 
@@ -26,7 +29,7 @@ namespace Foreman
 		{
 			WindowState = FormWindowState.Maximized;
 
-			Properties.Settings.Default.ForemanVersion = 5;
+			Properties.Settings.Default.ForemanVersion = VersionUpdater.CurrentVersion;
 
 			if (!Enum.IsDefined(typeof(ProductionGraph.RateUnit), Properties.Settings.Default.DefaultRateUnit))
 			{
@@ -179,7 +182,7 @@ namespace Foreman
 				GraphViewer.Graph.SerializeNodeIdSet = null; //we want to save everything.
 				serialiser.Serialize(writer, GraphViewer);
 				savefilePath = path;
-				this.Text = string.Format("Foreman 2.0 ({0}) - {1}", Properties.Settings.Default.CurrentPresetName, savefilePath ?? "Untitled");
+				this.Text = string.Format(DefaultAppName + " ({0}) - {1}", Properties.Settings.Default.CurrentPresetName, savefilePath ?? "Untitled");
 				return true;
 			}
 			catch (Exception exception)
@@ -244,7 +247,7 @@ namespace Foreman
 
 			Properties.Settings.Default.Save();
 			GraphViewer.Invalidate();
-			this.Text = string.Format("Foreman 2.0 ({0}) - {1}", Properties.Settings.Default.CurrentPresetName, savefilePath ?? "Untitled");
+			this.Text = string.Format(DefaultAppName + " ({0}) - {1}", Properties.Settings.Default.CurrentPresetName, savefilePath ?? "Untitled");
 		}
 
 		private void NewGraph()
@@ -272,7 +275,7 @@ namespace Foreman
 			}
 
 			Properties.Settings.Default.Save();
-			this.Text = string.Format("Foreman 2.0 ({0}) - {1}", Properties.Settings.Default.CurrentPresetName, savefilePath ?? "Untitled");
+			this.Text = string.Format(DefaultAppName + " ({0}) - {1}", Properties.Settings.Default.CurrentPresetName, savefilePath ?? "Untitled");
 		}
 
 		private void ImportGraph()
@@ -298,7 +301,7 @@ namespace Foreman
 		{
 			try
 			{
-				GraphViewer.ImportNodesFromJson((JObject)JObject.Parse(File.ReadAllText(path))["ProductionGraph"], GraphViewer.ScreenToGraph(new Point(GraphViewer.Width / 2, GraphViewer.Height / 2)));
+				GraphViewer.ImportNodesFromJson((JObject)JObject.Parse(File.ReadAllText(path))["ProductionGraph"], GraphViewer.ScreenToGraph(new Point(GraphViewer.Width / 2, GraphViewer.Height / 2)), true);
 			}
 			catch (Exception exception)
 			{
@@ -370,12 +373,12 @@ namespace Foreman
 
 			if (!existingPresetFiles.Contains(Properties.Settings.Default.CurrentPresetName))
 			{
-				MessageBox.Show("The current preset (" + Properties.Settings.Default.CurrentPresetName + ") has been removed. Switching to the default preset (Factorio 1.1 Vanilla)");
+				MessageBox.Show("The current preset (" + Properties.Settings.Default.CurrentPresetName + ") has been removed. Switching to the default preset (Factorio 2.0 Vanilla)");
 				Properties.Settings.Default.CurrentPresetName = DefaultPreset;
 			}
 			if (!existingPresetFiles.Contains(DefaultPreset))
 			{
-				MessageBox.Show("The default preset (Factorio 1.1 Vanilla) has been removed. Please re-install / re-download Foreman");
+				MessageBox.Show("The default preset (Factorio 2.0 Vanilla) has been removed. Please re-install / re-download Foreman");
 				Application.Exit();
 				return null;
 			}
@@ -440,6 +443,7 @@ namespace Foreman
 			options.EnabledObjects.UnionWith(GraphViewer.DCache.Assemblers.Values.Where(r => r.Enabled));
 			options.EnabledObjects.UnionWith(GraphViewer.DCache.Beacons.Values.Where(r => r.Enabled));
 			options.EnabledObjects.UnionWith(GraphViewer.DCache.Modules.Values.Where(r => r.Enabled));
+			options.EnabledObjects.UnionWith(GraphViewer.DCache.Qualities.Values.Where(r => r.Enabled));
 
 			using (SettingsForm form = new SettingsForm(options))
 			{
@@ -455,7 +459,7 @@ namespace Foreman
 
 						List<Preset> validPresets = GetValidPresetsList();
 						await GraphViewer.LoadFromJson(JObject.Parse(JsonConvert.SerializeObject(GraphViewer)), true, false);
-						this.Text = string.Format("Foreman 2.0 ({0}) - {1}", Properties.Settings.Default.CurrentPresetName, savefilePath ?? "Untitled");
+						this.Text = string.Format(DefaultAppName + " ({0}) - {1}", Properties.Settings.Default.CurrentPresetName, savefilePath ?? "Untitled");
 					}
 					else //not loading a new preset -> update the enabled statuses
 					{
@@ -478,8 +482,12 @@ namespace Foreman
 						{
 							module.Enabled = options.EnabledObjects.Contains(module);
 						}
-
-						GraphViewer.DCache.RocketAssembler.Enabled = GraphViewer.DCache.Assemblers["rocket-silo"]?.Enabled?? false;
+						foreach (Quality quality in GraphViewer.DCache.Qualities.Values)
+						{
+							quality.Enabled = options.EnabledObjects.Contains(quality);
+						}
+						GraphViewer.DCache.DefaultQuality.Enabled = true;
+						GraphViewer.DCache.RocketAssembler.Enabled = GraphViewer.DCache.Assemblers["rocket-silo"]?.Enabled ?? false;
 					}
 
 					GraphViewer.LevelOfDetail = options.LevelOfDetail;
@@ -533,6 +541,7 @@ namespace Foreman
 					Properties.Settings.Default.ShowUnavailable = options.DEV_ShowUnavailableItems;
 					Properties.Settings.Default.Save();
 
+					GraphViewer.Graph.UpdateNodeMaxQualities();
 					GraphViewer.Graph.UpdateNodeStates(true);
 					GraphViewer.Graph.UpdateNodeValues();
 
@@ -556,7 +565,7 @@ namespace Foreman
 		private void AddRecipeButton_Click(object sender, EventArgs e)
 		{
 			Point location = GraphViewer.ScreenToGraph(new Point(GraphViewer.Width / 2, GraphViewer.Height / 2));
-			GraphViewer.AddRecipe(new Point(15, 15), null, location, NewNodeType.Disconnected);
+			GraphViewer.AddNewNode(new Point(15, 15), new ItemQualityPair(null, null), location, NewNodeType.Disconnected);
 		}
 
 		private void AddItemButton_Click(object sender, EventArgs e)
@@ -574,7 +583,7 @@ namespace Foreman
 
 		private void MainForm_KeyDown(object sender, KeyEventArgs e)
 		{
-			if(e.KeyCode == Keys.S && (Control.ModifierKeys & Keys.Control) == Keys.Control)
+			if (e.KeyCode == Keys.S && (Control.ModifierKeys & Keys.Control) == Keys.Control)
 			{
 				if (savefilePath == null || !SaveGraph(savefilePath))
 				{

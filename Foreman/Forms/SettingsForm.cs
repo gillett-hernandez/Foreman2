@@ -39,7 +39,7 @@ namespace Foreman
 			public ModuleSelector.Style DefaultModuleStyle;
 			public NodeDirection DefaultNodeDirection;
 			public bool SmartNodeDirection;
-			
+
 			public bool EnableExtraProductivityForNonMiners;
 			public bool DEV_ShowUnavailableItems;
 			public bool DEV_UseRecipeBWFilters;
@@ -70,6 +70,7 @@ namespace Foreman
 		private List<ListViewItem> unfilteredBeaconList;
 		private List<ListViewItem> unfilteredModuleList;
 		private List<ListViewItem> unfilteredRecipeList;
+		private List<ListViewItem> unfilteredQualityList;
 
 		private List<ListViewItem> filteredAssemblerList;
 		private List<ListViewItem> filteredMinerList;
@@ -77,6 +78,7 @@ namespace Foreman
 		private List<ListViewItem> filteredBeaconList;
 		private List<ListViewItem> filteredModuleList;
 		private List<ListViewItem> filteredRecipeList;
+		private List<ListViewItem> filteredQualityList;
 
 		private MouseHoverDetector mhDetector;
 
@@ -89,11 +91,13 @@ namespace Foreman
 			MainForm.SetDoubleBuffered(MinerListView);
 			MainForm.SetDoubleBuffered(ModuleListView);
 			MainForm.SetDoubleBuffered(RecipeListView);
+			MainForm.SetDoubleBuffered(QualityListView);
 
 			AssemblerListView.Columns[0].Width = AssemblerListView.Width - 32;
 			MinerListView.Columns[0].Width = MinerListView.Width - 32;
 			ModuleListView.Columns[0].Width = ModuleListView.Width - 32;
 			RecipeListView.Columns[0].Width = RecipeListView.Width - 32;
+			QualityListView.Columns[0].Width = QualityListView.Width - 32;
 
 			unfilteredAssemblerList = new List<ListViewItem>();
 			unfilteredMinerList = new List<ListViewItem>();
@@ -101,6 +105,7 @@ namespace Foreman
 			unfilteredBeaconList = new List<ListViewItem>();
 			unfilteredModuleList = new List<ListViewItem>();
 			unfilteredRecipeList = new List<ListViewItem>();
+			unfilteredQualityList = new List<ListViewItem>();
 
 			filteredAssemblerList = new List<ListViewItem>();
 			filteredMinerList = new List<ListViewItem>();
@@ -108,6 +113,7 @@ namespace Foreman
 			filteredBeaconList = new List<ListViewItem>();
 			filteredModuleList = new List<ListViewItem>();
 			filteredRecipeList = new List<ListViewItem>();
+			filteredQualityList = new List<ListViewItem>();
 
 			SelectPresetMenuItem.Click += SelectPresetMenuItem_Click;
 			DeletePresetMenuItem.Click += DeletePresetMenuItem_Click;
@@ -138,7 +144,7 @@ namespace Foreman
 			DisconnectedArrowsCheckBox.Checked = Options.ShowDisconnectedArrows;
 			OUSuppliedArrowsCheckBox.Checked = Options.ShowOUSuppliedArrows;
 
-			switch(Options.LevelOfDetail)
+			switch (Options.LevelOfDetail)
 			{
 				case ProductionGraphViewer.LOD.Low:
 					LowLodRadioButton.Checked = true;
@@ -151,7 +157,7 @@ namespace Foreman
 					break;
 			}
 
-			switch(Options.DefaultNodeDirection)
+			switch (Options.DefaultNodeDirection)
 			{
 				case NodeDirection.Down:
 					NodeDirectionDropDown.SelectedIndex = 1;
@@ -200,6 +206,7 @@ namespace Foreman
 			}
 			RecipeDifficultyLabel.Text = presetInfo.ExpensiveRecipes ? "Expensive" : "Normal";
 			TechnologyDifficultyLabel.Text = presetInfo.ExpensiveTechnology ? "Expensive" : "Normal";
+
 		}
 
 		private void LoadUnfilteredLists()
@@ -213,13 +220,20 @@ namespace Foreman
 			LoadUnfilteredList(Options.DCache.Beacons.Values, unfilteredBeaconList);
 			LoadUnfilteredList(Options.DCache.Modules.Values, unfilteredModuleList);
 			LoadUnfilteredList(Options.DCache.Recipes.Values, unfilteredRecipeList);
+			LoadUnfilteredList(Options.DCache.Qualities.Values, unfilteredQualityList);
 
 			UpdateFilteredLists();
 		}
 
 		private void LoadUnfilteredList(IEnumerable<DataObjectBase> origin, List<ListViewItem> lviList)
 		{
-			foreach (DataObjectBase dObject in origin.OrderByDescending(a => a.Available).ThenBy(a => a.FriendlyName))
+			IOrderedEnumerable<DataObjectBase> orderedList;
+			if (origin is IEnumerable<Quality>)
+				orderedList = origin.OrderByDescending(a => a.Available).ThenBy(a => a);
+			else
+				orderedList = origin.OrderByDescending(a => a.Available).ThenBy(a => a.FriendlyName);
+
+			foreach (DataObjectBase dObject in orderedList)
 			{
 				ListViewItem lvItem = new ListViewItem();
 				if (dObject.Icon != null)
@@ -250,6 +264,7 @@ namespace Foreman
 			UpdateFilteredList(unfilteredBeaconList, filteredBeaconList, BeaconListView);
 			UpdateFilteredList(unfilteredModuleList, filteredModuleList, ModuleListView);
 			UpdateFilteredList(unfilteredRecipeList, filteredRecipeList, RecipeListView);
+			UpdateFilteredList(unfilteredQualityList, filteredQualityList, QualityListView);
 		}
 
 		private void UpdateFilteredList(List<ListViewItem> unfilteredList, List<ListViewItem> filteredList, ListView owner)
@@ -482,6 +497,7 @@ namespace Foreman
 		private void BeaconListView_RetrieveVirtualItem(object sender, RetrieveVirtualItemEventArgs e) { e.Item = filteredBeaconList[e.ItemIndex]; }
 		private void ModuleListView_RetrieveVirtualItem(object sender, RetrieveVirtualItemEventArgs e) { e.Item = filteredModuleList[e.ItemIndex]; }
 		private void RecipeListView_RetrieveVirtualItem(object sender, RetrieveVirtualItemEventArgs e) { e.Item = filteredRecipeList[e.ItemIndex]; }
+		private void QualityListView_RetrieveVirtualItem(object sender, RetrieveVirtualItemEventArgs e) { e.Item = filteredQualityList[e.ItemIndex]; }
 
 		private void RecipeListView_StartHover(object sender, MouseEventArgs e)
 		{
@@ -574,7 +590,7 @@ namespace Foreman
 					}
 
 
-					if(newPreset == Options.Presets[0]) //we have overwritten the currently active preset. Must force a reload
+					if (newPreset == Options.Presets[0]) //we have overwritten the currently active preset. Must force a reload
 					{
 						Options.RequireReload = true;
 						UpdateSettings();
@@ -620,7 +636,7 @@ namespace Foreman
 				form.Top = this.Top + 50;
 				DialogResult result = form.ShowDialog();
 
-				if(result == DialogResult.OK)
+				if (result == DialogResult.OK)
 				{
 					UpdateEnabledStatus();
 				}
@@ -672,6 +688,10 @@ namespace Foreman
 				Options.EnabledObjects.Add(recipe);
 			}
 
+			foreach (Quality quality in Options.DCache.Qualities.Values.Where(r => r.Available))
+			{
+				Options.EnabledObjects.Add(quality);
+			}
 			UpdateEnabledStatus();
 		}
 
@@ -703,6 +723,10 @@ namespace Foreman
 			filteredRecipeList.AddRange(unfilteredRecipeList);
 			RecipeListView.VirtualListSize = filteredRecipeList.Count;
 
+			filteredQualityList.Clear();
+			filteredQualityList.AddRange(unfilteredQualityList);
+			QualityListView.VirtualListSize += filteredQualityList.Count;
+
 
 			foreach (ListViewItem item in unfilteredAssemblerList)
 			{
@@ -733,6 +757,11 @@ namespace Foreman
 			{
 				item.Checked = Options.EnabledObjects.Contains((DataObjectBase)item.Tag);
 			}
+			foreach (ListViewItem item in unfilteredQualityList)
+			{
+				item.Checked = Options.EnabledObjects.Contains((DataObjectBase)item.Tag);
+			}
+
 
 			UpdateFilteredLists();
 		}

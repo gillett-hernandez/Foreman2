@@ -360,7 +360,7 @@ namespace Foreman
 						Assembler lAssembler = (Assembler)l.Tag;
 						Assembler rAssembler = (Assembler)r.Tag;
 
-						similarInternals = (lAssembler.Speed == rAssembler.Speed && lAssembler.ModuleSlots == rAssembler.ModuleSlots);
+						similarInternals = true; // (lAssembler.Speed == rAssembler.Speed && lAssembler.ModuleSlots == rAssembler.ModuleSlots);  //QUALITY UPDATE REQUIRED
 						break;
 					case 6: //beacons
 						Beacon lBeacon = (Beacon)l.Tag;
@@ -372,8 +372,13 @@ namespace Foreman
 						Module lModule = (Module)l.Tag;
 						Module rModule = (Module)r.Tag;
 
-						similarInternals = (lModule.ProductivityBonus == rModule.ProductivityBonus && lModule.SpeedBonus == rModule.SpeedBonus);
-						break;
+						similarInternals = (lModule.GetProductivityBonus() == rModule.GetProductivityBonus() &&
+							lModule.GetSpeedBonus() == rModule.GetSpeedBonus() &&
+                            lModule.GetConsumptionBonus() == rModule.GetConsumptionBonus() &&
+							lModule.GetSpeedBonus() == rModule.GetSpeedBonus() &&
+							lModule.GetQualityBonus() == rModule.GetQualityBonus());
+
+                        break;
 				}
 
 				bgColor = similarInternals ? (similarNames ? EqualBGColor : CloseEnoughBGColor) : DifferentGBColor;
@@ -535,14 +540,14 @@ namespace Foreman
 				else if (lLVI.Tag is Assembler assembler) //assembler, miner, or power
 				{
 					string left = assembler.FriendlyName + "\n" +
-						string.Format("   Speed:         {0}x\n", assembler.Speed) +
+						string.Format("   Speed:         {0}x\n", assembler.GetSpeed(assembler.Owner.DefaultQuality)) +  //QUALITY UPDATE REQUIRED
 						string.Format("   Module Slots:  {0}", assembler.ModuleSlots);
 					string right = "";
 					if (compareTypeTT)
 					{
 						Assembler rassembler = rLVI.Tag as Assembler;
 						right = rassembler.FriendlyName + "\n" +
-						string.Format("   Speed:         {0}x\n", rassembler.Speed) +
+						string.Format("   Speed:         {0}x\n", rassembler.GetSpeed(assembler.Owner.DefaultQuality)) +  //QUALITY UPDATE REQUIRED
 						string.Format("   Module Slots:  {0}", rassembler.ModuleSlots);
 					}
 
@@ -567,21 +572,23 @@ namespace Foreman
 				else if (lLVI.Tag is Module module)
 				{
 					string left = module.FriendlyName + "\n" +
-						string.Format("   Productivity bonus: {0}\n", module.ProductivityBonus.ToString("%0")) +
-						string.Format("   Speed bonus:        {0}\n", module.SpeedBonus.ToString("%0")) +
-						string.Format("   Efficiency bonus:   {0}\n", (-module.ConsumptionBonus).ToString("%0")) +
-						string.Format("   Pollution bonus:    {0}", module.PollutionBonus.ToString("%0"));
-					string right = "";
+						string.Format("   Productivity bonus: {0}\n", module.GetProductivityBonus().ToString("%0")) +
+						string.Format("   Speed bonus:        {0}\n", module.GetSpeedBonus().ToString("%0")) +
+						string.Format("   Efficiency bonus:   {0}\n", (-module.GetConsumptionBonus()).ToString("%0")) +
+						string.Format("   Pollution bonus:    {0}", module.GetPolutionBonus().ToString("%0")) +
+	                    string.Format("   Quality bonus:      {0}", module.GetQualityBonus().ToString("%0"));
+                    string right = "";
 					if (compareTypeTT)
 					{
 						Module rmodule = rLVI.Tag as Module;
 						right = rmodule.FriendlyName + "\n" +
-						string.Format("   Productivity bonus: {0}\n", rmodule.ProductivityBonus.ToString("%0")) +
-						string.Format("   Speed bonus:        {0}\n", rmodule.SpeedBonus.ToString("%0")) +
-						string.Format("   Efficiency bonus:   {0}\n", (-rmodule.ConsumptionBonus).ToString("%0")) +
-						string.Format("   Pollution bonus:    {0}", rmodule.PollutionBonus.ToString("%0"));
-					}
-					TextToolTip.SetText(left, right);
+						string.Format("   Productivity bonus: {0}\n", rmodule.GetProductivityBonus().ToString("%0")) +
+						string.Format("   Speed bonus:        {0}\n", rmodule.GetSpeedBonus().ToString("%0")) +
+						string.Format("   Efficiency bonus:   {0}\n", (-rmodule.GetConsumptionBonus()).ToString("%0")) +
+                        string.Format("   Pollution bonus:    {0}", rmodule.GetPolutionBonus().ToString("%0")) +
+                        string.Format("   Quality bonus:      {0}", rmodule.GetQualityBonus().ToString("%0"));
+                    }
+                    TextToolTip.SetText(left, right);
 					TextToolTip.Show((Control)sender, location);
 				}
 			}

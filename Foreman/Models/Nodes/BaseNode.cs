@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Runtime.Serialization;
+using System.Xml.Schema;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.TreeView;
 
 namespace Foreman
 {
@@ -40,8 +42,16 @@ namespace Foreman
 		public double ActualRate { get { return ActualRatePerSec * MyGraph.GetRateMultipler(); } }
 		public double DesiredRate { get { return DesiredRatePerSec * MyGraph.GetRateMultipler(); } set { DesiredRatePerSec = value / MyGraph.GetRateMultipler(); } }
 
-		public abstract IEnumerable<Item> Inputs { get; }
-		public abstract IEnumerable<Item> Outputs { get; }
+		//'set value' values below are for flow setting - they are used to set the desired rate of the node regardless of what 'variable' they represent
+		//ex: recipe nodes will use this to 'set' the number of assemblers, passthrough/source/sink nodes use this to 'set' flowrate, plant nodes set 'plant tiles' and spoil nodes set 'inventory stacks'
+		//in its default form (below) its used for 'flowrate'
+		public virtual double ActualSetValue { get { return ActualRate; } }
+		public virtual double DesiredSetValue { get { return DesiredRate; } set { DesiredRate = value; } }
+		public virtual double MaxDesiredSetValue { get { return ProductionGraph.MaxSetFlow; } }
+		public virtual string SetValueDescription { get { return string.Format("Item Flowrate (per {0})", MyGraph.GetRateName()); } }
+
+		public abstract IEnumerable<ItemQualityPair> Inputs { get; }
+		public abstract IEnumerable<ItemQualityPair> Outputs { get; }
 
 		public List<NodeLink> InputLinks { get; private set; }
 		public List<NodeLink> OutputLinks { get; private set; }
@@ -72,35 +82,37 @@ namespace Foreman
 		public bool AllLinksValid { get { return (InputLinks.Count(l => !l.IsValid) + OutputLinks.Count(l => !l.IsValid) == 0); } }
 		public bool AllLinksConnected { get { return !Inputs.Any(i => !InputLinks.Any(l => l.Item == i)) && !Outputs.Any(i => !OutputLinks.Any(l => l.Item == i)); } }
 
-		public virtual void UpdateState(bool makeDirty = true)
-		{
-			if(makeDirty)
-			{
-				IsClean = false;
+        public void UpdateState(bool makeDirty = true)
+        {
+            if (makeDirty){
+                IsClean = false;
 			}
-			NodeState originalState = State;
-			State = AllLinksValid ? AllLinksConnected? NodeState.Clean : NodeState.MissingLink : NodeState.Error;
-			if (State != originalState)
-			{
-				OnNodeStateChanged();
+            NodeState oldState = State;
+            State = GetUpdatedState();
+            if (oldState != State){
+                OnNodeStateChanged();
 			}
+        }
+
+        internal virtual NodeState GetUpdatedState()
+        {
+			return (AllLinksValid ? (AllLinksConnected? NodeState.Clean : NodeState.MissingLink) : NodeState.Error);
 		}
 
 		protected virtual void OnNodeStateChanged() { NodeStateChanged?.Invoke(this, EventArgs.Empty); }
 		protected virtual void OnNodeValuesChanged() { NodeValuesChanged?.Invoke(this, EventArgs.Empty); }
 
-		public abstract double GetConsumeRate(Item item); //calculated rate a given item is consumed by this node (may not match desired amount)
-		public abstract double GetSupplyRate(Item item); //calculated rate a given item is supplied by this note (may not match desired amount)
+		public abstract double GetConsumeRate(ItemQualityPair item); //calculated rate a given item is consumed by this node (may not match desired amount)
+		public abstract double GetSupplyRate(ItemQualityPair item); //calculated rate a given item is supplied by this note (may not match desired amount)
 
-		public double GetSupplyUsedRate(Item item)
+		public double GetSupplyUsedRate(ItemQualityPair item)
 		{
 			return (double)OutputLinks.Where(x => x.Item == item).Sum(x => x.Throughput);
 		}
 
 		public bool IsOverproducing()
 		{
-			foreach (Item item in Outputs)
-			{
+			foreach (ItemQualityPair item in Outputs) {
 				if (IsOverproducing(item))
 				{
 					return true;
@@ -110,7 +122,7 @@ namespace Foreman
 			return false;
 		}
 
-		public bool IsOverproducing(Item item)
+		public bool IsOverproducing(ItemQualityPair item)
 		{
 			//supplied & produced > 1 ---> allow for 0.1% error
 			//supplied & produced [0.0001 -> 1]  ---> allow for 1% error
@@ -143,6 +155,9 @@ namespace Foreman
 			info.AddValue("Location", Location);
 			info.AddValue("RateType", RateType);
 			info.AddValue("Direction", NodeDirection);
+
+            if (RateType == RateType.Manual)
+                info.AddValue("DesiredSetValue", DesiredSetValue);
 			if (KeyNode)
 			{
 				info.AddValue("KeyNode", KeyNodeTitle);
@@ -158,27 +173,33 @@ namespace Foreman
 		public bool KeyNode => MyNode.KeyNode;
 		public string KeyNodeTitle => MyNode.KeyNodeTitle;
 
-		public IEnumerable<Item> Inputs => MyNode.Inputs;
-		public IEnumerable<Item> Outputs => MyNode.Outputs;
+		public IEnumerable<ItemQualityPair> Inputs => MyNode.Inputs;
+		public IEnumerable<ItemQualityPair> Outputs => MyNode.Outputs;
 
 		public IEnumerable<ReadOnlyNodeLink> InputLinks { get { foreach (NodeLink nodeLink in MyNode.InputLinks) { yield return nodeLink.ReadOnlyLink; } } }
 		public IEnumerable<ReadOnlyNodeLink> OutputLinks { get { foreach (NodeLink nodeLink in MyNode.OutputLinks) { yield return nodeLink.ReadOnlyLink; } } }
 
 		public RateType RateType => MyNode.RateType;
 		public double ActualRate => MyNode.ActualRate;
+		public double ActualRatePerSec => MyNode.ActualRatePerSec;
 		public double DesiredRate => MyNode.DesiredRate;
 		public NodeState State => MyNode.State;
+
+		public double ActualSetValue => MyNode.ActualSetValue;
+		public double DesiredSetValue => MyNode.DesiredSetValue;
+		public double MaxDesiredSetValue => MyNode.MaxDesiredSetValue;
+		public string SetValueDescription => MyNode.SetValueDescription;
 
 		public NodeDirection NodeDirection => MyNode.NodeDirection;
 
 		public abstract List<string> GetErrors();
 		public abstract List<string> GetWarnings();
 
-		public double GetConsumeRate(Item item) => MyNode.GetConsumeRate(item);
-		public double GetSupplyRate(Item item) => MyNode.GetSupplyRate(item);
-		public double GetSupplyUsedRate(Item item) => MyNode.GetSupplyUsedRate(item);
+		public double GetConsumeRate(ItemQualityPair item) => MyNode.GetConsumeRate(item);
+		public double GetSupplyRate(ItemQualityPair item) => MyNode.GetSupplyRate(item);
+		public double GetSupplyUsedRate(ItemQualityPair item) => MyNode.GetSupplyUsedRate(item);
 		public bool IsOverproducing() => MyNode.IsOverproducing();
-		public bool IsOverproducing(Item item) => MyNode.IsOverproducing(item);
+		public bool IsOverproducing(ItemQualityPair item) => MyNode.IsOverproducing(item);
 		public bool ManualRateNotMet() => MyNode.ManualRateNotMet();
 
 		private readonly BaseNode MyNode;
@@ -230,19 +251,16 @@ namespace Foreman
 			}
 		}
 
-		public void SetRateType(RateType type) { if (MyNode.RateType != type)
-			{
-				MyNode.RateType = type;
-			}
-		}
-		public virtual void SetDesiredRate(double rate) { if (MyNode.DesiredRate != rate)
-			{
-				MyNode.DesiredRate = rate;
+		public void SetRateType(RateType type) { if (MyNode.RateType != type) {MyNode.RateType = type;} }
+
+		public void SetDesiredSetValue(double value) {
+			if(MyNode.DesiredSetValue != value) {
+				MyNode.DesiredSetValue = value; MyNode.UpdateState();
 			}
 		}
 
-		public void SetDirection(NodeDirection direction) { if (MyNode.NodeDirection != direction)
-			{
+		public void SetDirection(NodeDirection direction) {
+			if (MyNode.NodeDirection != direction) {
 				MyNode.NodeDirection = direction;
 			}
 		}

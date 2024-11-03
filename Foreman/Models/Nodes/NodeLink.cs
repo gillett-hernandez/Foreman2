@@ -11,7 +11,7 @@ namespace Foreman
 		public NodeLinkController Controller { get { return controller; } }
 		public ReadOnlyNodeLink ReadOnlyLink { get; protected set; }
 
-		public Item Item { get; private set; }
+		public ItemQualityPair Item { get; private set; }
 		public double ThroughputPerSec { get; internal set; }
 		public double Throughput { get { return ThroughputPerSec * MyGraph.GetRateMultipler(); } }
 		public bool IsValid { get; private set; }
@@ -21,7 +21,7 @@ namespace Foreman
 		public readonly BaseNode SupplierNode;
 		public readonly BaseNode ConsumerNode;
 
-		internal NodeLink(ProductionGraph myGraph, BaseNode supplier, BaseNode consumer, Item item)
+		internal NodeLink(ProductionGraph myGraph, BaseNode supplier, BaseNode consumer, ItemQualityPair item)
 		{
 			MyGraph = myGraph;
 			SupplierNode = supplier;
@@ -38,10 +38,11 @@ namespace Foreman
 		{
 			info.AddValue("SupplierID", SupplierNode.NodeID);
 			info.AddValue("ConsumerID", ConsumerNode.NodeID);
-			info.AddValue("Item", Item.Name);
+			info.AddValue("Item", Item.Item.Name);
+			info.AddValue("Quality", Item.Quality.Name);
 		}
 
-		public override string ToString() { return string.Format("NodeLink for {0} connecting {1} -> {2}", Item.Name, SupplierNode.NodeID, ConsumerNode.NodeID); }
+		public override string ToString() { return string.Format("NodeLink for {0} ({1}) connecting {1} -> {2}", Item.Item.Name, Item.Quality.Name, SupplierNode.NodeID, ConsumerNode.NodeID); }
 	}
 
 	public class ReadOnlyNodeLink
@@ -52,7 +53,7 @@ namespace Foreman
 		public NodeDirection SupplierDirection => MyLink.SupplierNode.NodeDirection;
 		public NodeDirection ConsumerDirection => MyLink.ConsumerNode.NodeDirection;
 
-		public Item Item => MyLink.Item;
+		public ItemQualityPair Item => MyLink.Item;
 		public double Throughput => MyLink.Throughput;
 		public bool IsValid => MyLink.IsValid;
 

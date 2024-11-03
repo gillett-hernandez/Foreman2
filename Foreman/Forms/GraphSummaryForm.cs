@@ -98,9 +98,9 @@ namespace Foreman
 			this.rateString = rateString;
 
 			//lists
-			LoadUnfilteredSelectedAssemblerList(nodes.Where(n => n is ReadOnlyRecipeNode rNode && rNode.SelectedAssembler.EntityType == EntityType.Assembler).Select(n => (ReadOnlyRecipeNode)n), unfilteredAssemblerList);
-			LoadUnfilteredSelectedAssemblerList(nodes.Where(n => n is ReadOnlyRecipeNode rNode && (rNode.SelectedAssembler.EntityType == EntityType.Miner || rNode.SelectedAssembler.EntityType == EntityType.OffshorePump)).Select(n => (ReadOnlyRecipeNode)n), unfilteredMinerList);
-			LoadUnfilteredSelectedAssemblerList(nodes.Where(n => n is ReadOnlyRecipeNode rNode && (rNode.SelectedAssembler.EntityType == EntityType.Boiler || rNode.SelectedAssembler.EntityType == EntityType.BurnerGenerator || rNode.SelectedAssembler.EntityType == EntityType.Generator || rNode.SelectedAssembler.EntityType == EntityType.Reactor)).Select(n => (ReadOnlyRecipeNode)n), unfilteredPowerList);
+			LoadUnfilteredSelectedAssemblerList(nodes.Where(n => n is ReadOnlyRecipeNode rNode && rNode.SelectedAssembler.Assembler.EntityType == EntityType.Assembler).Select(n => (ReadOnlyRecipeNode)n), unfilteredAssemblerList);
+			LoadUnfilteredSelectedAssemblerList(nodes.Where(n => n is ReadOnlyRecipeNode rNode && (rNode.SelectedAssembler.Assembler.EntityType == EntityType.Miner || rNode.SelectedAssembler.Assembler.EntityType == EntityType.OffshorePump)).Select(n => (ReadOnlyRecipeNode)n), unfilteredMinerList);
+			LoadUnfilteredSelectedAssemblerList(nodes.Where(n => n is ReadOnlyRecipeNode rNode && (rNode.SelectedAssembler.Assembler.EntityType == EntityType.Boiler || rNode.SelectedAssembler.Assembler.EntityType == EntityType.BurnerGenerator || rNode.SelectedAssembler.Assembler.EntityType == EntityType.Generator || rNode.SelectedAssembler.Assembler.EntityType == EntityType.Reactor)).Select(n => (ReadOnlyRecipeNode)n), unfilteredPowerList);
 
 			LoadUnfilteredBeaconList(nodes.Where(n => n is ReadOnlyRecipeNode rNode && rNode.SelectedBeacon != null).Select(n => (ReadOnlyRecipeNode)n), unfilteredBeaconList);
 
@@ -110,7 +110,7 @@ namespace Foreman
 			LoadUnfilteredKeyNodesList(nodes.Where(n => n.KeyNode), unfilteredKeyNodesList);
 
 			//building totals
-			double buildingTotal = nodes.Where(n => n is ReadOnlyRecipeNode).Sum(n => Math.Ceiling(((ReadOnlyRecipeNode)n).ActualAssemblerCount));
+			double buildingTotal = nodes.Where(n => n is ReadOnlyRecipeNode).Sum(n => Math.Ceiling(((ReadOnlyRecipeNode)n).ActualSetValue));
 			double beaconTotal = nodes.Where(n => n is ReadOnlyRecipeNode).Sum(n => ((ReadOnlyRecipeNode)n).GetTotalBeacons());
 			BuildingCountLabel.Text += GraphicsStuff.DoubleToString(buildingTotal);
 			BeaconCountLabel.Text += GraphicsStuff.DoubleToString(beaconTotal);
@@ -131,8 +131,8 @@ namespace Foreman
 
 		private void LoadUnfilteredSelectedAssemblerList(IEnumerable<ReadOnlyRecipeNode> origin, List<ListViewItem> lviList)
 		{
-			Dictionary<Assembler, int> buildingCounters = new Dictionary<Assembler, int>();
-			Dictionary<Assembler, Tuple<double, double>> buildingElectricalPower = new Dictionary<Assembler, Tuple<double, double>>(); //power for buildings, power for beacons)
+			Dictionary<AssemblerQualityPair, int> buildingCounters = new Dictionary<AssemblerQualityPair, int>();
+			Dictionary<AssemblerQualityPair, Tuple<double, double>> buildingElectricalPower = new Dictionary<AssemblerQualityPair, Tuple<double, double>>(); //power for buildings, power for beacons)
 
 			foreach(ReadOnlyRecipeNode rnode in origin)
 			{
@@ -141,15 +141,15 @@ namespace Foreman
 					buildingCounters.Add(rnode.SelectedAssembler, 0);
 					buildingElectricalPower.Add(rnode.SelectedAssembler, new Tuple<double, double>(0,0));
 				}
-				buildingCounters[rnode.SelectedAssembler] += (int)Math.Ceiling(rnode.ActualAssemblerCount); //should probably check the validity of ceiling in case of near correct (ex: 1.0001 assemblers should really be counted as 1 instead of 2)
+				buildingCounters[rnode.SelectedAssembler] += (int)Math.Ceiling(rnode.ActualSetValue); //should probably check the validity of ceiling in case of near correct (ex: 1.0001 assemblers should really be counted as 1 instead of 2)
 				Tuple<double, double> oldValues = buildingElectricalPower[rnode.SelectedAssembler];
 				buildingElectricalPower[rnode.SelectedAssembler] = new Tuple<double,double>(oldValues.Item1 + rnode.GetTotalGeneratorElectricalProduction() + rnode.GetTotalAssemblerElectricalConsumption(), oldValues.Item2 + rnode.GetTotalBeaconElectricalConsumption());
 			}
 
-			foreach (Assembler assembler in buildingCounters.Keys.OrderByDescending(a => a.Available).ThenBy(a => a.FriendlyName))
+			foreach (AssemblerQualityPair assembler in buildingCounters.Keys.OrderByDescending(a => a.Assembler.Available).ThenBy(a => a.Assembler.FriendlyName).ThenBy(a => a.Quality.Level).ThenBy(a => a.Quality.FriendlyName))
 			{
 				ListViewItem lvItem = new ListViewItem();
-				if (assembler.Icon != null)
+				if (assembler.Assembler.Icon != null)
 				{
 					IconList.Images.Add(assembler.Icon);
 					lvItem.ImageIndex = IconList.Images.Count - 1;
@@ -161,8 +161,8 @@ namespace Foreman
 
 				lvItem.Text = buildingCounters[assembler] >= 10000000? buildingCounters[assembler].ToString("0.##e0") : buildingCounters[assembler].ToString("N0");
 				lvItem.Tag = assembler;
-				lvItem.Name = assembler.Name; //key
-				lvItem.BackColor = assembler.Available ? AvailableObjectColor : UnavailableObjectColor;
+				lvItem.Name = assembler.Assembler.Name + ":" + assembler.Quality.Name; //key
+				lvItem.BackColor = assembler.Assembler.Available ? AvailableObjectColor : UnavailableObjectColor;
 				lvItem.SubItems.Add(new ListViewItem.ListViewSubItem() { Text = assembler.FriendlyName });
 				lvItem.SubItems.Add(new ListViewItem.ListViewSubItem() { Text = buildingElectricalPower[assembler].Item1 == 0 ? "-" : GraphicsStuff.DoubleToEnergy(buildingElectricalPower[assembler].Item1, "W"), Tag = buildingElectricalPower[assembler].Item1 });
 				lvItem.SubItems.Add(new ListViewItem.ListViewSubItem() { Text = buildingElectricalPower[assembler].Item2 == 0 ? "-" : GraphicsStuff.DoubleToEnergy(buildingElectricalPower[assembler].Item2, "W"), Tag = buildingElectricalPower[assembler].Item2 });
@@ -172,7 +172,7 @@ namespace Foreman
 
 		private void LoadUnfilteredBeaconList(IEnumerable<ReadOnlyRecipeNode> origin, List<ListViewItem> lviList)
 		{
-			Dictionary<Beacon, int> beaconCounters = new Dictionary<Beacon, int>();
+			Dictionary<BeaconQualityPair, int> beaconCounters = new Dictionary<BeaconQualityPair, int>();
 
 			foreach (ReadOnlyRecipeNode rnode in origin)
 			{
@@ -184,7 +184,7 @@ namespace Foreman
 				beaconCounters[rnode.SelectedBeacon] += rnode.GetTotalBeacons();
 			}
 
-			foreach (Beacon beacon in beaconCounters.Keys.OrderByDescending(b => b.Available).ThenBy(b => b.FriendlyName))
+			foreach (BeaconQualityPair beacon in beaconCounters.Keys.OrderByDescending(b => b.Beacon.Available).ThenBy(b => b.Beacon.FriendlyName).ThenBy(b => b.Quality.Level).ThenBy(b => b.Quality.FriendlyName))
 			{
 				ListViewItem lvItem = new ListViewItem();
 				if (beacon.Icon != null)
@@ -199,10 +199,10 @@ namespace Foreman
 
 				lvItem.Text = beaconCounters[beacon].ToString();
 				lvItem.Tag = beacon;
-				lvItem.Name = beacon.Name; //key
-				lvItem.BackColor = beacon.Available ? AvailableObjectColor : UnavailableObjectColor;
+				lvItem.Name = beacon.Beacon.Name + ":" + beacon.Quality.Name; //key
+				lvItem.BackColor = beacon.Beacon.Available ? AvailableObjectColor : UnavailableObjectColor;
 				lvItem.SubItems.Add(beacon.FriendlyName);
-				double beaconPowerConsumption = beaconCounters[beacon] * (beacon.EnergyConsumption + beacon.EnergyDrain);
+				double beaconPowerConsumption = beaconCounters[beacon] * (beacon.Beacon.GetEnergyConsumption(beacon.Quality) + beacon.Beacon.GetEnergyDrain());  //QUALITY UPDATE REQUIRED
 				lvItem.SubItems.Add(new ListViewItem.ListViewSubItem() { Text = beaconCounters[beacon] == 0 ? "-" : GraphicsStuff.DoubleToEnergy(beaconPowerConsumption, "W"), Tag = beaconPowerConsumption });
 				lviList.Add(lvItem);
 			}
@@ -211,13 +211,13 @@ namespace Foreman
 		private void LoadUnfilteredItemLists(IEnumerable<ReadOnlyBaseNode> nodes, IEnumerable<ReadOnlyNodeLink> links, bool fluids, List<ListViewItem> lviList)
 		{
 			//NOTE: throughput is initially calculatated as all non-overflow linked input & output of each recipe node. At the end we will add
-			Dictionary<Item, ItemCounter> itemCounters = new Dictionary<Item, ItemCounter>();
+			Dictionary<ItemQualityPair, ItemCounter> itemCounters = new Dictionary<ItemQualityPair, ItemCounter>();
 
 			foreach (ReadOnlyBaseNode node in nodes)
 			{
 				if (node is ReadOnlyRecipeNode)
 				{
-					foreach (Item input in node.Inputs.Where(i => fluids.Equals(i is Fluid)))
+					foreach (ItemQualityPair input in node.Inputs.Where(i => fluids.Equals(i.Item is Fluid)))
 					{
 						if (!itemCounters.ContainsKey(input))
 						{
@@ -238,7 +238,7 @@ namespace Foreman
 						}
 					}
 
-					foreach (Item output in node.Outputs.Where(i => fluids.Equals(i is Fluid)))
+					foreach (ItemQualityPair output in node.Outputs.Where(i => fluids.Equals(i.Item is Fluid)))
 					{
 						if (!itemCounters.ContainsKey(output))
 						{
@@ -265,7 +265,7 @@ namespace Foreman
 					}
 				}
 
-				else if(node is ReadOnlySupplierNode sNode && fluids.Equals(sNode.SuppliedItem is Fluid))
+				else if(node is ReadOnlySupplierNode sNode && fluids.Equals(sNode.SuppliedItem.Item is Fluid))
 				{
 					if (!itemCounters.ContainsKey(sNode.SuppliedItem))
 					{
@@ -275,7 +275,7 @@ namespace Foreman
 					itemCounters[sNode.SuppliedItem].Input += sNode.ActualRate;
 				}
 
-				else if(node is ReadOnlyConsumerNode cNode && fluids.Equals(cNode.ConsumedItem is Fluid))
+				else if(node is ReadOnlyConsumerNode cNode && fluids.Equals(cNode.ConsumedItem.Item is Fluid))
 				{
 					if (!itemCounters.ContainsKey(cNode.ConsumedItem))
 					{
@@ -286,7 +286,7 @@ namespace Foreman
 				}
 			}
 
-			foreach (Item item in itemCounters.Keys.OrderBy(a => a.FriendlyName))
+			foreach (ItemQualityPair item in itemCounters.Keys.OrderBy(a => a.Item.FriendlyName).ThenBy(a => a.Quality.Level).ThenBy(a => a.Quality.FriendlyName))
 			{
 				ListViewItem lvItem = new ListViewItem();
 				if (item.Icon != null)
@@ -301,8 +301,8 @@ namespace Foreman
 
 				lvItem.Text = item.FriendlyName;
 				lvItem.Tag = item;
-				lvItem.Name = item.Name; //key
-				lvItem.BackColor = item.Available ? AvailableObjectColor : UnavailableObjectColor;
+				lvItem.Name = item.Item.Name + ":" + item.Quality.Name; //key
+				lvItem.BackColor = item.Item.Available ? AvailableObjectColor : UnavailableObjectColor;
 				lvItem.SubItems.Add(new ListViewItem.ListViewSubItem() { Text = itemCounters[item].Input == 0 ? "-" : GraphicsStuff.DoubleToString(itemCounters[item].Input), Tag = itemCounters[item].Input });
 				lvItem.SubItems.Add(new ListViewItem.ListViewSubItem() { Text = itemCounters[item].InputUnlinked == 0 ? "-" : GraphicsStuff.DoubleToString(itemCounters[item].InputUnlinked), Tag = itemCounters[item].InputUnlinked});
 				lvItem.SubItems.Add(new ListViewItem.ListViewSubItem() { Text = itemCounters[item].Output == 0 ? "-" : GraphicsStuff.DoubleToString(itemCounters[item].Output), Tag = itemCounters[item].Output });
@@ -347,6 +347,18 @@ namespace Foreman
 					nodeText = rNode.BaseRecipe.FriendlyName;
 					nodeType = "Recipe";
 				}
+				else if (node is ReadOnlySpoilNode spNode)
+                {
+                    icon = spNode.InputItem.Icon;
+                    nodeText = spNode.InputItem.FriendlyName + " spoiling";
+                    nodeType = "Spoil";
+                }
+				else if (node is ReadOnlyPlantNode plNode)
+                {
+                    icon = plNode.Seed.Icon;
+                    nodeText = plNode.Seed.FriendlyName + " planting";
+                    nodeType = "Plant";
+                }
 				else
 				{
 					continue;
@@ -372,7 +384,7 @@ namespace Foreman
 				if(node is ReadOnlyRecipeNode rrNode)
 				{
 					lvItem.SubItems.Add(new ListViewItem.ListViewSubItem() { Text = "-", Tag = (double)0 });
-					lvItem.SubItems.Add(new ListViewItem.ListViewSubItem() { Text = GraphicsStuff.DoubleToString(rrNode.ActualAssemblerCount), Tag = rrNode.ActualAssemblerCount });
+					lvItem.SubItems.Add(new ListViewItem.ListViewSubItem() { Text = GraphicsStuff.DoubleToString(rrNode.ActualSetValue), Tag = rrNode.ActualSetValue });
 				}
 				else
 				{

@@ -11,6 +11,8 @@ namespace Foreman
 		bool IsTemperatureDependent { get; }
 		double DefaultTemperature { get; }
 		double SpecificHeatCapacity { get; }
+		double GasTemperature { get; }
+		double MaxTemperature { get; }
 
 		string GetTemperatureRangeFriendlyName(fRange tempRange);
 		string GetTemperatureFriendlyName(double temperature);
@@ -21,12 +23,16 @@ namespace Foreman
 		public bool IsTemperatureDependent { get; internal set; } //true if not all recipes can accept each other (ex: fluid produced in R1 is at 10*c, and is required to be at 20+*c as ingredient at R2)
 		public double DefaultTemperature { get; internal set; }
 		public double SpecificHeatCapacity { get; internal set; }
+		public double GasTemperature { get; internal set; }
+		public double MaxTemperature { get; internal set; }
 
 		public FluidPrototype(DataCache dCache, string name, string friendlyName, SubgroupPrototype subgroup, string order, bool isMissing = false) : base(dCache, name, friendlyName, subgroup, order, isMissing)
 		{
 			IsTemperatureDependent = false;
 			DefaultTemperature = 0;
 			SpecificHeatCapacity = 0;
+			GasTemperature = 0;
+			MaxTemperature = 0;
 		}
 
 		public string GetTemperatureRangeFriendlyName(fRange tempRange)

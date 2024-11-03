@@ -11,11 +11,19 @@ namespace Foreman
 	{
 		Subgroup MySubgroup { get; }
 
-		double Time { get; set; }
+		double Time { get; }
 		long RecipeID { get; }
 		bool IsMissing { get; }
 
-		IReadOnlyDictionary<Item, double> ProductSet { get; }
+        bool AllowConsumptionBonus { get; }
+        bool AllowSpeedBonus { get; }
+        bool AllowProductivityBonus { get; }
+        bool AllowPollutionBonus { get; }
+        bool AllowQualityBonus { get; }
+
+        double MaxProductivityBonus { get; }
+
+        IReadOnlyDictionary<Item, double> ProductSet { get; }
 		IReadOnlyDictionary<Item, double> ProductPSet { get; } //extra productivity amounts [ actual amount = productSet + (productPSet * productivity bonus) ]
 		IReadOnlyList<Item> ProductList { get; }
 		IReadOnlyDictionary<Item, double> ProductTemperatureMap { get; }
@@ -34,15 +42,17 @@ namespace Foreman
 		string GetProductFriendlyName(Item item);
 		bool TestIngredientConnection(Recipe provider, Item ingredient);
 
+		//trash items (spoiled items from spoiling of items already inside assembler) are ignored
+		//planet conditions are ignored
 	}
 
 	public class RecipePrototype : DataObjectBasePrototype, Recipe
 	{
 		public Subgroup MySubgroup { get { return mySubgroup; } }
 
-		public double Time { get; set; }
+		public double Time { get; internal set; }
 
-		public IReadOnlyDictionary<Item, double> ProductSet { get { return productSet; } }
+        public IReadOnlyDictionary<Item, double> ProductSet { get { return productSet; } }
 		public IReadOnlyDictionary<Item, double> ProductPSet { get { return productPSet; } }
 		public IReadOnlyList<Item> ProductList { get { return productList; } }
 		public IReadOnlyDictionary<Item, double> ProductTemperatureMap { get { return productTemperatureMap; } }
@@ -57,7 +67,7 @@ namespace Foreman
 		public IReadOnlyCollection<Technology> MyUnlockTechnologies { get { return myUnlockTechnologies; } }
 		public IReadOnlyList<IReadOnlyList<Item>> MyUnlockSciencePacks { get; set; }
 
-		internal SubgroupPrototype mySubgroup;
+        internal SubgroupPrototype mySubgroup;
 
 		internal Dictionary<Item, double> productSet { get; private set; }
 		internal Dictionary<Item, double> productPSet { get; private set; }
@@ -75,10 +85,20 @@ namespace Foreman
 
 		public bool IsMissing { get; private set; }
 
+        public bool AllowConsumptionBonus { get; internal set; }
+        public bool AllowSpeedBonus { get; internal set; }
+        public bool AllowProductivityBonus { get; internal set; }
+        public bool AllowPollutionBonus { get; internal set; }
+        public bool AllowQualityBonus { get; internal set; }
+
+		public double MaxProductivityBonus { get; internal set; }
+
 		private static long lastRecipeID = 0;
 		public long RecipeID { get; private set; }
 
-		public RecipePrototype(DataCache dCache, string name, string friendlyName, SubgroupPrototype subgroup, string order, bool isMissing = false) : base(dCache, name, friendlyName, order)
+        internal bool HideFromPlayerCrafting { get; set; }
+
+        public RecipePrototype(DataCache dCache, string name, string friendlyName, SubgroupPrototype subgroup, string order, bool isMissing = false) : base(dCache, name, friendlyName, order)
 		{
 			RecipeID = lastRecipeID++;
 
@@ -88,6 +108,13 @@ namespace Foreman
 			Time = 0.5f;
 			this.Enabled = true;
 			this.IsMissing = isMissing;
+			this.HideFromPlayerCrafting = false;
+			this.AllowConsumptionBonus = true;
+			this.AllowSpeedBonus = true;
+			this.AllowProductivityBonus = true;
+			this.AllowPollutionBonus = true;
+			this.AllowQualityBonus = true;
+			this.MaxProductivityBonus = 1000;
 
 			ingredientSet = new Dictionary<Item, double>();
 			ingredientList = new List<ItemPrototype>();
@@ -104,7 +131,7 @@ namespace Foreman
 			MyUnlockSciencePacks = new List<List<Item>>();
 		}
 
-		public string GetIngredientFriendlyName(Item item)
+        public string GetIngredientFriendlyName(Item item)
 		{
 			if (IngredientSet.ContainsKey(item) && (item is Fluid fluid) && fluid.IsTemperatureDependent)
 			{

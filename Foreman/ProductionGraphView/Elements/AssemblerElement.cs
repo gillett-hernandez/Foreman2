@@ -20,7 +20,8 @@ namespace Foreman
 		private static readonly Pen speedModulePen = new Pen(Brushes.DarkBlue, 3);
 		private static readonly Pen prodModulePen = new Pen(Brushes.DarkRed, 3);
 		private static readonly Pen effModulePen = new Pen(Brushes.DarkGreen, 3);
-		private static readonly Pen unknownModulePen = new Pen(Brushes.Black, 3);
+        private static readonly Pen qualityModulePen = new Pen(Brushes.Gold, 3);
+        private static readonly Pen unknownModulePen = new Pen(Brushes.Black, 3);
 		private static readonly Font moduleFont = new Font(FontFamily.GenericSansSerif, 6, FontStyle.Bold);
 
 		private static readonly Font infoFont = new Font(FontFamily.GenericSansSerif, 5);
@@ -72,9 +73,11 @@ namespace Foreman
 					{
 						if (DisplayedNode.AssemblerModules.Count > (x * 7) + y)
 						{
-							Pen marker = DisplayedNode.AssemblerModules[(x * 7) + y].ProductivityBonus > 0 ? prodModulePen :
-								DisplayedNode.AssemblerModules[(x * 7) + y].ConsumptionBonus < 0 ? effModulePen :
-								DisplayedNode.AssemblerModules[(x * 7) + y].SpeedBonus > 0 ? speedModulePen : unknownModulePen;
+							Pen marker = DisplayedNode.AssemblerModules[(x * 7) + y].Module.GetProductivityBonus() > 0 ? prodModulePen :
+                                DisplayedNode.AssemblerModules[(x * 7) + y].Module.GetQualityBonus() > 0 ? qualityModulePen :
+								DisplayedNode.AssemblerModules[(x * 7) + y].Module.GetConsumptionBonus() < 0 ? effModulePen :
+								DisplayedNode.AssemblerModules[(x * 7) + y].Module.GetSpeedBonus() > 0 ? speedModulePen :
+								unknownModulePen;
 							graphics.DrawEllipse(marker, trans.X + moduleOffset.X + ModuleSpacing + ModuleIconSize - 3 - (x * 7), trans.Y + moduleOffset.Y + (y * 7), 3, 3);
 						}
 					}
@@ -82,27 +85,37 @@ namespace Foreman
 			}
 			else
 			{
-				int prodModules = DisplayedNode.AssemblerModules.Count(m => m.ProductivityBonus > 0);
-				int efficiencyModules = DisplayedNode.AssemblerModules.Count(m => m.ConsumptionBonus < 0 && m.ProductivityBonus <= 0);
-				int speedModules = DisplayedNode.AssemblerModules.Count(m => m.SpeedBonus > 0 && m.ConsumptionBonus >= 0 && m.ProductivityBonus <= 0);
-				int unknownModules = DisplayedNode.AssemblerModules.Count - prodModules - efficiencyModules - speedModules;
+				int prodModules = DisplayedNode.AssemblerModules.Count(m => m.Module.GetProductivityBonus() > 0);
+				int qualityModules = DisplayedNode.AssemblerModules.Count(m => m.Module.GetQualityBonus() > 0 && m.Module.GetProductivityBonus() <= 0);
+                int efficiencyModules = DisplayedNode.AssemblerModules.Count(m => m.Module.GetConsumptionBonus() < 0 && m.Module.GetProductivityBonus() <= 0 && m.Module.GetQualityBonus() <= 0);
+				int speedModules = DisplayedNode.AssemblerModules.Count(m => m.Module.GetSpeedBonus() > 0 && m.Module.GetConsumptionBonus() >= 0 && m.Module.GetProductivityBonus() <= 0 && m.Module.GetQualityBonus() <= 0);
+				int unknownModules = DisplayedNode.AssemblerModules.Count - prodModules - efficiencyModules - speedModules - qualityModules;
 				graphics.DrawString(string.Format("S:{0}", speedModules), moduleFont, Brushes.DarkBlue, trans.X, trans.Y + 10);
 				graphics.DrawString(string.Format("E:{0}", efficiencyModules), moduleFont, Brushes.DarkGreen, trans.X, trans.Y + 20);
 				graphics.DrawString(string.Format("P:{0}", prodModules), moduleFont, Brushes.DarkRed, trans.X, trans.Y + 30);
-				graphics.DrawString(string.Format("U:{0}", unknownModules), moduleFont, Brushes.Black, trans.X, trans.Y + 40);
+                graphics.DrawString(string.Format("Q:{0}", qualityModules), moduleFont, Brushes.Gold, trans.X, trans.Y + 40);
+                graphics.DrawString(string.Format("U:{0}", unknownModules), moduleFont, Brushes.Black, trans.X, trans.Y + 50);
 			}
 
 			//assembler info + quantity
 			Rectangle textbox = new Rectangle(trans.X + Width, trans.Y + 10, (myParent.Width / 2) - this.X - (this.Width / 2) - 6, 30);
-			if (graphViewer.LevelOfDetail == ProductionGraphViewer.LOD.High && (DisplayedNode.SelectedAssembler.EntityType == EntityType.Assembler || DisplayedNode.SelectedAssembler.EntityType == EntityType.Miner || DisplayedNode.SelectedAssembler.EntityType == EntityType.OffshorePump))
+			if (graphViewer.LevelOfDetail == ProductionGraphViewer.LOD.High && (DisplayedNode.SelectedAssembler.Assembler.EntityType == EntityType.Assembler || DisplayedNode.SelectedAssembler.Assembler.EntityType == EntityType.Miner || DisplayedNode.SelectedAssembler.Assembler.EntityType == EntityType.OffshorePump))
 			{
 				//info text
-				graphics.DrawString("Speed:\nProd:\nPower:", infoFont, textBrush, trans.X + Width + 2, trans.Y);
-				graphics.DrawString(string.Format("{0:P0}\n{1:P0}\n{2:P0}", DisplayedNode.GetSpeedMultiplier(), DisplayedNode.GetProductivityMultiplier(), DisplayedNode.GetConsumptionMultiplier()), infoFont, textBrush, trans.X + Width + 26, trans.Y);
+				if (DisplayedNode.GetQualityMultiplier() > 0)
+				{
+					graphics.DrawString("Speed:\nProd:\nPower:\nQuality:", infoFont, textBrush, trans.X + Width + 2, trans.Y);
+					graphics.DrawString(string.Format("{0:P0}\n{1:P0}\n{2:P0}\n{3:P0}", DisplayedNode.GetSpeedMultiplier(), DisplayedNode.GetProductivityMultiplier(), DisplayedNode.GetConsumptionMultiplier(), DisplayedNode.GetQualityMultiplier()), infoFont, textBrush, trans.X + Width + 26, trans.Y);
+				}
+				else
+				{
+					graphics.DrawString("Speed:\nProd:\nPower:", infoFont, textBrush, trans.X + Width + 2, trans.Y);
+					graphics.DrawString(string.Format("{0:P0}\n{1:P0}\n{2:P0}", DisplayedNode.GetSpeedMultiplier(), DisplayedNode.GetProductivityMultiplier(), DisplayedNode.GetConsumptionMultiplier()), infoFont, textBrush, trans.X + Width + 26, trans.Y);
+				}
 
-				textbox.Y = trans.Y + 24;
+				textbox.Y = trans.Y + 28;
 			}
-			else if(graphViewer.LevelOfDetail == ProductionGraphViewer.LOD.High && DisplayedNode.SelectedAssembler.EntityType == EntityType.Generator)
+			else if(graphViewer.LevelOfDetail == ProductionGraphViewer.LOD.High && DisplayedNode.SelectedAssembler.Assembler.EntityType == EntityType.Generator)
 			{
 				//info text
 				graphics.DrawString("Power:", infoFont, textBrush, trans.X + Width, trans.Y + 10);
@@ -114,33 +127,12 @@ namespace Foreman
 			//quantity
 			//graphics.DrawRectangle(devPen, textbox);
 			string text = "x";
-			if (DisplayedNode.SelectedAssembler.IsMissing)
-			{
+			if (DisplayedNode.SelectedAssembler.Assembler.IsMissing) {
 				text += "---";
 			}
 			else
 			{
-				double assemblerCount = DisplayedNode.ActualAssemblerCount;
-				if (assemblerCount >= 10000)
-				{
-					text += assemblerCount.ToString("0.##e0");
-				}
-				else if (Properties.Settings.Default.RoundAssemblerCount)
-				{
-					text += Math.Ceiling(assemblerCount).ToString("0");
-				}
-				else if (assemblerCount >= 0.1)
-				{
-					text += assemblerCount.ToString("0.#");
-				}
-				else if (assemblerCount != 0)
-				{
-					text += "<0.1";
-				}
-				else
-				{
-					text += "0";
-				}
+				text += BuildingQuantityToText(DisplayedNode.ActualSetValue);
 			}
 
 			GraphicsStuff.DrawText(graphics, textBrush, textFormat, text, counterBaseFont, textbox, true);
@@ -163,8 +155,8 @@ namespace Foreman
 				tti.ScreenLocation = graphViewer.GraphToScreen(LocalToGraph(new Point(1 + (DisplayedNode.AssemblerModules.Count > 3 ? DisplayedNode.AssemblerModules.Count > 6 ? ModuleSpacing * 3 / 2 : ModuleSpacing : ModuleSpacing * 3 / 2) - (Width / 2), -Height / 2)));
 				tti.Text = "Assembler Modules:";
 
-				Dictionary<Module, int> moduleCounter = new Dictionary<Module, int>();
-				foreach (Module m in DisplayedNode.AssemblerModules)
+				Dictionary<ModuleQualityPair, int> moduleCounter = new Dictionary<ModuleQualityPair, int>();
+				foreach (ModuleQualityPair m in DisplayedNode.AssemblerModules)
 				{
 					if (moduleCounter.ContainsKey(m))
 					{
@@ -176,8 +168,7 @@ namespace Foreman
 					}
 				}
 
-				foreach (Module m in moduleCounter.Keys.OrderBy(m => m.FriendlyName))
-				{
+				foreach (ModuleQualityPair m in moduleCounter.Keys.OrderBy(m => m.Module.FriendlyName).ThenBy(m => m.Quality.Level).ThenBy(m => m.Quality.FriendlyName)) {
 					tti.Text += string.Format("\n   {0} :{1}", moduleCounter[m], m.FriendlyName);
 				}
 

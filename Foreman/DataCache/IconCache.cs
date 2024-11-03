@@ -43,7 +43,23 @@ namespace Foreman
 
 			return unknownIcon;
 		}
-		public static Bitmap GetIcon(string path, int size)
+		private static Bitmap spoilageIcon;
+		public static Bitmap GetSpoilageIcon()
+		{
+			if (spoilageIcon == null)
+				spoilageIcon = GetIcon(Path.Combine("Graphics", "SpoilAssembler.png"), 96);
+			return spoilageIcon;
+
+		}
+        private static Bitmap plantingIcon;
+        public static Bitmap GetPlantingIcon()
+        {
+            if (plantingIcon == null)
+                plantingIcon = GetIcon(Path.Combine("Graphics", "PlantAssembler.png"), 96);
+            return plantingIcon;
+
+        }
+        public static Bitmap GetIcon(string path, int size)
 		{
 			try
 			{

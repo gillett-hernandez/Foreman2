@@ -69,7 +69,7 @@ namespace Foreman
 					{
 						FactorioLocationComboBox.Text = dialog.SelectedPath;
 					}
-					else if(File.Exists(Path.Combine(new string[] {dialog.SelectedPath, "x64", "factorio.exe"})))
+					else if (File.Exists(Path.Combine(new string[] { dialog.SelectedPath, "x64", "factorio.exe" })))
 					{
 						FactorioLocationComboBox.Text = Path.GetDirectoryName(dialog.SelectedPath);
 					}
@@ -87,7 +87,7 @@ namespace Foreman
 
 		private void ModsBrowseButton_Click(object sender, EventArgs e)
 		{
-						using (FolderBrowserDialog dialog = new FolderBrowserDialog())
+			using (FolderBrowserDialog dialog = new FolderBrowserDialog())
 			{
 				if (Directory.Exists(ModsLocationComboBox.Text))
 				{
@@ -133,7 +133,7 @@ namespace Foreman
 			}
 
 			List<Preset> existingPresets = MainForm.GetValidPresetsList();
-			if(NewPresetName.ToLower() == MainForm.DefaultPreset.ToLower())
+			if (NewPresetName.ToLower() == MainForm.DefaultPreset.ToLower())
 			{
 				MessageBox.Show("Cant overwrite default preset!", "", MessageBoxButtons.OK);
 				CleanupFailedImport();
@@ -169,11 +169,28 @@ namespace Foreman
 			}
 
 			FileVersionInfo factorioVersionInfo = FileVersionInfo.GetVersionInfo(Path.Combine(new string[] { installPath, "bin", "x64", "factorio.exe" }));
-			if (factorioVersionInfo.ProductMajorPart < 1 || factorioVersionInfo.ProductMinorPart < 1 || (factorioVersionInfo.ProductMinorPart == 1 && factorioVersionInfo.ProductBuildPart < 4))
+			if (factorioVersionInfo.ProductMajorPart < 2)
 			{
 				EnableProgressBar(false);
-				MessageBox.Show("Factorio version (" + factorioVersionInfo.ProductVersion + ") can not be used with Foreman. Please use Factorio 1.1.4 or newer.");
-				ErrorLogging.LogLine(string.Format("Factorio version was too old. {0} instead of 1.1.4+", factorioVersionInfo.ProductVersion));
+				MessageBox.Show("Factorio Version below 2.0 can not be used with this version of Foreman. Please use Factorio 2.0 or newer. Alternatively download dev.13 or under of foreman 2.0 for pre factorio 2.0.");
+				ErrorLogging.LogLine(string.Format("Factorio version 0.x or 1.x instead of 2.x - use Foreman dev.13 or below for these factorio installs.", factorioVersionInfo.ProductVersion));
+				CleanupFailedImport();
+				return;
+			}
+			else
+			if (factorioVersionInfo.ProductMajorPart > 2)
+			{
+				EnableProgressBar(false);
+				MessageBox.Show("Factorio Version 3.x+ can not be used with this version of Foreman. Sit tight and wait for update...\nYou can also try to msg me on discord (u\\DanielKotes) if for some reason I am not already aware of this.");
+				ErrorLogging.LogLine(string.Format("Factorio version 3.x+ isnt supported.", factorioVersionInfo.ProductVersion));
+				CleanupFailedImport();
+				return;
+			}
+			else if (factorioVersionInfo.ProductMinorPart < 0 || (factorioVersionInfo.ProductMinorPart == 0 && factorioVersionInfo.ProductBuildPart < 7))
+			{
+				EnableProgressBar(false);
+				MessageBox.Show("Factorio version (" + factorioVersionInfo.ProductVersion + ") can not be used with Foreman. Please use Factorio 2.0.7 or newer.");
+				ErrorLogging.LogLine(string.Format("Factorio version was too old. {0} instead of 2.0.7+", factorioVersionInfo.ProductVersion));
 				CleanupFailedImport();
 				return;
 			}
@@ -211,7 +228,8 @@ namespace Foreman
 			stopwatch.Start();
 #endif
 			ImportStarted = true;
-			NewPresetName = await ProcessPreset(installPath, modsPath, progress, token);
+			string foremanModName = "foremanexport_" + factorioVersionInfo.ProductMajorPart + ".0.0";
+			NewPresetName = await ProcessPreset(installPath, foremanModName, modsPath, progress, token);
 #if DEBUG
 			Console.WriteLine(string.Format("Preset import time: {0} seconds.", (stopwatch.ElapsedMilliseconds / 1000).ToString("0.0")));
 			ErrorLogging.LogLine(string.Format("Preset import time: {0} seconds.", (stopwatch.ElapsedMilliseconds / 1000).ToString("0.0")));
@@ -230,7 +248,7 @@ namespace Foreman
 
 		}
 
-		private async Task<string> ProcessPreset(string installPath, string modsPath, IProgress<KeyValuePair<int, string>> progress, CancellationToken token)
+		private async Task<string> ProcessPreset(string installPath, string foremanModName, string modsPath, IProgress<KeyValuePair<int, string>> progress, CancellationToken token)
 		{
 			return await Task.Run(() =>
 			{
@@ -250,10 +268,9 @@ namespace Foreman
 					{
 						Directory.CreateDirectory(modsPath);
 					}
-
-					if (Directory.Exists(Path.Combine(modsPath, "foremanexport_1.0.0")))
+					if (Directory.Exists(Path.Combine(modsPath, foremanModName)))
 					{
-						Directory.Delete(Path.Combine(modsPath, "foremanexport_1.0.0"));
+						Directory.Delete(Path.Combine(modsPath, foremanModName));
 					}
 				}
 				catch (Exception e)
@@ -312,45 +329,23 @@ namespace Foreman
 				//copy the files as necessary
 				try
 				{
-					Directory.CreateDirectory(Path.Combine(modsPath, "foremanexport_1.0.0"));
+					Directory.CreateDirectory(Path.Combine(modsPath, foremanModName));
 
-					File.Copy(Path.Combine(new string[] { "Mods", "foremanexport_1.0.0", "info.json" }), Path.Combine(new string[] { modsPath, "foremanexport_1.0.0", "info.json" }));
-					File.Copy(Path.Combine(new string[] { "Mods", "foremanexport_1.0.0", "instrument-after-data.lua" }), Path.Combine(new string[] { modsPath, "foremanexport_1.0.0", "instrument-after-data.lua" }), true);
+					File.Copy(Path.Combine(new string[] { "Mods", foremanModName, "info.json" }), Path.Combine(new string[] { modsPath, foremanModName, "info.json" }));
+					File.Copy(Path.Combine(new string[] { "Mods", foremanModName, "instrument-after-data.lua" }), Path.Combine(new string[] { modsPath, foremanModName, "instrument-after-data.lua" }), true);
 
-					//recipe&technology difficulties each have their own lua script
-					if (NormalRecipeRButton.Checked)
-					{
-						if (NormalTechnologyRButton.Checked)
-						{
-							File.Copy(Path.Combine(new string[] { "Mods", "foremanexport_1.0.0", "instrument-control - nn.lua" }), Path.Combine(new string[] { modsPath, "foremanexport_1.0.0", "instrument-control.lua" }), true);
-						}
-						else
-						{
-							File.Copy(Path.Combine(new string[] { "Mods", "foremanexport_1.0.0", "instrument-control - ne.lua" }), Path.Combine(new string[] { modsPath, "foremanexport_1.0.0", "instrument-control.lua" }), true);
-						}
-					}
-					else
-					{
-						if (NormalTechnologyRButton.Checked)
-						{
-							File.Copy(Path.Combine(new string[] { "Mods", "foremanexport_1.0.0", "instrument-control - en.lua" }), Path.Combine(new string[] { modsPath, "foremanexport_1.0.0", "instrument-control.lua" }), true);
-						}
-						else
-						{
-							File.Copy(Path.Combine(new string[] { "Mods", "foremanexport_1.0.0", "instrument-control - ee.lua" }), Path.Combine(new string[] { modsPath, "foremanexport_1.0.0", "instrument-control.lua" }), true);
-						}
-					}
+					File.Copy(Path.Combine(new string[] { "Mods", foremanModName, "instrument-control.lua" }), Path.Combine(new string[] { modsPath, foremanModName, "instrument-control.lua" }), true);
 				}
 				catch (Exception e)
 				{
 					if (e is UnauthorizedAccessException)
 					{
-						MessageBox.Show("Insufficient access to copy foreman export mod files (Mods/foremanexport_1.0.0/) to the factorio mods folder. Please ensure factorio mods are in an accessible folder, or launch Foreman with Administrator privileges.");
+						MessageBox.Show("Insufficient access to copy foreman export mod files (Mods/" + foremanModName + "/) to the factorio mods folder. Please ensure factorio mods are in an accessible folder, or launch Foreman with Administrator privileges.");
 						ErrorLogging.LogLine("copying of foreman export mod files failed - insufficient access E:" + e.ToString());
 					}
 					else
 					{
-						MessageBox.Show("could not copy foreman export mod files (Mods/foremanexport_1.0.0/) to the factorio mods folder. Reinstall foreman?");
+						MessageBox.Show("could not copy foreman export mod files (Mods/" + foremanModName + "/) to the factorio mods folder. Reinstall foreman?");
 						ErrorLogging.LogLine("copying of foreman export mod files failed. E:" + e.ToString());
 					}
 					CleanupFailedImport(modsPath);
@@ -378,10 +373,9 @@ namespace Foreman
 				{
 					File.Delete("temp-save.zip");
 				}
-
-				if (Directory.Exists(Path.Combine(modsPath, "foremanexport_1.0.0")))
+				if (Directory.Exists(Path.Combine(modsPath, foremanModName)))
 				{
-					Directory.Delete(Path.Combine(modsPath, "foremanexport_1.0.0"), true);
+					Directory.Delete(Path.Combine(modsPath, foremanModName), true);
 				}
 
 				progress.Report(new KeyValuePair<int, string>(25, "Processing mod files."));
@@ -394,12 +388,18 @@ namespace Foreman
 				}
 				else if (resultString.IndexOf("<<<END-EXPORT-P1>>>") == -1 || resultString.IndexOf("<<<END-EXPORT-P2>>>") == -1)
 				{
+#if DEBUG
+					Console.WriteLine(resultString);
+#endif
 					MessageBox.Show("Foreman export could not be completed - possible mod conflict detected. Please run factorio and ensure it can successfully load to menu before retrying.");
 					ErrorLogging.LogLine("Foreman export failed partway. Consult errorExporting.json for full output (and search for <<<END-EXPORT-P1>>> or <<<END-EXPORT-P2>>>, at least one of which is missing)");
 					File.WriteAllText(Path.Combine(Application.StartupPath, "errorExporting.json"), resultString);
 					CleanupFailedImport(modsPath);
 					return "";
 				}
+#if DEBUG
+				File.WriteAllText(Path.Combine(Application.StartupPath, "debugExporting.json"), resultString);
+#endif
 
 				string lnamesString = resultString.Substring(resultString.IndexOf("<<<START-EXPORT-LN>>>") + 23);
 				lnamesString = lnamesString.Substring(0, lnamesString.IndexOf("<<<END-EXPORT-LN>>>") - 2);
@@ -432,7 +432,7 @@ namespace Foreman
 				catch
 				{
 					MessageBox.Show("Foreman export could not be completed - unknown json parsing error.\nSorry");
-					ErrorLogging.LogLine("json parsing of output failed. This is clearly an error with the export mod (foremanexport_1.0.0). Consult _iconJObjectOut.json and _dataJObjectOut.json and check which one isnt a valid json (and why)");
+					ErrorLogging.LogLine("json parsing of output failed. This is clearly an error with the export mod (" + foremanModName + "). Consult _iconJObjectOut.json and _dataJObjectOut.json and check which one isnt a valid json (and why)");
 					File.WriteAllText(Path.Combine(Application.StartupPath, "_iconJObjectOut.json"), iconString.ToString());
 					File.WriteAllText(Path.Combine(Application.StartupPath, "_dataJObjectOut.json"), dataString.ToString());
 					CleanupFailedImport(modsPath);
@@ -512,7 +512,7 @@ namespace Foreman
 			});
 		}
 
-		private void CleanupFailedImport(string modsPath = "", string presetPath = "")
+		private void CleanupFailedImport(string modsPath = "", string presetPath = "", string foremanModName = "")
 		{
 			SetStateForemanExportMod(modsPath, false);
 
@@ -523,22 +523,20 @@ namespace Foreman
 				File.Delete("temp-save.zip");
 			}
 
-			if (modsPath != "" && Directory.Exists(Path.Combine(modsPath, "foremanexport_1.0.0")))
+			if (modsPath != "" && foremanModName != "" && Directory.Exists(Path.Combine(modsPath, foremanModName)))
 			{
-				Directory.Delete(Path.Combine(modsPath, "foremanexport_1.0.0"), true);
+				Directory.Delete(Path.Combine(modsPath, foremanModName), true);
 			}
 
-			if (presetPath != "" && File.Exists(Path.Combine(Application.StartupPath, presetPath + ".pjson")))
+			if (presetPath != "" && foremanModName != "" && File.Exists(Path.Combine(Application.StartupPath, presetPath + ".pjson")))
 			{
 				File.Delete(Path.Combine(Application.StartupPath, presetPath + ".pjson"));
 			}
-
-			if (presetPath != "" && File.Exists(Path.Combine(Application.StartupPath, presetPath + ".json")))
+			if (presetPath != "" && foremanModName != "" && File.Exists(Path.Combine(Application.StartupPath, presetPath + ".json")))
 			{
 				File.Delete(Path.Combine(Application.StartupPath, presetPath + ".json"));
 			}
-
-			if (presetPath != "" && File.Exists(Path.Combine(Application.StartupPath, presetPath + ".dat")))
+			if (presetPath != "" && foremanModName != "" && File.Exists(Path.Combine(Application.StartupPath, presetPath + ".dat")))
 			{
 				File.Delete(Path.Combine(Application.StartupPath, presetPath + ".dat"));
 			}
@@ -566,7 +564,7 @@ namespace Foreman
 				else
 					foremanModToken["enabled"] = enabled;
 			}
-			else if(foremanModToken != null)
+			else if (foremanModToken != null)
 				foremanModToken.Remove();
 
 			try

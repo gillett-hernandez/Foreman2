@@ -26,7 +26,7 @@ namespace Foreman
 				return recipe.Assemblers
 					.OrderByDescending(a => a.Enabled)
 					.ThenByDescending(a => a.Available)
-					.ThenByDescending(a => ((a.ModuleSlots * 1000000) + a.Speed))
+					.ThenByDescending(a => ((a.ModuleSlots * 1000000) + a.GetSpeed(a.Owner.DefaultQuality)))  //QUALITY UPDATE REQUIRED
 					.ToList();
 			}
 			else
@@ -73,7 +73,7 @@ namespace Foreman
 					.OrderByDescending(a => a.Enabled)
 					.ThenByDescending(a => (a.IsBurner && includeBurners) || (!a.IsBurner && includeNonBurners))
 					.ThenByDescending(a => a.Available)
-					.ThenByDescending(a => orderDirection * ((a.Speed * 1000000) + a.ModuleSlots))
+					.ThenByDescending(a => orderDirection * ((a.GetSpeed(a.Owner.DefaultQuality) * 1000000) + a.ModuleSlots))  //QUALITY UPDATE REQUIRED
 					.ToList();
 			}
 		}

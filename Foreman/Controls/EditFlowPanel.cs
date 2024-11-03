@@ -18,8 +18,8 @@ namespace Foreman
 			nodeController = graphViewer.Graph.RequestNodeController(node);
 			myGraphViewer = graphViewer;
 
-			RateLabel.Text = string.Format("Item Flowrate (per {0})", myGraphViewer.Graph.GetRateName());
-			FixedFlowInput.Maximum = (decimal)(ProductionGraph.MaxSetFlow * myGraphViewer.Graph.GetRateMultipler());
+			RateLabel.Text = node.SetValueDescription;
+			FixedFlowInput.Maximum = (decimal)(node.MaxDesiredSetValue * graphViewer.Graph.GetRateMultipler());
 
 			if(node is ReadOnlyPassthroughNode pNode)
 			{
@@ -45,22 +45,22 @@ namespace Foreman
 			{
 				AutoOption.Checked = true;
 				FixedFlowInput.Enabled = false;
-				FixedFlowInput.Value = Math.Min(FixedFlowInput.Maximum, (decimal)nodeData.ActualRate);
+				FixedFlowInput.Value = Math.Min(FixedFlowInput.Maximum, (decimal)nodeData.ActualSetValue);
 			}
 			else
 			{
 				FixedOption.Checked = true;
 				FixedFlowInput.Enabled = true;
-				FixedFlowInput.Value = Math.Min(FixedFlowInput.Maximum, (decimal)nodeData.DesiredRate);
+				FixedFlowInput.Value = Math.Min(FixedFlowInput.Maximum, (decimal)nodeData.DesiredSetValue);
 			}
 			UpdateFixedFlowInputDecimals(FixedFlowInput);
 		}
 
 		private void SetFixedRate()
 		{
-			if (nodeData.DesiredRate != (double)FixedFlowInput.Value)
+			if (nodeData.DesiredSetValue != (double)FixedFlowInput.Value)
 			{
-				nodeController.SetDesiredRate((double)FixedFlowInput.Value);
+				nodeController.SetDesiredSetValue((double)FixedFlowInput.Value);
 				myGraphViewer.Graph.UpdateNodeValues();
 			}
 			UpdateFixedFlowInputDecimals(FixedFlowInput);

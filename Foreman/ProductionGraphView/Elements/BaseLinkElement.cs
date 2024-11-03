@@ -10,7 +10,7 @@ namespace Foreman
 
 		public BaseNodeElement SupplierElement { get; protected set; }
 		public BaseNodeElement ConsumerElement { get; protected set; }
-		public virtual Item Item { get; protected set; }
+		public virtual ItemQualityPair Item { get; protected set; }
 
 		private Point consumerOrigin, supplierOrigin;
 		private NodeDirection consumerDirection, supplierDirection;
@@ -196,7 +196,7 @@ namespace Foreman
 			iconOnlyDraw = (style == NodeDrawingStyle.IconsOnly);
 			UpdateCurve();
 
-			using (Pen pen = new Pen(Item.AverageColor, LinkWidth) { EndCap = System.Drawing.Drawing2D.LineCap.Round, StartCap = System.Drawing.Drawing2D.LineCap.Round })
+			using (Pen pen = new Pen(Item.Item.AverageColor, LinkWidth) { EndCap = System.Drawing.Drawing2D.LineCap.Round, StartCap = System.Drawing.Drawing2D.LineCap.Round })
 			{
 				if (graphViewer.ArrowsOnLinks && !graphViewer.DynamicLinkWidth && !iconOnlyDraw)
 				{

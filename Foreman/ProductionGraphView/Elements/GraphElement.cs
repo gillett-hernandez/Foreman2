@@ -154,5 +154,21 @@ namespace Foreman
 
 			graphViewer.Invalidate();
 		}
+
+		internal string BuildingQuantityToText(double quantity)
+		{
+			string text = "";
+            if (quantity >= 10000)
+                text += quantity.ToString("0.##e0");
+            else if (Properties.Settings.Default.RoundAssemblerCount)
+                text += Math.Ceiling(quantity).ToString("0");
+            else if (quantity >= 0.1)
+                text += quantity.ToString("0.#");
+            else if (quantity != 0)
+                text += "<0.1";
+            else
+                text += "0";
+			return text;
+        }
 	}
 }

@@ -9,7 +9,7 @@ namespace Foreman
 	public class LinkElement : BaseLinkElement
 	{
 		public ReadOnlyNodeLink DisplayedLink { get; private set; }
-		public override Item Item { get { return DisplayedLink.Item; } protected set { } }
+		public override ItemQualityPair Item { get { return DisplayedLink.Item; } protected set { } }
 
 		public ItemTabElement SupplierTab { get; protected set; }
 		public ItemTabElement ConsumerTab { get; protected set; }

@@ -6,13 +6,13 @@ namespace Foreman
 {
 	static class LinkChecker
 	{
-		public static bool IsPossibleConnection(Item item, ReadOnlyBaseNode supplier, ReadOnlyBaseNode consumer)
+		public static bool IsPossibleConnection(ItemQualityPair item, ReadOnlyBaseNode supplier, ReadOnlyBaseNode consumer)
 		{
 			if (!supplier.Outputs.Contains(item) || !consumer.Inputs.Contains(item))
 			{
 				return false;
 			}
-			if (!(item is Fluid fluid) || !fluid.IsTemperatureDependent)
+			if (!(item.Item is Fluid fluid) || !fluid.IsTemperatureDependent)
 			{
 				return true;
 			}
@@ -76,17 +76,17 @@ namespace Foreman
 				}
 				if (cNode is ReadOnlyRecipeNode && (cNode != node || includeSelf)) //RecipeNode
 				{
-					Recipe recipe = ((ReadOnlyRecipeNode)cNode).BaseRecipe;
+					Recipe recipe = ((ReadOnlyRecipeNode)cNode).BaseRecipe.Recipe;
 					if (direction == LinkType.Input && recipe.IngredientSet.ContainsKey(fluid)) //have to check for ingredient inclusion due to fuel/fuel-remains
 					{
 						minTemp = Math.Max(minTemp, recipe.IngredientTemperatureMap[fluid].Min);
 						maxTemp = Math.Min(maxTemp, recipe.IngredientTemperatureMap[fluid].Max);
 						gotOne = true;
 					}
-					else if (direction == LinkType.Input && ((ReadOnlyRecipeNode)cNode).SelectedAssembler.IsTemperatureFluidBurner) //special case for fluid burner
+					else if (direction == LinkType.Input && ((ReadOnlyRecipeNode)cNode).SelectedAssembler.Assembler.IsTemperatureFluidBurner) //special case for fluid burner
 					{
-						minTemp = Math.Max(minTemp, ((ReadOnlyRecipeNode)cNode).SelectedAssembler.FluidFuelTemperatureRange.Min);
-						maxTemp = Math.Min(maxTemp, ((ReadOnlyRecipeNode)cNode).SelectedAssembler.FluidFuelTemperatureRange.Max);
+						minTemp = Math.Max(minTemp, ((ReadOnlyRecipeNode)cNode).SelectedAssembler.Assembler.FluidFuelTemperatureRange.Min);
+						maxTemp = Math.Min(maxTemp, ((ReadOnlyRecipeNode)cNode).SelectedAssembler.Assembler.FluidFuelTemperatureRange.Max);
 						gotOne = true;
 					}
 					else if (direction == LinkType.Output && recipe.ProductSet.ContainsKey(fluid))

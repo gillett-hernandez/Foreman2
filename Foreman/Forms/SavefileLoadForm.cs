@@ -146,10 +146,23 @@ namespace Foreman
 
 					//test factorio version
 					FileVersionInfo factorioVersionInfo = FileVersionInfo.GetVersionInfo(factorioPath);
-					if (factorioVersionInfo.ProductMajorPart < 1 || factorioVersionInfo.ProductMinorPart < 1 || (factorioVersionInfo.ProductMinorPart == 1 && factorioVersionInfo.ProductBuildPart < 4))
+					if (factorioVersionInfo.ProductMajorPart < 2)
 					{
-						MessageBox.Show("Factorio version (" + factorioVersionInfo.ProductVersion + ") can not be used with Foreman. Please use Factorio 1.1.4 or newer.");
-						ErrorLogging.LogLine(string.Format("Save file load: Factorio version was too old. {0} instead of 1.1.4+", factorioVersionInfo.ProductVersion));
+						MessageBox.Show("Factorio Version below 2.0 can not be used with this version of Foreman. Please use Factorio 2.0 or newer. Alternatively download dev.13 or under of foreman 2.0 for pre factorio 2.0.");
+						ErrorLogging.LogLine(string.Format("Factorio version 0.x or 1.x instead of 2.x - use Foreman dev.13 or below for these factorio installs.", factorioVersionInfo.ProductVersion));
+						return DialogResult.Cancel;
+					}
+					else
+					if (factorioVersionInfo.ProductMajorPart > 2)
+					{
+						MessageBox.Show("Factorio Version 3.x+ can not be used with this version of Foreman. Sit tight and wait for update...\nYou can also try to msg me on discord (u\\DanielKotes) if for some reason I am not already aware of this.");
+						ErrorLogging.LogLine(string.Format("Factorio version 3.x+ isnt supported.", factorioVersionInfo.ProductVersion));
+						return DialogResult.Cancel;
+					}
+					else if (factorioVersionInfo.ProductMinorPart < 0 || (factorioVersionInfo.ProductMinorPart == 0 && factorioVersionInfo.ProductBuildPart < 7))
+					{
+						MessageBox.Show("Factorio version (" + factorioVersionInfo.ProductVersion + ") can not be used with Foreman. Please use Factorio 2.0.7 or newer.");
+						ErrorLogging.LogLine(string.Format("Factorio version was too old. {0} instead of 2.0.7+", factorioVersionInfo.ProductVersion));
 						return DialogResult.Cancel;
 					}
 
@@ -159,17 +172,16 @@ namespace Foreman
 					{
 						Directory.CreateDirectory(modsPath);
 					}
-
-					Directory.CreateDirectory(Path.Combine(modsPath, "foremansavereader_1.0.0"));
+					Directory.CreateDirectory(Path.Combine(modsPath, "foremansavereader_2.0.0"));
 					try
 					{
 
-						File.Copy(Path.Combine(new string[] { "Mods", "foremansavereader_1.0.0", "info.json" }), Path.Combine(new string[] { modsPath, "foremansavereader_1.0.0", "info.json" }), true);
-						File.Copy(Path.Combine(new string[] { "Mods", "foremansavereader_1.0.0", "instrument-control.lua" }), Path.Combine(new string[] { modsPath, "foremansavereader_1.0.0", "instrument-control.lua" }), true);
+						File.Copy(Path.Combine(new string[] { "Mods", "foremansavereader_2.0.0", "info.json" }), Path.Combine(new string[] { modsPath, "foremansavereader_2.0.0", "info.json" }), true);
+						File.Copy(Path.Combine(new string[] { "Mods", "foremansavereader_2.0.0", "instrument-control.lua" }), Path.Combine(new string[] { modsPath, "foremansavereader_2.0.0", "instrument-control.lua" }), true);
 					}
 					catch
 					{
-						MessageBox.Show("could not copy foreman save reader mod files (Mods/foremansavereader_1.0.0/) to the factorio mods folder. Reinstall foreman?");
+						MessageBox.Show("could not copy foreman save reader mod files (Mods/foremansavereader_2.0.0/) to the factorio mods folder. Reinstall foreman?");
 						ErrorLogging.LogLine("copying of foreman save reader mod files failed.");
 						return DialogResult.Abort;
 					}
@@ -220,19 +232,18 @@ namespace Foreman
 						if (token.IsCancellationRequested)
 						{
 							process.Close();
-							if (Directory.Exists(Path.Combine(modsPath, "foremansavereader_1.0.0")))
+							if (Directory.Exists(Path.Combine(modsPath, "foremansavereader_2.0.0")))
 							{
-								Directory.Delete(Path.Combine(modsPath, "foremansavereader_1.0.0"), true);
+								Directory.Delete(Path.Combine(modsPath, "foremansavereader_2.0.0"), true);
 							}
-
 							return DialogResult.Cancel;
 						}
 						Thread.Sleep(100);
 					}
 
-					if (Directory.Exists(Path.Combine(modsPath, "foremansavereader_1.0.0")))
+					if (Directory.Exists(Path.Combine(modsPath, "foremansavereader_2.0.0")))
 					{
-						Directory.Delete(Path.Combine(modsPath, "foremansavereader_1.0.0"), true);
+						Directory.Delete(Path.Combine(modsPath, "foremansavereader_2.0.0"), true);
 					}
 
 					if (resultString.IndexOf("Is another instance already running?") != -1)
@@ -242,6 +253,9 @@ namespace Foreman
 					}
 					else if (resultString.IndexOf("<<<END-EXPORT-P0>>>") == -1)
 					{
+#if DEBUG
+						Console.WriteLine(resultString);
+#endif
 						ErrorLogging.LogLine("could not process save file due to export not completing. Mod issue?");
 						return DialogResult.Abort;
 					}
@@ -272,11 +286,10 @@ namespace Foreman
 				}
 				catch
 				{
-					if (!string.IsNullOrEmpty(modsPath) && Directory.Exists(Path.Combine(modsPath, "foremanexport_1.0.0")))
+					if (!string.IsNullOrEmpty(modsPath) && Directory.Exists(Path.Combine(modsPath, "foremanexport_2.0.0")))
 					{
-						Directory.Delete(Path.Combine(modsPath, "foremanexport_1.0.0"), true);
+						Directory.Delete(Path.Combine(modsPath, "foremanexport_2.0.0"), true);
 					}
-
 					SaveFileInfo = null;
 					return DialogResult.Abort;
 				}
@@ -350,7 +363,7 @@ namespace Foreman
 
 			foreach (Recipe recipe in DCache.Recipes.Values)
 			{
-				if (recipe.Name.StartsWith("§§") || SaveFileInfo.Recipes.ContainsKey(recipe.Name))
+				if (recipe.Name.StartsWith("§§") || (SaveFileInfo.Recipes.ContainsKey(recipe.Name) && SaveFileInfo.Recipes[recipe.Name]))
 				{
 					EnabledObjects.Add(recipe);
 				}

@@ -12,7 +12,7 @@ namespace Foreman
 		public static int TabBorder { get { return border; } }
 
 		public LinkType LinkType;
-		public Item Item { get; private set; }
+		public ItemQualityPair Item { get; private set; }
 		public IEnumerable<ReadOnlyNodeLink> Links { get { return LinkType == LinkType.Input ? DisplayedNode.InputLinks.Where(l => l.Item == Item) : DisplayedNode.OutputLinks.Where(l => l.Item == Item); } }
 
 		public bool HideItemTab { get; set; }
@@ -40,7 +40,7 @@ namespace Foreman
 
 		private readonly ReadOnlyBaseNode DisplayedNode;
 
-		public ItemTabElement(Item item, LinkType type, ProductionGraphViewer graphViewer, BaseNodeElement node) : base(graphViewer, node)
+		public ItemTabElement(ItemQualityPair item, LinkType type, ProductionGraphViewer graphViewer, BaseNodeElement node) : base(graphViewer, node)
 		{
 			DisplayedNode = node.DisplayedNode;
 			Item = item;
@@ -139,14 +139,14 @@ namespace Foreman
 			{
 				if (LinkType == LinkType.Input)
 				{
-					tti.Text = rNode.BaseRecipe.GetIngredientFriendlyName(Item);
+					tti.Text = Item.Item is Fluid ? rNode.BaseRecipe.Recipe.GetIngredientFriendlyName(Item.Item) : Item.FriendlyName;
 				}
-				else //if(LinkType == LinkType.Output)
-				{
-					tti.Text = rNode.BaseRecipe.GetProductFriendlyName(Item);
+				else
+				{ //if(LinkType == LinkType.Output)
+					tti.Text = Item.Item is Fluid ? rNode.BaseRecipe.Recipe.GetProductFriendlyName(Item.Item) : Item.FriendlyName;
 				}
 			}
-			else if ((Item is Fluid fluid) && fluid.IsTemperatureDependent)
+			else if ((Item.Item is Fluid fluid) && fluid.IsTemperatureDependent)
 			{
 				fRange tempRange = LinkChecker.GetTemperatureRange(fluid, parentNode.DisplayedNode, (LinkType == LinkType.Input) ? LinkType.Output : LinkType.Input, true); //input type tab means output of connection link and vice versa
 				if (tempRange.Ignore && DisplayedNode is ReadOnlyPassthroughNode)
@@ -179,13 +179,11 @@ namespace Foreman
 
 			if (button == MouseButtons.Right)
 			{
-				
 				List<ReadOnlyNodeLink> connections = new List<ReadOnlyNodeLink>();
 				if (LinkType == LinkType.Input)
 				{
 					// right clicked on an input connection
 					connections.AddRange(DisplayedNode.InputLinks.Where(l => l.Item == Item));
-					
 				}
 				else //if (LinkType == LinkType.Output)
 				{
@@ -235,7 +233,6 @@ namespace Foreman
 						graphViewer.Graph.UpdateNodeValues();
 					}))
 				{ Enabled = connections.Count > 0 });
-				
 
 				RightClickMenu.Show(graphViewer, graphViewer.GraphToScreen(graph_point));
 			}
