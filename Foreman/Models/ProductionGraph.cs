@@ -85,7 +85,7 @@ namespace Foreman
 					{
 						if (node is RecipeNode rnode)
 						{
-							rnode.UpdateInputsAndOutputs();
+							rnode.MaxQualitySteps = maxQualitySteps;
 						}
 					}
 				}
@@ -470,7 +470,7 @@ namespace Foreman
 				bool not_dict_contains_consumer = !roToNode.ContainsKey(consumer);
 				bool not_supplier_output_contains_item = !supplier.Outputs.Contains(item);
 				bool not_consumer_inputs_contains_item = !consumer.Inputs.Contains(item);
-				
+
 				Trace.Fail(string.Format("Node link creation called with invalid parameters! consumer:{0}. supplier:{1}. item:{2}. specific conditions are {3}, {4}, {5}, {6}",
 					consumer.ToString(),
 					supplier.ToString(),
@@ -1191,7 +1191,7 @@ namespace Foreman
 
 						includedAssemblers.Add(rnode.SelectedAssembler.Assembler.Name);
 
-						if (rnode.SelectedBeacon.Beacon != null)
+						if (rnode.SelectedBeacon)
 						{
 							includedBeacons.Add(rnode.SelectedBeacon.Beacon.Name);
 						}
@@ -1202,7 +1202,7 @@ namespace Foreman
 						includedQualities.Add(new KeyValuePair<string, int>(rnode.BaseRecipe.Quality.Name, rnode.BaseRecipe.Quality.Level));
 						includedQualities.Add(new KeyValuePair<string, int>(rnode.SelectedAssembler.Quality.Name, rnode.SelectedAssembler.Quality.Level));
 
-						if (rnode.SelectedBeacon.Beacon != null)
+						if (rnode.SelectedBeacon)
 						{
 							includedQualities.Add(new KeyValuePair<string, int>(rnode.BaseRecipe.Quality.Name, rnode.BaseRecipe.Quality.Level));
 						}

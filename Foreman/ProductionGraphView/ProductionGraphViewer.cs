@@ -202,7 +202,7 @@ namespace Foreman
 				return;
 			}
 
-			if ((nNodeType != NewNodeType.Disconnected) && (originElement == null || baseItem.Item == null))
+			if ((nNodeType != NewNodeType.Disconnected) && (originElement == null || !baseItem))
 			{
 				Trace.Fail("Origin element or base item not provided for a new (linked) node");
 			}
@@ -217,6 +217,46 @@ namespace Foreman
 			NodeDirection newNodeDirection = (originElement == null || !SmartNodeDirection) ? Graph.DefaultNodeDirection :
 				draggedLinkElement.Type != BaseLinkElement.LineType.UShape ? originElement.DisplayedNode.NodeDirection :
 				originElement.DisplayedNode.NodeDirection == NodeDirection.Up ? NodeDirection.Down : NodeDirection.Up;
+
+			if ((Control.ModifierKeys & Keys.Control) == Keys.Control) //control key pressed -> we are making a passthrough node.
+			{
+				ProcessNodeRequest(null, new RecipeRequestArgs(NodeType.Passthrough));
+				DisposeLinkDrag();
+				Graph.UpdateNodeStates(false);
+				Invalidate();
+			}
+			else
+			{
+				fRange tempRange = new fRange(0, 0, true);
+				if (baseItem && baseItem.Item is Fluid fluid && fluid.IsTemperatureDependent)
+				{
+					if (nNodeType == NewNodeType.Consumer) //need to check all nodes down to recipes for range of temperatures being produced
+					{
+						tempRange = LinkChecker.GetTemperatureRange(fluid, originElement.DisplayedNode, LinkType.Output, true);
+					}
+					else if (nNodeType == NewNodeType.Supplier) //need to check all nodes up to recipes for range of temperatures being consumed (guaranteed to be in a SINGLE [] range)
+					{
+						tempRange = LinkChecker.GetTemperatureRange(fluid, originElement.DisplayedNode, LinkType.Input, true);
+					}
+				}
+
+				RecipeChooserPanel recipeChooser = new RecipeChooserPanel(this, drawOrigin, baseItem, tempRange, nNodeType); //QUALITY UPDATE
+				recipeChooser.RecipeRequested += ProcessNodeRequest;
+				recipeChooser.PanelClosed += (o, e) =>
+				{
+					if (e.Option != IRChooserPanel.ChooserPanelCloseReason.RequiresItemSelection)
+					{
+						SubwindowOpen = false;
+						DisposeLinkDrag();
+						Graph.UpdateNodeStates(false);
+						Invalidate();
+					}
+				};
+
+				SubwindowOpen = true;
+				recipeChooser.Show();
+			}
+			return; //end of this function
 
 			//internal helper funtion: called upon a successfull selection of a recipe-selection screen (opened above)
 			void ProcessNodeRequest(object o, RecipeRequestArgs recipeRequestArgs)
@@ -361,10 +401,12 @@ namespace Foreman
 				fRange tempRange = new fRange(0, 0, true);
 				if (baseItem.Item != null && baseItem.Item is Fluid fluid && fluid.IsTemperatureDependent)
 				{
-					if (nNodeType == NewNodeType.Consumer){ //need to check all nodes down to recipes for range of temperatures being produced
+					if (nNodeType == NewNodeType.Consumer)
+					{ //need to check all nodes down to recipes for range of temperatures being produced
 						tempRange = LinkChecker.GetTemperatureRange(fluid, originElement.DisplayedNode, LinkType.Output, true);
 					}
-					else if (nNodeType == NewNodeType.Supplier){ //need to check all nodes up to recipes for range of temperatures being consumed (guaranteed to be in a SINGLE [] range)
+					else if (nNodeType == NewNodeType.Supplier)
+					{ //need to check all nodes up to recipes for range of temperatures being consumed (guaranteed to be in a SINGLE [] range)
 						tempRange = LinkChecker.GetTemperatureRange(fluid, originElement.DisplayedNode, LinkType.Input, true);
 					}
 				}
@@ -1010,7 +1052,7 @@ namespace Foreman
 						rightClickMenu.MenuItems.Add(new MenuItem("Add Recipe",
 							new EventHandler((o, ee) =>
 							{
-								AddNewNode(screenPoint, new ItemQualityPair(null, null), ScreenToGraph(e.Location), NewNodeType.Disconnected);
+								AddNewNode(screenPoint, new ItemQualityPair("adding disconnected recipe"), ScreenToGraph(e.Location), NewNodeType.Disconnected);
 							})));
 						rightClickMenu.Show(this, e.Location);
 
@@ -1586,8 +1628,8 @@ namespace Foreman
 				}
 				DCache = form.GetDataCache();
 				LastAssemblerQuality = DCache.DefaultQuality; //QUALITY UPDATE
-				Graph.DefaultAssemblerQuality = DCache.DefaultQuality; //QUALITY UPDATE
-				Graph.MaxQualitySteps = DCache.QualityMaxChainLength;
+				Graph.DefaultAssemblerQuality = DCache.DefaultQuality;
+				Graph.MaxQualitySteps = 5; //DCache.QualityMaxChainLength;
 
 				if (result == DialogResult.Abort)
 				{

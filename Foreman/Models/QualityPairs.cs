@@ -14,14 +14,20 @@ namespace Foreman
         public readonly Item Item;
         public readonly Quality Quality;
 
+        public ItemQualityPair(string comment)
+        {
+            Item = null;
+            Quality = null;
+        }
+
         public ItemQualityPair(Item item, Quality quality)
         {
             Item = item;
             Quality = quality;
 
-            if (Item != null && Quality == null)
+            if (Item == null || Quality == null)
             {
-                Trace.Fail(string.Format("Attempted to create item quality pair with item {0} and no quality!", Item));
+                throw new NullReferenceException("null error - Item: " + nameof(Item) + " Quality: " + nameof(Quality));
             }
         }
 
@@ -30,6 +36,7 @@ namespace Foreman
         public override int GetHashCode() => Item.GetHashCode() + Quality.GetHashCode();
         public static bool operator ==(ItemQualityPair lhs, ItemQualityPair rhs) => lhs.Equals(rhs);
         public static bool operator !=(ItemQualityPair lhs, ItemQualityPair rhs) => !(lhs == rhs);
+        public static implicit operator bool(ItemQualityPair bp) => bp != null && bp.Item != null && bp.Quality != null;
         public override string ToString() { return Item.ToString() + " (" + Quality.ToString() + ")"; }
 
         public string FriendlyName
@@ -69,9 +76,9 @@ namespace Foreman
             Module = module;
             Quality = quality;
 
-            if (Module != null && Quality == null)
+            if (Module == null || Quality == null)
             {
-                Trace.Fail(string.Format("Attempted to create Module quality pair with Module {0} and no quality!", Module));
+                throw new NullReferenceException("null error - Module: " + nameof(Module) + " Quality: " + nameof(Quality));
             }
         }
 
@@ -80,6 +87,7 @@ namespace Foreman
         public override int GetHashCode() => Module.GetHashCode() + Quality.GetHashCode();
         public static bool operator ==(ModuleQualityPair lhs, ModuleQualityPair rhs) => lhs.Equals(rhs);
         public static bool operator !=(ModuleQualityPair lhs, ModuleQualityPair rhs) => !(lhs == rhs);
+        public static implicit operator bool(ModuleQualityPair bp) => bp != null && bp.Module != null && bp.Quality != null;
         public override string ToString() { return Module.ToString() + " (" + Quality.ToString() + ")"; }
 
         public void GetObjectData(SerializationInfo info, StreamingContext context)
@@ -125,9 +133,9 @@ namespace Foreman
             Assembler = assembler;
             Quality = quality;
 
-            if (Assembler != null && Quality == null)
+            if (Assembler == null || Quality == null)
             {
-                Trace.Fail(string.Format("Attempted to create Assembler quality pair with Assembler {0} and no quality!", Assembler));
+                throw new NullReferenceException("null error - Assembler: " + nameof(Assembler) + " Quality: " + nameof(Quality));
             }
         }
 
@@ -136,6 +144,7 @@ namespace Foreman
         public override int GetHashCode() => Assembler.GetHashCode() + Quality.GetHashCode();
         public static bool operator ==(AssemblerQualityPair lhs, AssemblerQualityPair rhs) => lhs.Equals(rhs);
         public static bool operator !=(AssemblerQualityPair lhs, AssemblerQualityPair rhs) => !(lhs == rhs);
+        public static implicit operator bool(AssemblerQualityPair bp) => bp != null && bp.Assembler != null && bp.Quality != null;
         public override string ToString() { return Assembler.ToString() + " (" + Quality.ToString() + ")"; }
 
         public string FriendlyName
@@ -170,14 +179,19 @@ namespace Foreman
         public readonly Beacon Beacon;
         public readonly Quality Quality;
 
+        public BeaconQualityPair(string comment)
+        {
+            Beacon = null;
+            Quality = null;
+        }
+
         public BeaconQualityPair(Beacon beacon, Quality quality)
         {
             Beacon = beacon;
             Quality = quality;
 
-            if (Beacon != null && Quality == null)
-            {
-                Trace.Fail(string.Format("Attempted to create Beacon quality pair with Beacon {0} and no quality!", Beacon));
+            if (Beacon == null || Quality == null) {
+                throw new NullReferenceException("null error - Beacon: " + nameof(Beacon) + " Quality: " + nameof(Quality));
             }
         }
 
@@ -186,6 +200,7 @@ namespace Foreman
         public override int GetHashCode() => Beacon.GetHashCode() + Quality.GetHashCode();
         public static bool operator ==(BeaconQualityPair lhs, BeaconQualityPair rhs) => lhs.Equals(rhs);
         public static bool operator !=(BeaconQualityPair lhs, BeaconQualityPair rhs) => !(lhs == rhs);
+        public static implicit operator bool(BeaconQualityPair bp) => bp != null && bp.Beacon != null && bp.Quality != null;
         public override string ToString() { return Beacon.ToString() + " (" + Quality.ToString() + ")"; }
 
         public string FriendlyName
@@ -220,14 +235,19 @@ namespace Foreman
         public readonly Recipe Recipe;
         public readonly Quality Quality;
 
+        public RecipeQualityPair(string comment)
+        {
+            Recipe = null;
+            Quality = null;
+        }
+
         public RecipeQualityPair(Recipe recipe, Quality quality)
         {
             Recipe = recipe;
             Quality = quality;
 
-            if (Recipe != null && Quality == null)
-            {
-                Trace.Fail(string.Format("Attempted to create recipe quality pair with recipe {0} and no quality!", recipe));
+            if (Recipe == null || Quality == null) {
+                throw new NullReferenceException("null error - Recipe: " + nameof(Recipe) + " Quality: " + nameof(Quality));
             }
         }
 
@@ -236,6 +256,7 @@ namespace Foreman
         public override int GetHashCode() => Recipe.GetHashCode() + Quality.GetHashCode();
         public static bool operator ==(RecipeQualityPair lhs, RecipeQualityPair rhs) => lhs.Equals(rhs);
         public static bool operator !=(RecipeQualityPair lhs, RecipeQualityPair rhs) => !(lhs == rhs);
+        public static implicit operator bool(RecipeQualityPair bp) => bp != null && bp.Recipe != null && bp.Quality != null;
         public override string ToString() { return Recipe.ToString() + " (" + Quality.ToString() + ")"; }
 
         public string FriendlyName

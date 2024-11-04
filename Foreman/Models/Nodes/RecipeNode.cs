@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.Serialization;
+using System.Xml.Schema;
 
 namespace Foreman
 {
@@ -65,7 +66,8 @@ namespace Foreman
 		public bool LowPriority { get; set; }
 
 		public readonly RecipeQualityPair BaseRecipe;
-		public double NeighbourCount { get; set; }
+		private double neighbourCount;
+		public double NeighbourCount { get { return neighbourCount; } set { if (neighbourCount != value) { neighbourCount = value; ioUpdateRequired = true; UpdateState(); OnNodeValuesChanged(); } } }
 
 		private readonly DataCache RecipeOwner;
 
@@ -73,7 +75,7 @@ namespace Foreman
 		public AssemblerQualityPair SelectedAssembler
 		{
 			get { return assembler; }
-			set { if (value.Assembler != null && assembler != value) { assembler = value; ioUpdateRequired = true; UpdateState(); OnNodeValuesChanged(); } }
+			set { if (value && assembler != value) { assembler = value; ioUpdateRequired = true; UpdateState(); OnNodeValuesChanged(); } }
 		}
 		public Item Fuel
 		{
@@ -124,7 +126,8 @@ namespace Foreman
 
 		public override double DesiredRatePerSec { get { return DesiredSetValue * SelectedAssembler.Assembler.GetSpeed(SelectedAssembler.Quality) * GetSpeedMultiplier() / (BaseRecipe.Recipe.Time); } set { Trace.Fail("Desired rate set on a recipe node!"); } }
 
-		public double ExtraProductivityBonus { get; set; }
+		private double extraProductivityBonus;
+		public double ExtraProductivityBonus { get { return extraProductivityBonus; } set { if (extraProductivityBonus != value) { extraProductivityBonus = value; ioUpdateRequired = true; UpdateState(); OnNodeValuesChanged(); } } }
 
 		public uint MaxQualitySteps { get { return maxQualitySteps; } set { if (maxQualitySteps != value) { maxQualitySteps = value; ioUpdateRequired = true; } } } //if quality bonus > 0 then we will take this many extra quality steps for products
 		private uint maxQualitySteps;
@@ -163,12 +166,14 @@ namespace Foreman
 			beaconModules = new List<ModuleQualityPair>();
 
 			SelectedAssembler = new AssemblerQualityPair(recipe.Recipe.Assemblers.First(), assemblerQuality); //everything here works under the assumption that assember isnt null.
-			SelectedBeacon = new BeaconQualityPair(null, null);
+			SelectedBeacon = new BeaconQualityPair("no beacon selected");
 			NeighbourCount = 0;
 
 			BeaconCount = 0;
 			BeaconsPerAssembler = 0;
 			BeaconsConst = 0;
+
+			ExtraProductivityBonus = 0;
 		}
 
 		internal override NodeState GetUpdatedState()
@@ -230,7 +235,7 @@ namespace Foreman
 				ErrorSet |= Errors.AModuleQualityIsMissing;
 			}
 
-			if (SelectedBeacon.Beacon != null)
+			if (SelectedBeacon)
 			{
 				if (SelectedBeacon.Beacon.IsMissing)
 				{
@@ -326,7 +331,7 @@ namespace Foreman
 				WarningSet |= Warnings.AModulesQualityIsDisabled;
 			}
 
-			if (SelectedBeacon.Beacon != null)
+			if (SelectedBeacon)
 			{
 				if (!SelectedBeacon.Beacon.Enabled)
 				{
@@ -433,7 +438,7 @@ namespace Foreman
 					else
 					{
 						ItemQualityPair currentProduct = new ItemQualityPair(item, BaseRecipe.Quality);
-						uint currentStep = 0;
+						uint currentStep = 1;
 						outputList.Add(currentProduct);
 						outputSet.Add(currentProduct, amount);
 						double currentMultiplier = GetQualityMultiplier();
@@ -441,7 +446,6 @@ namespace Foreman
 						{
 							currentStep++;
 							ItemQualityPair lastProduct = currentProduct;
-							
 							currentMultiplier *= currentProduct.Quality.NextProbability;
 							currentProduct = new ItemQualityPair(item, currentProduct.Quality.NextQuality);
 							if (currentMultiplier == 0)
@@ -541,7 +545,7 @@ namespace Foreman
 
 		public double GetProductivityBonus() //unlike most of the others, this is the bonus (aka: starts from 0%, not 100%) //also: quality bonus is rounded down to 2 decimal places (1 percent)
 		{
-			double multiplier = SelectedAssembler.Assembler.BaseProductivityBonus + ((SelectedAssembler.Assembler.EntityType == EntityType.Miner || MyGraph.EnableExtraProductivityForNonMiners) ? ExtraProductivityBonus : 0);
+			double multiplier = SelectedAssembler.Assembler.BaseProductivityBonus + ExtraProductivityBonus;
 			foreach (ModuleQualityPair module in AssemblerModules)
 			{
 				multiplier += module.Module.GetProductivityBonus(module.Quality);
@@ -678,7 +682,7 @@ namespace Foreman
 				info.AddValue("Burnt", FuelRemains.Name);
 			}
 
-			if (SelectedBeacon.Beacon != null)
+			if (SelectedBeacon)
 			{
 				info.AddValue("Beacon", SelectedBeacon.Beacon.Name);
 				info.AddValue("BeaconQuality", SelectedBeacon.Quality.Name);
@@ -1003,7 +1007,7 @@ namespace Foreman
 
 		public double GetBeaconEnergyConsumption() //Watts
 		{
-			if (SelectedBeacon.Beacon == null || SelectedBeacon.Beacon.EnergySource != EnergySource.Electric)
+			if (!SelectedBeacon || SelectedBeacon.Beacon.EnergySource != EnergySource.Electric)
 			{
 				return 0;
 			}
@@ -1012,7 +1016,7 @@ namespace Foreman
 
 		public double GetBeaconPollutionProduction() //pollution/sec
 		{
-			if (SelectedBeacon.Beacon == null)
+			if (!SelectedBeacon)
 			{
 				return 0;
 			}
@@ -1057,19 +1061,21 @@ namespace Foreman
 
 		public int GetTotalBeacons()
 		{
-			if (MyNode.SelectedBeacon.Beacon == null)
+			if (!MyNode.SelectedBeacon)
 			{
 				return 0;
 			}
+
 			return (int)Math.Ceiling(((int)(MyNode.ActualSetValue + 0.8) * BeaconsPerAssembler) + BeaconsConst); //assume 0.2 assemblers (or more) is enough to warrant an extra 'beacons per assembler' row
 		}
 
 		public double GetTotalBeaconElectricalConsumption() // J/sec (W)
 		{
-			if (MyNode.SelectedBeacon.Beacon == null)
+			if (!MyNode.SelectedBeacon)
 			{
 				return 0;
 			}
+
 
 			return GetTotalBeacons() * GetBeaconEnergyConsumption();
 		}
@@ -1128,10 +1134,11 @@ namespace Foreman
 					resolutions.Add("Fix assembler modules", new Action(() =>
 					{
 						for (int i = MyNode.AssemblerModules.Count - 1; i >= 0; i--)
-							if (MyNode.AssemblerModules[i].Module.IsMissing || !MyNode.SelectedAssembler.Assembler.Modules.Contains(MyNode.AssemblerModules[i].Module) || !MyNode.BaseRecipe.Recipe.Modules.Contains(MyNode.AssemblerModules[i].Module) || MyNode.AssemblerModules[i].Quality.IsMissing)
+							if (MyNode.AssemblerModules[i].Module.IsMissing || !MyNode.SelectedAssembler.Assembler.Modules.Contains(MyNode.AssemblerModules[i].Module) || !MyNode.BaseRecipe.Recipe.AssemblerModules.Contains(MyNode.AssemblerModules[i].Module) || MyNode.AssemblerModules[i].Quality.IsMissing)
 							{
 								RemoveAssemblerModule(i);
 							}
+
 						while (MyNode.AssemblerModules.Count > MyNode.SelectedAssembler.Assembler.ModuleSlots)
 						{
 							RemoveAssemblerModule(MyNode.AssemblerModules.Count - 1);
@@ -1149,7 +1156,7 @@ namespace Foreman
 					resolutions.Add("Fix beacon modules", new Action(() =>
 					{
 						for (int i = MyNode.BeaconModules.Count - 1; i >= 0; i--)
-							if (MyNode.BeaconModules[i].Module.IsMissing || !MyNode.SelectedAssembler.Assembler.Modules.Contains(MyNode.BeaconModules[i].Module) || !MyNode.BaseRecipe.Recipe.Modules.Contains(MyNode.BeaconModules[i].Module) || !MyNode.SelectedBeacon.Beacon.Modules.Contains(MyNode.BeaconModules[i].Module) || MyNode.BeaconModules[i].Quality.IsMissing)
+							if (MyNode.BeaconModules[i].Module.IsMissing || !MyNode.SelectedAssembler.Assembler.Modules.Contains(MyNode.BeaconModules[i].Module) || !MyNode.BaseRecipe.Recipe.AssemblerModules.Contains(MyNode.BeaconModules[i].Module) || !MyNode.SelectedBeacon.Beacon.Modules.Contains(MyNode.BeaconModules[i].Module) || MyNode.BeaconModules[i].Quality.IsMissing)
 							{
 								RemoveBeaconModule(i);
 							}
@@ -1264,7 +1271,7 @@ namespace Foreman
 			for (int i = MyNode.AssemblerModules.Count - 1; i >= 0; i--)
 				if (MyNode.AssemblerModules[i].Module.IsMissing ||
 					!MyNode.SelectedAssembler.Assembler.Modules.Contains(MyNode.AssemblerModules[i].Module) ||
-					!MyNode.BaseRecipe.Recipe.Modules.Contains(MyNode.AssemblerModules[i].Module) ||
+					!MyNode.BaseRecipe.Recipe.AssemblerModules.Contains(MyNode.AssemblerModules[i].Module) ||
 					!MyNode.AssemblerModules[i].Quality.Available ||
 					MyNode.AssemblerModules[i].Quality.IsMissing)
 				{ MyNode.AssemblerModulesRemoveAt(i); }
@@ -1276,7 +1283,7 @@ namespace Foreman
 			}
 
 			//check if any modules work (if none work, then turn off beacon)
-			if (MyNode.SelectedAssembler.Assembler.Modules.Count == 0 || MyNode.BaseRecipe.Recipe.Modules.Count == 0)
+			if (MyNode.SelectedAssembler.Assembler.Modules.Count == 0 || MyNode.BaseRecipe.Recipe.AssemblerModules.Count == 0)
 			{
 				ClearBeacon();
 			}
@@ -1347,7 +1354,7 @@ namespace Foreman
 
 		public void ClearBeacon()
 		{
-			MyNode.SelectedBeacon = new BeaconQualityPair(null, null);
+			MyNode.SelectedBeacon = new BeaconQualityPair("clearing beacon");
 			MyNode.BeaconModulesClear();
 			MyNode.BeaconCount = 0;
 			MyNode.BeaconsPerAssembler = 0;
@@ -1357,7 +1364,7 @@ namespace Foreman
 
 		public void SetBeacon(BeaconQualityPair beacon)
 		{
-			if (beacon.Beacon == null) { ClearBeacon(); return; } //shouldnt be called - but whatever
+			if (!beacon) { ClearBeacon(); return; } //shouldnt be called - but whatever
 
 			MyNode.SelectedBeacon = beacon;
 			//check for invalid modules
@@ -1365,7 +1372,7 @@ namespace Foreman
 			{
 				if (MyNode.BeaconModules[i].Module.IsMissing ||
 					!MyNode.SelectedAssembler.Assembler.Modules.Contains(MyNode.BeaconModules[i].Module) ||
-					!MyNode.BaseRecipe.Recipe.Modules.Contains(MyNode.BeaconModules[i].Module) ||
+					!MyNode.BaseRecipe.Recipe.AssemblerModules.Contains(MyNode.BeaconModules[i].Module) ||
 					!MyNode.SelectedBeacon.Beacon.Modules.Contains(MyNode.BeaconModules[i].Module) ||
 					!MyNode.BeaconModules[i].Quality.Available ||
 					MyNode.BeaconModules[i].Quality.IsMissing)
@@ -1423,7 +1430,7 @@ namespace Foreman
 			{
 				if (filterModules)
 				{
-					HashSet<Module> acceptableModules = new HashSet<Module>(MyNode.BaseRecipe.Recipe.Modules.Intersect(MyNode.SelectedAssembler.Assembler.Modules));
+					HashSet<Module> acceptableModules = new HashSet<Module>(MyNode.BaseRecipe.Recipe.AssemblerModules.Intersect(MyNode.SelectedAssembler.Assembler.Modules));
 					foreach (ModuleQualityPair m in modules)
 					{
 						if (MyNode.AssemblerModules.Count < MyNode.SelectedAssembler.Assembler.ModuleSlots && acceptableModules.Contains(m.Module))
@@ -1491,7 +1498,7 @@ namespace Foreman
 			{
 				if (filterModules)
 				{
-					HashSet<Module> acceptableModules = new HashSet<Module>(MyNode.BaseRecipe.Recipe.Modules.Intersect(MyNode.SelectedAssembler.Assembler.Modules).Intersect(MyNode.SelectedBeacon.Beacon.Modules));
+					HashSet<Module> acceptableModules = new HashSet<Module>(MyNode.BaseRecipe.Recipe.AssemblerModules.Intersect(MyNode.SelectedAssembler.Assembler.Modules).Intersect(MyNode.SelectedBeacon.Beacon.Modules));
 					foreach (ModuleQualityPair m in modules)
 					{
 						if (MyNode.BeaconModules.Count < MyNode.SelectedBeacon.Beacon.ModuleSlots && acceptableModules.Contains(m.Module))

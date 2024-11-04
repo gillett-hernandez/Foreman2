@@ -9,7 +9,8 @@ namespace Foreman
 		IReadOnlyCollection<Technology> Prerequisites { get; }
 		IReadOnlyCollection<Technology> PostTechs { get; }
 		IReadOnlyCollection<Recipe> UnlockedRecipes { get; }
-		IReadOnlyDictionary<Item, double> SciPackSet { get; }
+        IReadOnlyCollection<Recipe> UnlockedQualities { get; }
+        IReadOnlyDictionary<Item, double> SciPackSet { get; }
 		IReadOnlyList<Item> SciPackList { get; }
 		double ResearchCost { get; }
 		int Tier { get; } //furthest distance from this tech to the starting tech. nice way or ordering technologies
@@ -20,7 +21,8 @@ namespace Foreman
 		public IReadOnlyCollection<Technology> Prerequisites { get { return prerequisites; } }
 		public IReadOnlyCollection<Technology> PostTechs { get { return postTechs; } }
 		public IReadOnlyCollection<Recipe> UnlockedRecipes { get { return unlockedRecipes; } }
-		public IReadOnlyDictionary<Item, double> SciPackSet { get { return sciPackSet; } }
+        public IReadOnlyCollection<Recipe> UnlockedQualities { get { return UnlockedQualities; } }
+        public IReadOnlyDictionary<Item, double> SciPackSet { get { return sciPackSet; } }
 		public IReadOnlyList<Item> SciPackList { get { return sciPackList; } }
 		public double ResearchCost { get; set; }
 		public int Tier { get; set; }
@@ -28,6 +30,7 @@ namespace Foreman
 		internal HashSet<TechnologyPrototype> prerequisites { get; private set; }
 		internal HashSet<TechnologyPrototype> postTechs { get; private set; }
 		internal HashSet<RecipePrototype> unlockedRecipes { get; private set; }
+		internal HashSet<QualityPrototype> unlockedQualities { get; private set; }
 		internal Dictionary<Item, double> sciPackSet { get; private set; }
 		internal List<Item> sciPackList { get; private set; }
 
@@ -37,6 +40,7 @@ namespace Foreman
 			prerequisites = new HashSet<TechnologyPrototype>();
 			postTechs = new HashSet<TechnologyPrototype>();
 			unlockedRecipes = new HashSet<RecipePrototype>();
+			unlockedQualities = new HashSet<QualityPrototype>();
 			sciPackSet = new Dictionary<Item, double>();
 			sciPackList = new List<Item>();
 			ResearchCost = 0;

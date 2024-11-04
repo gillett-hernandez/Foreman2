@@ -219,6 +219,7 @@ namespace Foreman
 			//return;
 
 			Dictionary<string, List<RecipePrototype>> craftingCategories = new Dictionary<string, List<RecipePrototype>>();
+			Dictionary<string, List<ModulePrototype>> moduleCategories = new Dictionary<string, List<ModulePrototype>>();
 			Dictionary<string, List<RecipePrototype>> resourceCategories = new Dictionary<string, List<RecipePrototype>>
 			{
 				{ "<<foreman_resource_category_water_tile>>", new List<RecipePrototype>() } //the water resources
@@ -295,12 +296,12 @@ namespace Foreman
 
 				foreach (var objJToken in jsonData["modules"].ToList())
 				{
-					ProcessModule(objJToken, iconCache);
+					ProcessModule(objJToken, iconCache, moduleCategories);
 				}
 
 				foreach (var objJToken in jsonData["recipes"].ToList())
 				{
-					ProcessRecipe(objJToken, iconCache, craftingCategories);
+					ProcessRecipe(objJToken, iconCache, craftingCategories, moduleCategories);
 				}
 				foreach (var objJToken in jsonData["resources"].ToList())
 				{
@@ -322,7 +323,7 @@ namespace Foreman
 
 				foreach (var objJToken in jsonData["entities"].ToList())
 				{
-					ProcessEntity(objJToken, iconCache, craftingCategories, resourceCategories, fuelCategories, miningWithFluidRecipes);
+					ProcessEntity(objJToken, iconCache, craftingCategories, resourceCategories, fuelCategories, miningWithFluidRecipes, moduleCategories);
 				}
 
 				//process launch products (empty now - depreciated)
@@ -382,7 +383,7 @@ namespace Foreman
 						tech.unlockedRecipes.Remove(recipe);
 					}
 
-					foreach (ModulePrototype module in recipe.modules)
+					foreach (ModulePrototype module in recipe.assemblerModules)
 					{
 						module.recipes.Remove(recipe);
 					}
@@ -740,7 +741,8 @@ namespace Foreman
 				(string)objJToken["localised_name"],
 				(string)objJToken["order"]);
 
-			if (iconCache.ContainsKey((string)objJToken["icon_name"])) {
+			if (iconCache.ContainsKey((string)objJToken["icon_name"]))
+			{
 				quality.SetIconAndColor(iconCache[(string)objJToken["icon_name"]]);
 			}
 
@@ -752,7 +754,8 @@ namespace Foreman
 			quality.MiningDrillResourceDrainMultiplier = (double)objJToken["mining_drill_resource_drain_multiplier"];
 			quality.NextProbability = objJToken["next_probability"] != null ? (double)objJToken["next_probability"] : 0;
 
-			if (quality.NextProbability != 0) {
+			if (quality.NextProbability != 0)
+			{
 				nextQualities.Add(quality, (string)objJToken["next"]);
 			}
 
@@ -923,33 +926,41 @@ namespace Foreman
 			}
 		}
 
-		private void ProcessModule(JToken objJToken, Dictionary<string, IconColorPair> iconCache)
+		private void ProcessModule(JToken objJToken, Dictionary<string, IconColorPair> iconCache, Dictionary<string, List<ModulePrototype>> moduleCategories)
 		{
 			ModulePrototype module = new ModulePrototype(
 				this,
 				(string)objJToken["name"],
 				(string)objJToken["localised_name"]);
 
-			if (iconCache.ContainsKey((string)objJToken["icon_name"])){
+			if (iconCache.ContainsKey((string)objJToken["icon_name"]))
+			{
 				module.SetIconAndColor(iconCache[(string)objJToken["icon_name"]]);
 			}
-			else if (iconCache.ContainsKey((string)objJToken["icon_alt_name"])){
+			else if (iconCache.ContainsKey((string)objJToken["icon_alt_name"]))
+			{
 				module.SetIconAndColor(iconCache[(string)objJToken["icon_alt_name"]]);
 			}
 
-			module.SpeedBonus = Math.Truncate((double)objJToken["module_effects"]["speed"] * 100) / 100;
-			module.ProductivityBonus = Math.Truncate((double)objJToken["module_effects"]["productivity"] * 100) / 100;
-			module.ConsumptionBonus = Math.Truncate((double)objJToken["module_effects"]["consumption"] * 100) / 100;
-			module.PollutionBonus = Math.Truncate((double)objJToken["module_effects"]["pollution"] * 100) / 100;
-			module.QualityBonus = Math.Truncate((double)objJToken["module_effects"]["quality"] * 100) / 100;
+			module.SpeedBonus = Math.Round((double)objJToken["module_effects"]["speed"] * 1000, 0, MidpointRounding.AwayFromZero) / 1000;
+			module.ProductivityBonus = Math.Round((double)objJToken["module_effects"]["productivity"] * 1000, 0, MidpointRounding.AwayFromZero) / 1000;
+			module.ConsumptionBonus = Math.Round((double)objJToken["module_effects"]["consumption"] * 1000, 0, MidpointRounding.AwayFromZero) / 1000;
+			module.PollutionBonus = Math.Round((double)objJToken["module_effects"]["pollution"] * 1000, 0, MidpointRounding.AwayFromZero) / 1000;
+			module.QualityBonus = Math.Round((double)objJToken["module_effects"]["quality"] * 1000, 0, MidpointRounding.AwayFromZero) / 1000;
 
 			module.Tier = (int)objJToken["tier"];
+
 			module.Category = (string)objJToken["category"];
+			if (!moduleCategories.ContainsKey(module.Category))
+			{
+				moduleCategories.Add(module.Category, new List<ModulePrototype>());
+			}
+			moduleCategories[module.Category].Add(module);
 
 			modules.Add(module.Name, module);
 		}
 
-		private void ProcessRecipe(JToken objJToken, Dictionary<string, IconColorPair> iconCache, Dictionary<string, List<RecipePrototype>> craftingCategories)
+		private void ProcessRecipe(JToken objJToken, Dictionary<string, IconColorPair> iconCache, Dictionary<string, List<RecipePrototype>> craftingCategories, Dictionary<string, List<ModulePrototype>> moduleCategories)
 		{
 			RecipePrototype recipe = new RecipePrototype(
 				this,
@@ -981,6 +992,9 @@ namespace Foreman
 			{
 				recipe.SetIconAndColor(iconCache[(string)objJToken["icon_alt_name"]]);
 			}
+
+			recipe.HasProductivityResearch = objJToken["prod_research"] != null && (bool)objJToken["prod_research"];
+			recipe.MaxProductivityBonus = objJToken["maximum_productivity"] == null ? 1000 : (double)objJToken["maximum_productivity"];
 
 			foreach (var productJToken in objJToken["products"].ToList())
 			{
@@ -1024,26 +1038,64 @@ namespace Foreman
 				}
 			}
 
-			foreach (ModulePrototype module in modules.Values.Cast<ModulePrototype>())
+			if (objJToken["allowed_effects"] != null)
 			{
-				bool validModule = ((bool)objJToken["allowed_effects"]["consumption"] || module.ConsumptionBonus >= 0) &&
-									((bool)objJToken["allowed_effects"]["speed"] || module.SpeedBonus <= 0) &&
-									((bool)objJToken["allowed_effects"]["productivity"] || module.ProductivityBonus <= 0) &&
-									((bool)objJToken["allowed_effects"]["pollution"] || module.PollutionBonus >= 0) &&
-									((bool)objJToken["allowed_effects"]["quality"] || module.QualityBonus <= 0);
+				recipe.AllowConsumptionBonus = (bool)objJToken["allowed_effects"]["consumption"];
+				recipe.AllowSpeedBonus = (bool)objJToken["allowed_effects"]["speed"];
+				recipe.AllowProductivityBonus = (bool)objJToken["allowed_effects"]["productivity"];
+				recipe.AllowPollutionBonus = (bool)objJToken["allowed_effects"]["pollution"];
+				recipe.AllowQualityBonus = (bool)objJToken["allowed_effects"]["quality"];
 
-				if (objJToken["allowed_module_categories"] != null)
+				foreach (ModulePrototype module in modules.Values.Cast<ModulePrototype>())
 				{
-					foreach (var moduleCategoryJToken in objJToken["allowed_module_categories"])
+					bool validModule = (recipe.AllowConsumptionBonus || module.ConsumptionBonus >= 0) &&
+										(recipe.AllowSpeedBonus || module.SpeedBonus <= 0) &&
+										(recipe.AllowProductivityBonus || module.ProductivityBonus <= 0) &&
+										(recipe.AllowPollutionBonus || module.PollutionBonus >= 0) &&
+										(recipe.AllowQualityBonus || module.QualityBonus <= 0);
+					if (validModule)
 					{
-						validModule &= (module.Category == (string)moduleCategoryJToken);
+						recipe.beaconModules.Add(module);
 					}
 				}
 
-				if (validModule)
+				if (objJToken["allowed_module_categories"] == null || objJToken["allowed_module_categories"].Count() == 0)
 				{
-					recipe.modules.Add(module);
-					module.recipes.Add(recipe);
+					foreach (ModulePrototype module in modules.Values.Cast<ModulePrototype>())
+					{
+						bool validModule = (recipe.AllowConsumptionBonus || module.ConsumptionBonus >= 0) &&
+											(recipe.AllowSpeedBonus || module.SpeedBonus <= 0) &&
+											(recipe.AllowProductivityBonus || module.ProductivityBonus <= 0) &&
+											(recipe.AllowPollutionBonus || module.PollutionBonus >= 0) &&
+											(recipe.AllowQualityBonus || module.QualityBonus <= 0);
+						if (validModule)
+						{
+							recipe.assemblerModules.Add(module);
+							module.recipes.Add(recipe);
+						}
+					}
+				}
+				else
+				{
+					foreach (string moduleCategory in objJToken["allowed_module_categories"].Select(a => ((JProperty)a).Name))
+					{
+						if (moduleCategories.ContainsKey(moduleCategory))
+						{
+							foreach (ModulePrototype module in moduleCategories[moduleCategory])
+							{
+								bool validModule = (recipe.AllowConsumptionBonus || module.ConsumptionBonus >= 0) &&
+													(recipe.AllowSpeedBonus || module.SpeedBonus <= 0) &&
+													(recipe.AllowProductivityBonus || module.ProductivityBonus <= 0) &&
+													(recipe.AllowPollutionBonus || module.PollutionBonus >= 0) &&
+													(recipe.AllowQualityBonus || module.QualityBonus <= 0);
+								if (validModule)
+								{
+									recipe.assemblerModules.Add(module);
+									module.recipes.Add(recipe);
+								}
+							}
+						}
+					}
 				}
 			}
 
@@ -1097,7 +1149,7 @@ namespace Foreman
 			foreach (ModulePrototype module in modules.Values.Cast<ModulePrototype>()) //we will let the assembler sort out which module can be used with this recipe
 			{
 				module.recipes.Add(recipe);
-				recipe.modules.Add(module);
+				recipe.assemblerModules.Add(module);
 			}
 
 			recipe.SetIconAndColor(new IconColorPair(recipe.productList[0].Icon, recipe.productList[0].AverageColor));
@@ -1141,15 +1193,21 @@ namespace Foreman
 				}
 			}
 
-			foreach (var altModifier in objJToken["alt_modifiers"])
+			foreach (var qualityName in objJToken["qualities"])
 			{
-				if ((string)altModifier == "mining-with-fluid")
+				if (qualities.TryGetValue((string)qualityName, out Quality quality))
 				{
-					foreach (RecipePrototype recipe in miningWithFluidRecipes.Cast<RecipePrototype>())
-					{
-						recipe.myUnlockTechnologies.Add(technology);
-						technology.unlockedRecipes.Add(recipe);
-					}
+					((QualityPrototype)quality).myUnlockTechnologies.Add(technology);
+					technology.unlockedQualities.Add((QualityPrototype)quality);
+				}
+			}
+
+			if (objJToken["unlocks-mining-with-fluid"] != null)
+			{
+				foreach (RecipePrototype recipe in miningWithFluidRecipes.Cast<RecipePrototype>())
+				{
+					recipe.myUnlockTechnologies.Add(technology);
+					technology.unlockedRecipes.Add(recipe);
 				}
 			}
 
@@ -1192,7 +1250,7 @@ namespace Foreman
 			assemblers.Add(playerAssember.Name, playerAssember);
 		}
 
-		private void ProcessEntity(JToken objJToken, Dictionary<string, IconColorPair> iconCache, Dictionary<string, List<RecipePrototype>> craftingCategories, Dictionary<string, List<RecipePrototype>> resourceCategories, Dictionary<string, List<ItemPrototype>> fuelCategories, List<Recipe> miningWithFluidRecipes)
+		private void ProcessEntity(JToken objJToken, Dictionary<string, IconColorPair> iconCache, Dictionary<string, List<RecipePrototype>> craftingCategories, Dictionary<string, List<RecipePrototype>> resourceCategories, Dictionary<string, List<ItemPrototype>> fuelCategories, List<Recipe> miningWithFluidRecipes, Dictionary<string, List<ModulePrototype>> moduleCategories)
 		{
 			string type = (string)objJToken["type"];
 			if (type == "character") //character is processed later
@@ -1272,12 +1330,16 @@ namespace Foreman
 			if (objJToken["q_speed"] != null)
 			{
 				foreach (JToken speedToken in objJToken["q_speed"])
+				{
 					entity.speed.Add(qualities[(string)speedToken["quality"]], (double)speedToken["value"]);
+				}
 			}
 			else if (objJToken["speed"] != null)
 			{
 				foreach (Quality quality in qualities.Values)
+				{
 					entity.speed.Add(quality, (double)objJToken["speed"]);
+				}
 			}
 
 			entity.ModuleSlots = objJToken["module_inventory_size"] == null ? 0 : (int)objJToken["module_inventory_size"];
@@ -1296,32 +1358,64 @@ namespace Foreman
 					((AssemblerPrototype)entity).AllowBeacons = (bool)objJToken["uses_beacon_effects"];
 				}
 
-				foreach (ModulePrototype module in modules.Values.Cast<ModulePrototype>())
+				if (objJToken["allowed_effects"] != null)
 				{
-					bool validModule = ((bool)objJToken["allowed_effects"]["consumption"] || module.ConsumptionBonus >= 0) &&
-										((bool)objJToken["allowed_effects"]["speed"] || module.SpeedBonus <= 0) &&
-										((bool)objJToken["allowed_effects"]["productivity"] || module.ProductivityBonus <= 0) &&
-										((bool)objJToken["allowed_effects"]["pollution"] || module.PollutionBonus >= 0) &&
-										((bool)objJToken["allowed_effects"]["quality"] || module.QualityBonus <= 0);
+					bool allow_consumption = (bool)objJToken["allowed_effects"]["consumption"];
+					bool allow_speed = (bool)objJToken["allowed_effects"]["speed"];
+					bool alllow_productivity = (bool)objJToken["allowed_effects"]["productivity"];
+					bool allow_pollution = (bool)objJToken["allowed_effects"]["pollution"];
+					bool allow_quality = (bool)objJToken["allowed_effects"]["quality"];
 
-					if (objJToken["allowed_module_categories"] != null)
+					if (objJToken["allowed_module_categories"] == null || objJToken["allowed_module_categories"].Count() == 0)
 					{
-						foreach (var moduleCategoryJToken in objJToken["allowed_module_categories"].ToList())
+						foreach (ModulePrototype module in modules.Values.Cast<ModulePrototype>())
 						{
-							validModule &= (module.Category == (string)moduleCategoryJToken);
+							bool validModule = (allow_consumption || module.ConsumptionBonus >= 0) &&
+												(allow_speed || module.SpeedBonus <= 0) &&
+												(alllow_productivity || module.ProductivityBonus <= 0) &&
+												(allow_pollution || module.PollutionBonus >= 0) &&
+												(allow_quality || module.QualityBonus <= 0);
+							if (validModule)
+							{
+								entity.modules.Add(module);
+								if (entity is AssemblerPrototype aEntity)
+								{
+									module.assemblers.Add(aEntity);
+								}
+								else if (entity is BeaconPrototype bEntity)
+								{
+									module.beacons.Add(bEntity);
+								}
+							}
 						}
 					}
-
-					if (validModule)
+					else
 					{
-						entity.modules.Add(module);
-						if (entity is AssemblerPrototype aEntity)
+						foreach (string moduleCategory in objJToken["allowed_module_categories"].Select(a => ((JProperty)a).Name))
 						{
-							module.assemblers.Add(aEntity);
-						}
-						else if (entity is BeaconPrototype bEntity)
-						{
-							module.beacons.Add(bEntity);
+							if (moduleCategories.ContainsKey(moduleCategory))
+							{
+								foreach (ModulePrototype module in moduleCategories[moduleCategory])
+								{
+									bool validModule = (allow_consumption || module.ConsumptionBonus >= 0) &&
+														(allow_speed || module.SpeedBonus <= 0) &&
+														(alllow_productivity || module.ProductivityBonus <= 0) &&
+														(allow_pollution || module.PollutionBonus >= 0) &&
+														(allow_quality || module.QualityBonus <= 0);
+									if (validModule)
+									{
+										entity.modules.Add(module);
+										if (entity is AssemblerPrototype aEntity)
+										{
+											module.assemblers.Add(aEntity);
+										}
+										else if (entity is BeaconPrototype bEntity)
+										{
+											module.beacons.Add(bEntity);
+										}
+									}
+								}
+							}
 						}
 					}
 				}
@@ -1336,7 +1430,9 @@ namespace Foreman
 				BeaconPrototype bEntity = (BeaconPrototype)entity;
 
 				if (BeaconAdditionalProcessing(objJToken, bEntity))
+				{
 					beacons.Add(bEntity.Name, bEntity);
+				}
 			}
 			else
 			{
@@ -1383,18 +1479,22 @@ namespace Foreman
 			{
 				Dictionary<string, double> pollutions = objJObject["pollution"].ToObject<Dictionary<string, double>>();
 				foreach (KeyValuePair<string, double> pollution in pollutions)
+				{
 					entity.pollution.Add(pollution.Key, pollution.Value);
+				}
 			}
 
 			//energy production
 			foreach (JToken speedToken in objJToken["q_energy_production"])
+			{
 				entity.energyProduction.Add(qualities[(string)speedToken["quality"]], (double)speedToken["value"]);
-
+			}
 			//energy consumption
 			entity.energyDrain = objJToken["drain"] != null ? (double)objJToken["drain"] : 0; //seconds
 			foreach (JToken speedToken in objJToken["q_max_energy_usage"])
+			{
 				entity.energyConsumption.Add(qualities[(string)speedToken["quality"]], (double)speedToken["value"]);
-
+			}
 			//fuel processing
 			switch (entity.EnergySource)
 			{
@@ -1641,7 +1741,7 @@ namespace Foreman
 				foreach (ModulePrototype module in modules.Values.Cast<ModulePrototype>()) //we will let the assembler sort out which module can be used with this recipe
 				{
 					module.recipes.Add(recipe);
-					recipe.modules.Add(module);
+					recipe.assemblerModules.Add(module);
 				}
 
 				recipes.Add(recipe.Name, recipe);
@@ -1710,7 +1810,7 @@ namespace Foreman
 				foreach (ModulePrototype module in modules.Values.Cast<ModulePrototype>()) //we will let the assembler sort out which module can be used with this recipe
 				{
 					module.recipes.Add(recipe);
-					recipe.modules.Add(module);
+					recipe.assemblerModules.Add(module);
 				}
 
 				recipes.Add(recipe.Name, recipe);

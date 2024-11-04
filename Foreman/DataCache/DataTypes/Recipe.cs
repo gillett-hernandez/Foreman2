@@ -15,6 +15,8 @@ namespace Foreman
 		long RecipeID { get; }
 		bool IsMissing { get; }
 
+		bool HasProductivityResearch { get; }
+
         bool AllowConsumptionBonus { get; }
         bool AllowSpeedBonus { get; }
         bool AllowProductivityBonus { get; }
@@ -33,9 +35,10 @@ namespace Foreman
 		IReadOnlyDictionary<Item, fRange> IngredientTemperatureMap { get; }
 
 		IReadOnlyCollection<Assembler> Assemblers { get; }
-		IReadOnlyCollection<Module> Modules { get; }
+		IReadOnlyCollection<Module> AssemblerModules { get; }
+        IReadOnlyCollection<Module> BeaconModules { get; }
 
-		IReadOnlyCollection<Technology> MyUnlockTechnologies { get; }
+        IReadOnlyCollection<Technology> MyUnlockTechnologies { get; }
 		IReadOnlyList<IReadOnlyList<Item>> MyUnlockSciencePacks { get; }
 
 		string GetIngredientFriendlyName(Item item);
@@ -62,7 +65,8 @@ namespace Foreman
 		public IReadOnlyDictionary<Item, fRange> IngredientTemperatureMap { get { return ingredientTemperatureMap; } }
 
 		public IReadOnlyCollection<Assembler> Assemblers { get { return assemblers; } }
-		public IReadOnlyCollection<Module> Modules { get { return modules; } }
+		public IReadOnlyCollection<Module> AssemblerModules { get { return assemblerModules; } }
+		public IReadOnlyCollection<Module> BeaconModules { get { return beaconModules; } }
 
 		public IReadOnlyCollection<Technology> MyUnlockTechnologies { get { return myUnlockTechnologies; } }
 		public IReadOnlyList<IReadOnlyList<Item>> MyUnlockSciencePacks { get; set; }
@@ -79,7 +83,8 @@ namespace Foreman
 		internal List<ItemPrototype> ingredientList { get; private set; }
 
 		internal HashSet<AssemblerPrototype> assemblers { get; private set; }
-		internal HashSet<ModulePrototype> modules { get; private set; }
+		internal HashSet<ModulePrototype> assemblerModules { get; private set; }
+		internal HashSet<ModulePrototype> beaconModules { get; private set; }
 
 		internal HashSet<TechnologyPrototype> myUnlockTechnologies { get; private set; }
 
@@ -91,7 +96,9 @@ namespace Foreman
         public bool AllowPollutionBonus { get; internal set; }
         public bool AllowQualityBonus { get; internal set; }
 
-		public double MaxProductivityBonus { get; internal set; }
+        public bool HasProductivityResearch { get; internal set; }
+
+        public double MaxProductivityBonus { get; internal set; }
 
 		private static long lastRecipeID = 0;
 		public long RecipeID { get; private set; }
@@ -115,6 +122,7 @@ namespace Foreman
 			this.AllowPollutionBonus = true;
 			this.AllowQualityBonus = true;
 			this.MaxProductivityBonus = 1000;
+			this.HasProductivityResearch = false;
 
 			ingredientSet = new Dictionary<Item, double>();
 			ingredientList = new List<ItemPrototype>();
@@ -126,7 +134,8 @@ namespace Foreman
 			productPSet = new Dictionary<Item, double>();
 
 			assemblers = new HashSet<AssemblerPrototype>();
-			modules = new HashSet<ModulePrototype>();
+			assemblerModules = new HashSet<ModulePrototype>();
+			beaconModules = new HashSet<ModulePrototype>();
 			myUnlockTechnologies = new HashSet<TechnologyPrototype>();
 			MyUnlockSciencePacks = new List<List<Item>>();
 		}

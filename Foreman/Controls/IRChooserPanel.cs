@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -122,9 +123,10 @@ namespace Foreman
 				button.FlatAppearance.BorderSize = 0;
 				button.TabStop = false;
 				button.Margin = new Padding(0);
-				button.Size = new Size(1, 1);
+				button.Size = new Size(1, 64);
 				button.Dock = DockStyle.Fill;
-				button.Image = new Bitmap(SortedGroups[i].Icon, (int)(GroupTable.Width / (GroupTable.ColumnCount * 1.1f)), (int)(GroupTable.Width / (GroupTable.ColumnCount * 1.1f)));
+				button.BackgroundImage = SortedGroups[i].Icon;
+				button.BackgroundImageLayout = ImageLayout.Center;
 				button.Tag = SortedGroups[i];
 
 				GroupButtonToolTip.SetToolTip(button, string.IsNullOrEmpty(SortedGroups[i].FriendlyName) ? "-" : SortedGroups[i].FriendlyName);
@@ -155,7 +157,7 @@ namespace Foreman
 					button.ForeColor = Color.Gray;
 					button.BackColor = Color.DimGray;
 					button.Margin = new Padding(1);
-					button.Size = new Size(1, 1);
+					button.Size = new Size(40, 40);
 					button.Dock = DockStyle.Fill;
 					button.BackgroundImage = null;
 					button.Tag = null;
@@ -455,7 +457,7 @@ namespace Foreman
 		protected override void IRChooserPanel_Disposed(object sender, EventArgs e)
 		{
 			base.IRChooserPanel_Disposed(sender, e);
-			if (selectedItem.Item != null)
+			if (selectedItem)
 			{
 				ItemRequested?.Invoke(this, new ItemRequestArgs(selectedItem));
 			}
@@ -615,9 +617,9 @@ namespace Foreman
 			DCache = parent.DCache;
 			qualitySelectorIndexSet = new List<Quality>();
 
-			if (item.Quality == null)
-			{
-				QualitySelectorTable.Visible = true;
+            if (!item)
+            {
+                QualitySelectorTable.Visible = true;
 				foreach (Quality quality in parent.DCache.AvailableQualities.Where(q => q.Enabled))
 				{
 					QualitySelector.Items.Add(quality.FriendlyName);
@@ -658,15 +660,10 @@ namespace Foreman
 
 			KeyItem = item;
 			KeyItemTempRange = (nodeType == NewNodeType.Disconnected) ? new fRange(0, 0, true) : tempRange; //cant use temp range if its a disconnected node
-			isDefaultQuality = KeyItem.Quality == null || KeyItem.Quality == DCache.DefaultQuality;
+			isDefaultQuality = !KeyItem || KeyItem.Quality == DCache.DefaultQuality;
 
 			RecipeNameOnlyFilterCheckBox.Visible = true;
-			if (KeyItem.Item == null)
-			{
-				OtherNodeOptionsATable.Visible = false;
-				OtherNodeOptionsBTable.Visible = false;
-			}
-			else
+			if (KeyItem)
 			{
 				ItemIconPanel.Visible = true;
 				ItemIconPanel.BackgroundImage = KeyItem.Icon;
@@ -682,8 +679,8 @@ namespace Foreman
 				int totalVisible = (AddSpoilButton.Visible ? 1 : 0) + (AddUnspoilButton.Visible ? 1 : 0) + (AddPlantButton.Visible ? 1 : 0) + (AddUnplantButton.Visible ? 1 : 0);
 				OtherNodeOptionsBTable.Visible = totalVisible > 0;
 
-				bool hasConsumptionRecipes = Properties.Settings.Default.ShowUnavailable ? KeyItem.Item.ConsumptionRecipes.Count > 0 : KeyItem.Item.ConsumptionRecipes.Count(r => r.Available) > 0;
-				bool hasFuelConsumptionRecipes = isDefaultQuality && (KeyItem.Item.FuelsEntities.FirstOrDefault(a => (a is Assembler assembler) && assembler.Enabled && assembler.Recipes.FirstOrDefault(r => r.Enabled) != null) != null);
+				bool hasConsumptionRecipes = Properties.Settings.Default.ShowUnavailable? KeyItem.Item.ConsumptionRecipes.Count > 0 : KeyItem.Item.ConsumptionRecipes.Count(r => r.Available) > 0;
+				bool hasFuelConsumptionRecipes = isDefaultQuality && (KeyItem.Item.FuelsEntities.Any(a => (a is Assembler assembler) && assembler.Enabled && assembler.Recipes.Any(r => r.Enabled)));
 				bool hasProductionRecipes = Properties.Settings.Default.ShowUnavailable ? KeyItem.Item.ProductionRecipes.Count > 0 : KeyItem.Item.ProductionRecipes.Count(r => r.Available) > 0;
 				bool hasFuelProductionRecipes = isDefaultQuality && (KeyItem.Item.FuelOrigin != null && KeyItem.Item.FuelOrigin.FuelsEntities.Any(a => (a is Assembler assembler) && assembler.Enabled && assembler.Recipes.Any(r => r.Enabled)));
 
@@ -710,6 +707,11 @@ namespace Foreman
 					AsFuelCheckBox.Visible = (asIngredient && KeyItem.Item.FuelsEntities.Count > 0);
 				}
 			}
+			else
+			{
+                OtherNodeOptionsATable.Visible = false;
+                OtherNodeOptionsBTable.Visible = false;
+            }
 		}
 
 		protected override List<Group> GetSortedGroups()
@@ -742,7 +744,7 @@ namespace Foreman
 			bool includeSuppliers = AsProductCheckBox.Checked;
 			bool includeConsumers = AsIngredientCheckBox.Checked;
 			bool includeFuel = AsFuelCheckBox.Checked && isDefaultQuality;
-			bool ignoreItem = (KeyItem.Item == null);
+			bool ignoreItem = !KeyItem;
 
 			Dictionary<Group, List<List<KeyValuePair<DataObjectBase, Color>>>> filteredRecipes = new Dictionary<Group, List<List<KeyValuePair<DataObjectBase, Color>>>>();
 			Dictionary<Group, int> filteredRecipeCount = new Dictionary<Group, int>();
@@ -949,8 +951,42 @@ namespace Foreman
 
 	public class NFButton : Button
 	{
+		private static ColorMatrix grayMatrix = new ColorMatrix(new float[][]
+		{
+			new float[] { .2126f, .2126f, .2126f, 0, 0 },
+			new float[] { .7152f, .7152f, .7152f, 0, 0 },
+			new float[] { .0722f, .0722f, .0722f, 0, 0 },
+			new float[] { 0, 0, 0, 0.4f, 0 },
+			new float[] { 0, 0, 0, 0, 1 }
+		});
+		private Image bgImg;
+
 		public NFButton() : base() { this.SetStyle(ControlStyles.Selectable, false); }
 		protected override bool ShowFocusCues { get { return false; } }
+		protected override void OnBackgroundImageChanged(EventArgs e) {
+			base.OnBackgroundImageChanged(e);
+			if (Enabled)
+				bgImg = BackgroundImage;
+		}
+		protected override void OnEnabledChanged(EventArgs e)
+		{
+			base.OnEnabledChanged(e);
+			if (BackgroundImage == null)
+				return;
+			if (!Enabled) {
+				var gray = new Bitmap(BackgroundImage.Width, BackgroundImage.Height, BackgroundImage.PixelFormat);
+				gray.SetResolution(BackgroundImage.HorizontalResolution, BackgroundImage.VerticalResolution);
+				using (var g = Graphics.FromImage(gray)) {
+					using (var attrib = new ImageAttributes()) {
+						attrib.SetColorMatrix(grayMatrix);
+						g.DrawImage(BackgroundImage, new Rectangle(0, 0, BackgroundImage.Width, BackgroundImage.Height), 0, 0, BackgroundImage.Width, BackgroundImage.Height, GraphicsUnit.Pixel, attrib);
+						BackgroundImage = gray;
+					}
+				}
+			} else if (bgImg != null) {
+				BackgroundImage = bgImg;
+			}
+		}
 	}
 
 	public class RecipeRequestArgs : EventArgs
@@ -959,18 +995,18 @@ namespace Foreman
 		public NodeType NodeType;
 		public NodeDirection Direction;
 		public RecipeRequestArgs(RecipeQualityPair recipe) : this(NodeType.Recipe, recipe, NodeDirection.Down) { }
-		public RecipeRequestArgs(NodeType nodeType) : this(nodeType, new RecipeQualityPair(null, null), NodeDirection.Down)
+        public RecipeRequestArgs(NodeType nodeType) : this(nodeType, new RecipeQualityPair("non-recipe request args"), NodeDirection.Down)
 		{
 			if (nodeType == NodeType.Recipe)
 			{
 				Trace.Fail("RecipeRequestArgs need a recipe for a recipe node request!");
 			}
-			if (nodeType == NodeType.Spoil)
+            if (nodeType == NodeType.Spoil || nodeType == NodeType.Plant)
 			{
-				Trace.Fail("RecipeRequestArgs need a direction for a spoil node request!");
+                Trace.Fail("RecipeRequestArgs need a direction for a spoil / plant node request!");
 			}
-		}
-		public RecipeRequestArgs(NodeType nodeType, NodeDirection direction) : this(nodeType, new RecipeQualityPair(null, null), direction)
+        }
+		public RecipeRequestArgs(NodeType nodeType, NodeDirection direction) : this(nodeType, new RecipeQualityPair("non-recipe request args"), direction)
 		{
 			if (nodeType != NodeType.Spoil && nodeType != NodeType.Plant)
 			{

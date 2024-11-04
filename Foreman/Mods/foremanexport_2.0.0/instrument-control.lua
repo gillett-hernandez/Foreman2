@@ -3,6 +3,9 @@ local qualityEnabled = 0
 
 
 localindex = 0
+
+local prodTechRecipes = {} --list of recipes that have technologies with infinite productivity research
+
 local function ExportLocalisedString(lstring, index)
 	-- as could be expected if lstring doesnt have a working translation then we get a beauty of a mess... so that needs to be cleaned up outside of json table
 	localised_print('<#~#>')
@@ -111,12 +114,16 @@ local function ExportResearch()
 		end
 		
 		ttech['recipes'] = {}
-		ttech['alt_modifiers'] = {}
+		ttech['qualities'] = {}
 		for _, effect in pairs(tech.effects) do
 			if effect.type == 'unlock-recipe' then
 				table.insert(ttech['recipes'], effect.recipe)
-			elseif effect.type == 'unlock-quality' or effect.type == 'mining-with-fluid' then
-				table.insert(ttech['alt_modifiers'],effect.type)
+			elseif effect.type == 'change-recipe-productivity' then
+				prodTechRecipes[effect.recipe] = true
+			elseif effect.type == 'unlock-quality' then
+				table.insert(ttech['qualities'], effect.quality)
+			elseif effect.type == 'mining-with-fluid' then
+				ttech['unlocks-mining-with-fluid'] = true
 			end
 		end
 
@@ -148,6 +155,9 @@ local function ExportRecipes()
 			trecipe["icon_alt_name"] = 'icon.i.'..recipe.products[1].name
 		else
 			trecipe["icon_alt_name"] = 'icon.r.'..recipe.name
+		end
+		if prodTechRecipes[recipe.name] ~= nil then
+			trecipe["prod_research"] = true
 		end
 
 		trecipe['enabled'] = recipe.enabled
@@ -393,7 +403,7 @@ local function ExportEntities()
 					tentity['base_module_effects']['productivity'] = 0
 					tentity['base_module_effects']['pollution'] = 0
 					tentity['base_module_effects']['quality'] = 0
-					tentity['use_module_effects'] = false
+					tentity['uses_module_effects'] = false
 					tentity['uses_beacon_effects'] = false
 					tentity['uses_surface_effects'] = false
 				end
@@ -565,7 +575,7 @@ local function ExportResources()
 			tresource['mining_time'] = resource.mineable_properties.mining_time
 			if resource.mineable_properties.required_fluid and resource.mineable_properties.fluid_amount then
 				tresource['required_fluid'] = resource.mineable_properties.required_fluid
-				tresource['fluid_amount'] = resource.mineable_properties.fluid_amount
+				tresource['fluid_amount'] = resource.mineable_properties.fluid_amount / 10;
 			end
 
 			tresource['products'] = ProcessProductList(resource.mineable_properties.products)

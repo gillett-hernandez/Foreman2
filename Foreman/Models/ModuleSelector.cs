@@ -29,17 +29,17 @@ namespace Foreman
 				//speed, productivity, and productivity only have no max limits, so the 'best' option will always involve identical modules. just pick the best module and fill the module slots.
 				//efficiency however is capped at -80% consumption bonus, so we have to get a permutation and pick the 'best'
 				case Style.Speed:
-					bestModule = assembler.Modules.Intersect(recipe.Modules).Where(m => m.Enabled).OrderBy(m => ((m.GetSpeedBonus(quality) * 1000) - m.GetConsumptionBonus(quality))).LastOrDefault();
+					bestModule = assembler.Modules.Intersect(recipe.AssemblerModules).Where(m => m.Enabled).OrderBy(m => ((m.GetSpeedBonus(quality) * 1000) - m.GetConsumptionBonus(quality))).LastOrDefault();
 					break;
 				case Style.Productivity:
-					bestModule = assembler.Modules.Intersect(recipe.Modules).Where(m => m.Enabled).OrderBy(m => ((m.GetProductivityBonus(quality) * 1000) + m.GetSpeedBonus(quality))).LastOrDefault();
+					bestModule = assembler.Modules.Intersect(recipe.AssemblerModules).Where(m => m.Enabled).OrderBy(m => ((m.GetProductivityBonus(quality) * 1000) + m.GetSpeedBonus(quality))).LastOrDefault();
 					break;
 				case Style.ProductivityOnly:
-					bestModule = assembler.Modules.Intersect(recipe.Modules).Where(m => m.Enabled && m.GetProductivityBonus(quality) != 0).OrderBy(m => ((m.GetProductivityBonus(quality) * 1000) + m.GetSpeedBonus(quality))).LastOrDefault();
+					bestModule = assembler.Modules.Intersect(recipe.AssemblerModules).Where(m => m.Enabled && m.GetProductivityBonus(quality) != 0).OrderBy(m => ((m.GetProductivityBonus(quality) * 1000) + m.GetSpeedBonus(quality))).LastOrDefault();
 					break;
 				case Style.Efficiency:
-					List<Module> speedModules = assembler.Modules.Intersect(recipe.Modules).Where(m => m.Enabled && m.GetSpeedBonus(quality) > 0).OrderByDescending(m => ((m.GetSpeedBonus(quality) * 1000) - m.GetConsumptionBonus(quality))).ToList(); //highest speed is first!
-					List<Module> efficiencyModules = assembler.Modules.Intersect(recipe.Modules).Where(m => m.Enabled && m.GetConsumptionBonus(quality) < 0).OrderByDescending(m => ((m.GetConsumptionBonus(quality) * 1000) + m.GetSpeedBonus(quality))).ToList(); //highest consumption is first! (so worst->best effectivity)
+					List<Module> speedModules = assembler.Modules.Intersect(recipe.AssemblerModules).Where(m => m.Enabled && m.GetSpeedBonus(quality) > 0).OrderByDescending(m => ((m.GetSpeedBonus(quality) * 1000) - m.GetConsumptionBonus(quality))).ToList(); //highest speed is first!
+					List<Module> efficiencyModules = assembler.Modules.Intersect(recipe.AssemblerModules).Where(m => m.Enabled && m.GetConsumptionBonus(quality) < 0).OrderByDescending(m => ((m.GetConsumptionBonus(quality) * 1000) + m.GetSpeedBonus(quality))).ToList(); //highest consumption is first! (so worst->best effectivity)
 					List<ModulePermutator.Permutation> modulePermutations = ModulePermutator.GetOptimalEfficiencyPermutations(speedModules, efficiencyModules, assembler.ModuleSlots);
 
 					//return best module permutation that has the lowest consumption (max -80%), and the highest speed.
@@ -50,7 +50,7 @@ namespace Foreman
 
 					return moduleList; //empty
 				case Style.EfficiencyOnly:
-					List<Module> moduleOptions = assembler.Modules.Intersect(recipe.Modules).Where(m => m.Enabled && m.GetConsumptionBonus(quality) < 0).OrderByDescending(m => ((m.GetConsumptionBonus(quality) * 1000) - m.GetSpeedBonus(quality))).ToList();
+					List<Module> moduleOptions = assembler.Modules.Intersect(recipe.AssemblerModules).Where(m => m.Enabled && m.GetConsumptionBonus(quality) < 0).OrderByDescending(m => ((m.GetConsumptionBonus(quality) * 1000) - m.GetSpeedBonus(quality))).ToList();
 					List<ModulePermutator.Permutation> modulePermutationsB = ModulePermutator.GetOptimalEfficiencyPermutations(new List<Module>(), moduleOptions, assembler.ModuleSlots);
 
 					//return best module permutation that has the lowest consumption (max -80%), and the lowest tier cost

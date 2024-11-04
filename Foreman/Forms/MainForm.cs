@@ -7,7 +7,8 @@ using Newtonsoft.Json.Linq;
 using System.Drawing;
 using System.Linq;
 using System.Text;
-using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using static Foreman.NativeMethods;
 
 namespace Foreman
 {
@@ -23,6 +24,42 @@ namespace Foreman
 			this.DoubleBuffered = true;
 			DefaultAppName = this.Text;
 			SetStyle(ControlStyles.SupportsTransparentBackColor, true);
+			if (Properties.Settings.Default.FlagDarkMode) {
+				SetDarkMode();
+			}
+		}
+
+		public void SetDarkMode() {
+			int trueVal = 1;
+			DwmSetWindowAttribute(this.Handle, DwmWindowAttribute.DWMWA_USE_IMMERSIVE_DARK_MODE, ref trueVal, Marshal.SizeOf(typeof(int)));
+			ChangeTheme(Color.FromArgb(23, 23, 23), Color.FromArgb(124, 124, 124), this);
+		}
+
+		public void SetLightMode() {
+			int falseVal = 0;
+			DwmSetWindowAttribute(this.Handle, DwmWindowAttribute.DWMWA_USE_IMMERSIVE_DARK_MODE, ref falseVal, Marshal.SizeOf(typeof(int)));
+			ChangeTheme(DefaultBackColor, DefaultForeColor, this);
+		}
+
+		private static void ChangeTheme(Color bg, Color fg, Control root) {
+			root.BackColor = bg;
+			root.ForeColor = fg;
+			ChangeTheme(bg, fg, root.Controls);
+		}
+
+		private static void ChangeTheme(Color bg, Color fg, Control.ControlCollection container) {
+			foreach (Control component in container) {
+				ChangeTheme(bg, fg, component.Controls);
+				component.BackColor = bg;
+				component.ForeColor = fg;
+				if (component is Button b) {
+					b.UseVisualStyleBackColor = true;
+					b.FlatStyle = FlatStyle.Flat;
+				} else if (component is ProductionGraphViewer pgv) {
+					GridManager.SetGridColors(bg, fg);
+				}
+			}
+
 		}
 
 		private void MainForm_Load(object sender, EventArgs e)
@@ -407,6 +444,8 @@ namespace Foreman
 			options.Presets = GetValidPresetsList();
 			options.SelectedPreset = options.Presets[0];
 
+			options.QualitySteps = GraphViewer.Graph.MaxQualitySteps;
+
 			options.LevelOfDetail = GraphViewer.LevelOfDetail;
 			options.NodeCountForSimpleView = GraphViewer.NodeCountForSimpleView;
 			options.IconsOnlyIconSize = GraphViewer.IconsSize;
@@ -417,6 +456,8 @@ namespace Foreman
 			options.ShowRecipeToolTip = GraphViewer.ShowRecipeToolTip;
 			options.LockedRecipeEditPanelPosition = GraphViewer.LockedRecipeEditPanelPosition;
 			options.FlagOUSuppliedNodes = GraphViewer.FlagOUSuppliedNodes;
+
+			options.FlagDarkMode = Properties.Settings.Default.FlagDarkMode;
 
 			options.DefaultAssemblerStyle = GraphViewer.Graph.AssemblerSelector.DefaultSelectionStyle;
 			options.DefaultModuleStyle = GraphViewer.Graph.ModuleSelector.DefaultSelectionStyle;
@@ -445,7 +486,7 @@ namespace Foreman
 			options.EnabledObjects.UnionWith(GraphViewer.DCache.Modules.Values.Where(r => r.Enabled));
 			options.EnabledObjects.UnionWith(GraphViewer.DCache.Qualities.Values.Where(r => r.Enabled));
 
-			using (SettingsForm form = new SettingsForm(options))
+			using (SettingsForm form = new SettingsForm(options, this))
 			{
 				form.StartPosition = FormStartPosition.Manual;
 				form.Left = this.Left + 50;
@@ -490,6 +531,8 @@ namespace Foreman
 						GraphViewer.DCache.RocketAssembler.Enabled = GraphViewer.DCache.Assemblers["rocket-silo"]?.Enabled ?? false;
 					}
 
+					GraphViewer.Graph.MaxQualitySteps = options.QualitySteps;
+
 					GraphViewer.LevelOfDetail = options.LevelOfDetail;
 					Properties.Settings.Default.LevelOfDetail = (int)options.LevelOfDetail;
 					GraphViewer.NodeCountForSimpleView = options.NodeCountForSimpleView;
@@ -509,6 +552,8 @@ namespace Foreman
 					Properties.Settings.Default.LockedRecipeEditorPosition = options.LockedRecipeEditPanelPosition;
 					GraphViewer.FlagOUSuppliedNodes = options.FlagOUSuppliedNodes;
 					Properties.Settings.Default.FlagOUSuppliedNodes = options.FlagOUSuppliedNodes;
+
+					Properties.Settings.Default.FlagDarkMode = options.FlagDarkMode;
 
 					GraphViewer.Graph.AssemblerSelector.DefaultSelectionStyle = options.DefaultAssemblerStyle;
 					Properties.Settings.Default.DefaultAssemblerOption = (int)options.DefaultAssemblerStyle;
@@ -565,7 +610,7 @@ namespace Foreman
 		private void AddRecipeButton_Click(object sender, EventArgs e)
 		{
 			Point location = GraphViewer.ScreenToGraph(new Point(GraphViewer.Width / 2, GraphViewer.Height / 2));
-			GraphViewer.AddNewNode(new Point(15, 15), new ItemQualityPair(null, null), location, NewNodeType.Disconnected);
+			GraphViewer.AddNewNode(new Point(15, 15), new ItemQualityPair("adding disconnected recipe node"), location, NewNodeType.Disconnected);
 		}
 
 		private void AddItemButton_Click(object sender, EventArgs e)

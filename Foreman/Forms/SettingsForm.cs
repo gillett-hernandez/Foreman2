@@ -17,6 +17,8 @@ namespace Foreman
 			public Preset SelectedPreset;
 			public bool RequireReload;
 
+			public uint QualitySteps;
+
 			public ProductionGraphViewer.LOD LevelOfDetail;
 			public int NodeCountForSimpleView;
 			public int IconsOnlyIconSize;
@@ -29,6 +31,7 @@ namespace Foreman
 			public bool RoundAssemblerCount;
 			public bool LockedRecipeEditPanelPosition;
 			public bool FlagOUSuppliedNodes;
+			public bool FlagDarkMode;
 
 			public bool ShowErrorArrows;
 			public bool ShowWarningArrows;
@@ -81,8 +84,9 @@ namespace Foreman
 		private List<ListViewItem> filteredQualityList;
 
 		private MouseHoverDetector mhDetector;
+		private MainForm mainForm;
 
-		public SettingsForm(SettingsFormOptions options)
+		public SettingsForm(SettingsFormOptions options, MainForm mainForm)
 		{
 			Options = options;
 
@@ -92,6 +96,8 @@ namespace Foreman
 			MainForm.SetDoubleBuffered(ModuleListView);
 			MainForm.SetDoubleBuffered(RecipeListView);
 			MainForm.SetDoubleBuffered(QualityListView);
+
+			this.mainForm = mainForm;
 
 			AssemblerListView.Columns[0].Width = AssemblerListView.Width - 32;
 			MinerListView.Columns[0].Width = MinerListView.Width - 32;
@@ -126,6 +132,9 @@ namespace Foreman
 			PresetListBox.Items.RemoveAt(0); //0 is the currently active preset.
 
 			//settings
+
+			QualityStepsInput.Value = Options.QualitySteps;
+
 			DynamicLWCheckBox.Checked = Options.DynamicLinkWidth;
 			NodeCountForSimpleViewInput.Value = Math.Min(NodeCountForSimpleViewInput.Maximum, Options.NodeCountForSimpleView);
 
@@ -138,6 +147,7 @@ namespace Foreman
 			AbbreviateSciPackCheckBox.Checked = Options.AbbreviateSciPacks;
 			RecipeEditPanelPositionLockCheckBox.Checked = Options.LockedRecipeEditPanelPosition;
 			FlagOUSupplyNodesCheckBox.Checked = Options.FlagOUSuppliedNodes;
+			FlagDarkModeCheckBox.Checked = Options.FlagDarkMode;
 
 			ErrorArrowsCheckBox.Checked = Options.ShowErrorArrows;
 			WarningArrowsCheckBox.Checked = Options.ShowWarningArrows;
@@ -530,6 +540,8 @@ namespace Foreman
 
 		private void UpdateSettings()
 		{
+			Options.QualitySteps = (uint)QualityStepsInput.Value;
+
 			Options.LevelOfDetail = LowLodRadioButton.Checked ? ProductionGraphViewer.LOD.Low : MediumLodRadioButton.Checked ? ProductionGraphViewer.LOD.Medium : ProductionGraphViewer.LOD.High;
 			Options.NodeCountForSimpleView = (int)NodeCountForSimpleViewInput.Value;
 			Options.IconsOnlyIconSize = (int)IconsSizeInput.Value;
@@ -561,6 +573,14 @@ namespace Foreman
 			Options.Solver_PullConsumerNodes = PullConsumerNodesCheckBox.Checked;
 			Options.Solver_PullConsumerNodesPower = (double)PullConsumerNodesPowerInput.Value;
 
+			if (Options.FlagDarkMode != FlagDarkModeCheckBox.Checked) {
+				Options.FlagDarkMode = FlagDarkModeCheckBox.Checked;
+				if (Options.FlagDarkMode) {
+					mainForm.SetDarkMode();
+				} else {
+					mainForm.SetLightMode();
+				}
+			}
 		}
 
 		//PRESET FORMS (Import / compare)------------------------------------------------------------------------------------------

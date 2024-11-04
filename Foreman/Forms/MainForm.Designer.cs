@@ -28,6 +28,7 @@
 		/// </summary>
 		private void InitializeComponent()
 		{
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.MainLayoutPanel = new System.Windows.Forms.TableLayoutPanel();
             this.GraphViewer = new Foreman.ProductionGraphViewer();
             this.MenuTable = new System.Windows.Forms.TableLayoutPanel();
@@ -551,7 +552,7 @@
             this.VersionLabel.Name = "VersionLabel";
             this.VersionLabel.Size = new System.Drawing.Size(53, 130);
             this.VersionLabel.TabIndex = 18;
-            this.VersionLabel.Text = "v2.2.15.2 (Fork) (Debug)";
+            this.VersionLabel.Text = "v2.2.16.0 (Fork)";
             this.VersionLabel.TextAlign = System.Drawing.ContentAlignment.TopRight;
             //
             // MainForm
@@ -561,6 +562,7 @@
             this.ClientSize = new System.Drawing.Size(934, 761);
             this.Controls.Add(this.MainLayoutPanel);
             this.DoubleBuffered = true;
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.KeyPreview = true;
             this.MinimumSize = new System.Drawing.Size(950, 400);
             this.Name = "MainForm";

@@ -128,7 +128,7 @@ namespace Foreman
 				info.AddValue("Fuel", Fuel.Name);
 			}
 
-			if (Beacon.Beacon != null)
+			if (Beacon)
 			{
 				info.AddValue("Beacon", Beacon.Beacon.Name);
 				info.AddValue("BeaconQuality", Beacon.Quality.Name);

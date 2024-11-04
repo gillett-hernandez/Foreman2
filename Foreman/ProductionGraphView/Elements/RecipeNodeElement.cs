@@ -70,26 +70,26 @@ namespace Foreman
 				if (!OutputTabs.Any(tab => tab.Item == item))
 					OutputTabs.Add(new ItemTabElement(item, LinkType.Output, graphViewer, this));
 
-            //now that the tabs have been updated, update the size and positioning of the node:
-            int yOffset = (DisplayedNode.NodeDirection == NodeDirection.Up && InputTabs.Count == 0 && OutputTabs.Count != 0) || (DisplayedNode.NodeDirection == NodeDirection.Down && OutputTabs.Count == 0 && InputTabs.Count != 0) ? 10 :
+			//now that the tabs have been updated, update the size and positioning of the node:
+			int yOffset = (DisplayedNode.NodeDirection == NodeDirection.Up && InputTabs.Count == 0 && OutputTabs.Count != 0) || (DisplayedNode.NodeDirection == NodeDirection.Down && OutputTabs.Count == 0 && InputTabs.Count != 0) ? 10 :
 						  (DisplayedNode.NodeDirection == NodeDirection.Down && InputTabs.Count == 0 && OutputTabs.Count != 0) || (DisplayedNode.NodeDirection == NodeDirection.Up && OutputTabs.Count == 0 && InputTabs.Count != 0) ? -10 : 0;
-            yOffset += DisplayedNode.NodeDirection == NodeDirection.Up ? 4 : 0;
+			yOffset += DisplayedNode.NodeDirection == NodeDirection.Up ? 4 : 0;
 
-            AssemblerElement.Location = new Point(-26, -14 + yOffset);
-            BeaconElement.Location = new Point(-30, 27 + yOffset);
+			AssemblerElement.Location = new Point(-26, -14 + yOffset);
+			BeaconElement.Location = new Point(-30, 27 + yOffset);
 
-            AssemblerElement.SetVisibility(graphViewer.LevelOfDetail != ProductionGraphViewer.LOD.Low);
-            BeaconElement.SetVisibility(graphViewer.LevelOfDetail != ProductionGraphViewer.LOD.Low);
+			AssemblerElement.SetVisibility(graphViewer.LevelOfDetail != ProductionGraphViewer.LOD.Low);
+			BeaconElement.SetVisibility(graphViewer.LevelOfDetail != ProductionGraphViewer.LOD.Low);
 
-            Width = Math.Max(MinWidth, Math.Max(GetIconWidths(InputTabs), GetIconWidths(OutputTabs)) + 10);
-            if (Width % WidthD != 0)
-            {
-                Width += WidthD;
-                Width -= Width % WidthD;
-            }
-            Height = (graphViewer.LevelOfDetail == ProductionGraphViewer.LOD.Low) ? BaseSimpleHeight : BaseRecipeHeight;
+			Width = Math.Max(MinWidth, Math.Max(GetIconWidths(InputTabs), GetIconWidths(OutputTabs)) + 10);
+			if (Width % WidthD != 0)
+			{
+				Width += WidthD;
+				Width -= Width % WidthD;
+			}
+			Height = (graphViewer.LevelOfDetail == ProductionGraphViewer.LOD.Low) ? BaseSimpleHeight : BaseRecipeHeight;
 
-            base.UpdateState();
+			base.UpdateState();
 		}
 
 		protected override Bitmap NodeIcon() { return DisplayedNode.BaseRecipe.Icon; }
@@ -105,7 +105,7 @@ namespace Foreman
 				int textLength = GraphicsStuff.DrawText(graphics, TextBrush, textFormat, RecipeName, BaseFont, textSlot);
 
 				//assembler icon
-				graphics.DrawImage(DisplayedNode.SelectedAssembler.Assembler == null ? DataCache.UnknownIcon : DisplayedNode.SelectedAssembler.Icon, trans.X - Math.Min((Width / 2) - 10, (textLength / 2) + 32), trans.Y - 16, 32, 32);
+				graphics.DrawImage(DisplayedNode.SelectedAssembler ? DisplayedNode.SelectedAssembler.Icon : DataCache.UnknownIcon, trans.X - Math.Min((Width / 2) - 10, (textLength / 2) + 32), trans.Y - 16, 32, 32);
 
 				//productivity ticks
 				int pModules = DisplayedNode.AssemblerModules.Count(m => m.Module.GetProductivityBonus() > 0);
@@ -133,7 +133,8 @@ namespace Foreman
 
 		protected override void AddRClickMenuOptions(bool nodeInSelection)
 		{
-			if (nodeInSelection) {
+			if (nodeInSelection)
+			{
 				List<ReadOnlyRecipeNode> rNodes = new List<ReadOnlyRecipeNode>(graphViewer.SelectedNodes.Where(ne => ne is RecipeNodeElement).Select(ne => (ReadOnlyRecipeNode)ne.DisplayedNode));
 				if (!rNodes.Contains(this.DisplayedNode))
 				{
@@ -161,33 +162,22 @@ namespace Foreman
 						}
 					})));
 				if (rNodes.Any(rn => rn.AssemblerModules.Count > 0))
+					RightClickMenu.Items.Add(new ToolStripMenuItem("Remove modules", null,
+						new EventHandler((o, e) =>
+						{
+							RightClickMenu.Close();
+							foreach (ReadOnlyRecipeNode rNode in rNodes)
+								((RecipeNodeController)graphViewer.Graph.RequestNodeController(rNode)).RemoveAssemblerModules();
+						})));
+				if (rNodes.Any(rn => rn.SelectedBeacon))
 				{
-					RightClickMenu.Items.Add(
-						new ToolStripMenuItem(
-							"Remove modules",
-							null,
-							new EventHandler((o, e) => {
-								RightClickMenu.Close();
-								foreach (ReadOnlyRecipeNode rNode in rNodes) {
-									((RecipeNodeController)graphViewer.Graph.RequestNodeController(rNode)).RemoveAssemblerModules();
-								}
-							})
-						)
-					);
-				}
-				if (rNodes.Any(rn => rn.SelectedBeacon.Beacon != null)) {
-					RightClickMenu.Items.Add(
-						new ToolStripMenuItem(
-							"Remove beacons",
-							null,
-							new EventHandler((o, e) => {
-								RightClickMenu.Close();
-								foreach (ReadOnlyRecipeNode rNode in rNodes) {
-									((RecipeNodeController)graphViewer.Graph.RequestNodeController(rNode)).ClearBeacon();
-								}
-							})
-						)
-					);
+					RightClickMenu.Items.Add(new ToolStripMenuItem("Remove beacons", null,
+						new EventHandler((o, e) =>
+						{
+							RightClickMenu.Close();
+							foreach (ReadOnlyRecipeNode rNode in rNodes)
+								((RecipeNodeController)graphViewer.Graph.RequestNodeController(rNode)).ClearBeacon();
+						})));
 				}
 
 				RightClickMenu.Items.Add(new ToolStripSeparator());
@@ -198,8 +188,8 @@ namespace Foreman
 					bool canPasteExtraProductivityMiners = rNodes.Any(rn => rn.SelectedAssembler.Assembler.EntityType == EntityType.Miner);
 					bool canPasteExtraProductivityNonMiners = graphViewer.Graph.EnableExtraProductivityForNonMiners && rNodes.Any(rn => rn.SelectedAssembler.Assembler.EntityType != EntityType.Miner);
 					bool canPasteFuel = copiedOptions.Fuel != null && (canPasteAssembler || rNodes.Any(rn => rn.BaseRecipe.Recipe.Assemblers.Any(a => a.Fuels.Contains(copiedOptions.Fuel))));
-					bool canPasteModules = copiedOptions.AssemblerModules.Count > 0 && (canPasteAssembler || rNodes.Any(rn => rn.BaseRecipe.Recipe.Modules.Count > 0 && rn.SelectedAssembler.Assembler.Modules.Count > 0 && rn.SelectedAssembler.Assembler.ModuleSlots > 0));
-					bool canPasteBeacon = copiedOptions.Beacon.Beacon != null && (canPasteAssembler || rNodes.Any(rn => rn.BaseRecipe.Recipe.Modules.Count > 0 && rn.SelectedAssembler.Assembler.Modules.Count > 0));
+					bool canPasteModules = copiedOptions.AssemblerModules.Count > 0 && (canPasteAssembler || rNodes.Any(rn => rn.BaseRecipe.Recipe.AssemblerModules.Count > 0 && rn.SelectedAssembler.Assembler.Modules.Count > 0 && rn.SelectedAssembler.Assembler.ModuleSlots > 0));
+					bool canPasteBeacon = copiedOptions.Beacon && (canPasteAssembler || rNodes.Any(rn => rn.BaseRecipe.Recipe.AssemblerModules.Count > 0 && rn.SelectedAssembler.Assembler.Modules.Count > 0));
 
 					if (canPasteAssembler || canPasteFuel || canPasteModules || canPasteBeacon)
 					{
@@ -253,7 +243,8 @@ namespace Foreman
 							new ToolStripMenuItem(
 								"Paste selected options",
 								null,
-								new EventHandler((o, e) => {
+								new EventHandler((o, e) =>
+								{
 									RightClickMenu.Close();
 									if (canPasteAssembler)
 									{
@@ -299,31 +290,36 @@ namespace Foreman
 										{
 											controller.SetAssembler(copiedOptions.Assembler);
 											assemblerFilter = true;
-											if (rNode.SelectedAssembler.Assembler.EntityType == EntityType.Reactor) {
+											if (rNode.SelectedAssembler.Assembler.EntityType == EntityType.Reactor)
+											{
 												controller.SetNeighbourCount(copiedOptions.NeighbourCount);
 											}
 										}
 
-										if (extraProductivityMinersCheck.Checked && rNode.SelectedAssembler.Assembler.EntityType == EntityType.Miner) {
+										if (extraProductivityMinersCheck.Checked && rNode.SelectedAssembler.Assembler.EntityType == EntityType.Miner)
+										{
 											controller.SetExtraProductivityBonus(copiedOptions.ExtraProductivityBonus);
 										}
-										if (extraProductivityNonMinersCheck.Checked && rNode.SelectedAssembler.Assembler.EntityType != EntityType.Miner) {
+										if (extraProductivityNonMinersCheck.Checked && rNode.SelectedAssembler.Assembler.EntityType != EntityType.Miner)
+										{
 											controller.SetExtraProductivityBonus(copiedOptions.ExtraProductivityBonus);
 										}
 
-										if (fuelCheck.Checked && rNode.SelectedAssembler.Assembler.Fuels.Contains(copiedOptions.Fuel)) { //fuel fits the given recipe node
+										if (fuelCheck.Checked && rNode.SelectedAssembler.Assembler.Fuels.Contains(copiedOptions.Fuel))
+										{ //fuel fits the given recipe node
 											controller.SetFuel(copiedOptions.Fuel);
 										}
 
 										if (modulesCheck.Checked)
 										{
-											HashSet<Module> acceptableAssemblerModules = new HashSet<Module>(rNode.BaseRecipe.Recipe.Modules.Intersect(rNode.SelectedAssembler.Assembler.Modules));
-											if (!copiedOptions.AssemblerModules.Any(module => !acceptableAssemblerModules.Contains(module.Module))) {//all modules we copied can be added to the selected recipe/assembler
+											HashSet<Module> acceptableAssemblerModules = new HashSet<Module>(rNode.BaseRecipe.Recipe.AssemblerModules.Intersect(rNode.SelectedAssembler.Assembler.Modules));
+											if (!copiedOptions.AssemblerModules.Any(module => !acceptableAssemblerModules.Contains(module.Module))) //all modules we copied can be added to the selected recipe/assembler
+											{
 												controller.SetAssemblerModules(copiedOptions.AssemblerModules, true);
 											}
 										}
 
-										if (beaconCheck.Checked && rNode.BaseRecipe.Recipe.Modules.Intersect(rNode.SelectedAssembler.Assembler.Modules).Count() > 0 && copiedOptions.Beacon.Beacon != null)
+										if (beaconCheck.Checked && rNode.BaseRecipe.Recipe.AssemblerModules.Intersect(rNode.SelectedAssembler.Assembler.Modules).Count() > 0 && copiedOptions.Beacon)
 										{
 											controller.SetBeacon(copiedOptions.Beacon);
 											controller.SetBeaconCount(copiedOptions.BeaconCount);
@@ -331,18 +327,19 @@ namespace Foreman
 											controller.SetBeaconsPerAssembler(copiedOptions.BeaconsPerAssembler);
 										}
 
-										if (beaconModuleCheck.Checked && rNode.SelectedBeacon.Beacon != null)
+										if (beaconModuleCheck.Checked && rNode.SelectedBeacon)
 										{
-											HashSet<Module> acceptableBeaconModules = new HashSet<Module>(rNode.BaseRecipe.Recipe.Modules.Intersect(rNode.SelectedAssembler.Assembler.Modules).Intersect(rNode.SelectedBeacon.Beacon.Modules));
-											if (!copiedOptions.BeaconModules.Any(module => !acceptableBeaconModules.Contains(module.Module))) {
+											HashSet<Module> acceptableBeaconModules = new HashSet<Module>(rNode.BaseRecipe.Recipe.AssemblerModules.Intersect(rNode.SelectedAssembler.Assembler.Modules).Intersect(rNode.SelectedBeacon.Beacon.Modules));
+											if (!copiedOptions.BeaconModules.Any(module => !acceptableBeaconModules.Contains(module.Module)))
+											{
 												controller.SetBeaconModules(copiedOptions.BeaconModules, true);
 											}
 										}
 									}
+
 									graphViewer.Graph.UpdateNodeValues();
-								})
-							)
-						);
+								})));
+
 						RightClickMenu.Items.Add(new ToolStripSeparator());
 					}
 				}

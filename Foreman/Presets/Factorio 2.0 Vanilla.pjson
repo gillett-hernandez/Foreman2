@@ -33,7 +33,7 @@
       "recipes": [
         "advanced-circuit"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -61,7 +61,7 @@
       "recipes": [
         "selector-combinator"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -97,7 +97,7 @@
       "recipes": [
         "steel-furnace"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -127,7 +127,7 @@
       "recipes": [
         "electric-furnace"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -166,7 +166,7 @@
         "solid-fuel-from-heavy-oil",
         "solid-fuel-from-light-oil"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -205,7 +205,7 @@
         "artillery-turret",
         "artillery-shell"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -243,7 +243,7 @@
       ],
       "successors": {},
       "recipes": {},
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -285,7 +285,7 @@
       ],
       "successors": {},
       "recipes": {},
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -330,7 +330,7 @@
       "recipes": [
         "atomic-bomb"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -375,7 +375,7 @@
         "rail-signal",
         "rail-chain-signal"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -405,7 +405,7 @@
         "assembling-machine-1",
         "long-handed-inserter"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -434,7 +434,7 @@
       "recipes": [
         "assembling-machine-2"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -463,7 +463,7 @@
       "recipes": [
         "assembling-machine-3"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -512,7 +512,7 @@
       "recipes": [
         "automation-science-pack"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": {},
       "research_unit_count": 1,
       "localised_name": "Automation science pack"
@@ -533,7 +533,7 @@
       "recipes": [
         "car"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -565,7 +565,7 @@
       "recipes": [
         "battery"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -595,7 +595,7 @@
       "recipes": [
         "battery-equipment"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -624,7 +624,7 @@
       "recipes": [
         "battery-mk2-equipment"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -655,7 +655,7 @@
       "recipes": [
         "belt-immunity-equipment"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -683,7 +683,7 @@
         "braking-force-2"
       ],
       "recipes": {},
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -714,7 +714,7 @@
         "braking-force-3"
       ],
       "recipes": {},
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -746,7 +746,7 @@
         "braking-force-4"
       ],
       "recipes": {},
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -781,7 +781,7 @@
         "braking-force-5"
       ],
       "recipes": {},
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -816,7 +816,7 @@
         "braking-force-6"
       ],
       "recipes": {},
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -852,7 +852,7 @@
         "braking-force-7"
       ],
       "recipes": {},
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -889,7 +889,7 @@
       ],
       "successors": {},
       "recipes": {},
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -932,7 +932,7 @@
       "recipes": [
         "bulk-inserter"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -979,7 +979,7 @@
       "recipes": [
         "chemical-science-pack"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -1014,7 +1014,7 @@
         "display-panel",
         "iron-stick"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -1042,7 +1042,7 @@
       "recipes": [
         "cliff-explosives"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -1070,7 +1070,7 @@
       "recipes": [
         "coal-liquefaction"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -1114,7 +1114,7 @@
         "refined-hazard-concrete",
         "iron-stick"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -1146,7 +1146,7 @@
         "storage-chest",
         "construction-robot"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -1180,7 +1180,7 @@
       "recipes": [
         "defender-capsule"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -1215,7 +1215,7 @@
       "recipes": [
         "destroyer-capsule"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -1257,7 +1257,7 @@
       "recipes": [
         "discharge-defense-equipment"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -1296,7 +1296,7 @@
       "recipes": [
         "distractor-capsule"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -1332,7 +1332,7 @@
       "recipes": [
         "beacon"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -1369,7 +1369,7 @@
       "recipes": [
         "efficiency-module"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -1400,7 +1400,7 @@
       "recipes": [
         "efficiency-module-2"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -1434,7 +1434,7 @@
       "recipes": [
         "efficiency-module-3"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -1472,7 +1472,7 @@
       "recipes": [
         "accumulator"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -1505,7 +1505,7 @@
         "big-electric-pole",
         "iron-stick"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -1533,7 +1533,7 @@
       "recipes": [
         "substation"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -1569,7 +1569,7 @@
       "recipes": [
         "electric-engine-unit"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -1600,7 +1600,7 @@
       "recipes": [
         "electric-mining-drill"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -1627,7 +1627,7 @@
         "inserter",
         "small-electric-pole"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": {},
       "research_unit_count": 1,
       "localised_name": "Electronics"
@@ -1648,7 +1648,7 @@
       "recipes": [
         "energy-shield-equipment"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -1682,7 +1682,7 @@
       "recipes": [
         "energy-shield-mk2-equipment"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -1722,7 +1722,7 @@
       "recipes": [
         "engine-unit"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -1753,7 +1753,7 @@
       "recipes": [
         "exoskeleton-equipment"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -1785,7 +1785,7 @@
       "recipes": [
         "explosive-rocket"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -1826,7 +1826,7 @@
       "recipes": [
         "explosives"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -1855,7 +1855,7 @@
       "recipes": [
         "fast-inserter"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -1883,7 +1883,7 @@
       "recipes": [
         "fission-reactor-equipment"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -1927,7 +1927,7 @@
         "flamethrower-ammo",
         "flamethrower-turret"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -1960,7 +1960,7 @@
         "rocketry"
       ],
       "recipes": {},
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -2007,7 +2007,7 @@
         "lubricant-barrel",
         "empty-lubricant-barrel"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -2035,7 +2035,7 @@
       "recipes": [
         "fluid-wagon"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -2062,7 +2062,7 @@
         "follower-robot-count-2"
       ],
       "recipes": {},
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -2093,7 +2093,7 @@
         "follower-robot-count-3"
       ],
       "recipes": {},
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -2125,7 +2125,7 @@
         "follower-robot-count-4"
       ],
       "recipes": {},
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -2161,7 +2161,7 @@
         "follower-robot-count-5"
       ],
       "recipes": {},
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -2199,7 +2199,7 @@
       ],
       "successors": {},
       "recipes": {},
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -2247,7 +2247,7 @@
       "recipes": [
         "gate"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -2274,7 +2274,7 @@
       "recipes": [
         "gun-turret"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -2300,7 +2300,7 @@
       "recipes": [
         "heavy-armor"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -2323,7 +2323,7 @@
         "inserter-capacity-bonus-2"
       ],
       "recipes": {},
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -2350,7 +2350,7 @@
         "inserter-capacity-bonus-3"
       ],
       "recipes": {},
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -2378,7 +2378,7 @@
         "inserter-capacity-bonus-4"
       ],
       "recipes": {},
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -2410,7 +2410,7 @@
         "inserter-capacity-bonus-5"
       ],
       "recipes": {},
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -2445,7 +2445,7 @@
         "inserter-capacity-bonus-6"
       ],
       "recipes": {},
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -2480,7 +2480,7 @@
         "inserter-capacity-bonus-7"
       ],
       "recipes": {},
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -2514,7 +2514,7 @@
       ],
       "successors": {},
       "recipes": {},
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -2558,7 +2558,7 @@
         "kovarex-enrichment-process",
         "nuclear-fuel"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -2593,7 +2593,7 @@
       "recipes": [
         "small-lamp"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -2617,7 +2617,7 @@
       "recipes": [
         "land-mine"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -2648,7 +2648,7 @@
       "recipes": [
         "landfill"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -2679,7 +2679,7 @@
         "laser-weapons-damage-1"
       ],
       "recipes": {},
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -2711,7 +2711,7 @@
         "laser-shooting-speed-2"
       ],
       "recipes": {},
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -2746,7 +2746,7 @@
         "laser-shooting-speed-3"
       ],
       "recipes": {},
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -2781,7 +2781,7 @@
         "laser-shooting-speed-4"
       ],
       "recipes": {},
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -2816,7 +2816,7 @@
         "laser-shooting-speed-5"
       ],
       "recipes": {},
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -2852,7 +2852,7 @@
         "laser-shooting-speed-6"
       ],
       "recipes": {},
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -2891,7 +2891,7 @@
         "laser-shooting-speed-7"
       ],
       "recipes": {},
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -2928,7 +2928,7 @@
       ],
       "successors": {},
       "recipes": {},
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -2971,7 +2971,7 @@
       "recipes": [
         "laser-turret"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -3007,7 +3007,7 @@
         "laser-weapons-damage-2"
       ],
       "recipes": {},
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -3042,7 +3042,7 @@
         "laser-weapons-damage-3"
       ],
       "recipes": {},
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -3077,7 +3077,7 @@
         "laser-weapons-damage-4"
       ],
       "recipes": {},
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -3112,7 +3112,7 @@
         "laser-weapons-damage-5"
       ],
       "recipes": {},
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -3148,7 +3148,7 @@
         "laser-weapons-damage-6"
       ],
       "recipes": {},
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -3187,7 +3187,7 @@
         "laser-weapons-damage-7"
       ],
       "recipes": {},
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -3225,7 +3225,7 @@
       ],
       "successors": {},
       "recipes": {},
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -3273,7 +3273,7 @@
         "storage-chest",
         "logistic-robot"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -3317,7 +3317,7 @@
       "recipes": [
         "logistic-science-pack"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -3343,7 +3343,7 @@
         "requester-chest",
         "buffer-chest"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -3381,7 +3381,7 @@
         "underground-belt",
         "splitter"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -3411,7 +3411,7 @@
         "fast-underground-belt",
         "fast-splitter"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -3441,7 +3441,7 @@
         "express-underground-belt",
         "express-splitter"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -3482,7 +3482,7 @@
       "recipes": [
         "low-density-structure"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -3516,7 +3516,7 @@
       "recipes": [
         "lubricant"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -3554,7 +3554,7 @@
         "shotgun",
         "shotgun-shell"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -3585,7 +3585,7 @@
         "piercing-rounds-magazine",
         "grenade"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -3623,7 +3623,7 @@
         "slowdown-capsule",
         "combat-shotgun"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -3668,7 +3668,7 @@
         "piercing-shotgun-shell",
         "cluster-grenade"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -3722,7 +3722,7 @@
       "recipes": [
         "military-science-pack"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -3749,7 +3749,7 @@
         "mining-productivity-2"
       ],
       "recipes": {},
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -3777,7 +3777,7 @@
         "mining-productivity-3"
       ],
       "recipes": {},
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -3810,7 +3810,7 @@
         "mining-productivity-4"
       ],
       "recipes": {},
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -3848,7 +3848,7 @@
       ],
       "successors": {},
       "recipes": {},
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -3895,7 +3895,7 @@
       "recipes": [
         "modular-armor"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -3924,7 +3924,7 @@
         "speed-module"
       ],
       "recipes": {},
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -3951,7 +3951,7 @@
       "recipes": [
         "night-vision-equipment"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -3979,7 +3979,7 @@
       "recipes": [
         "nuclear-fuel-reprocessing"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -4021,7 +4021,7 @@
         "steam-turbine",
         "uranium-fuel-cell"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -4054,7 +4054,7 @@
       "recipes": [
         "pumpjack"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -4088,7 +4088,7 @@
         "basic-oil-processing",
         "solid-fuel-from-petroleum-gas"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": {},
       "research_unit_count": 1,
       "localised_name": "Oil processing"
@@ -4110,7 +4110,7 @@
       "recipes": [
         "personal-laser-defense-equipment"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -4148,7 +4148,7 @@
       "recipes": [
         "personal-roboport-equipment"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -4180,7 +4180,7 @@
       "recipes": [
         "personal-roboport-mk2-equipment"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -4215,7 +4215,7 @@
         "physical-projectile-damage-2"
       ],
       "recipes": {},
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -4239,7 +4239,7 @@
         "physical-projectile-damage-3"
       ],
       "recipes": {},
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -4267,7 +4267,7 @@
         "physical-projectile-damage-4"
       ],
       "recipes": {},
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -4298,7 +4298,7 @@
         "physical-projectile-damage-5"
       ],
       "recipes": {},
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -4330,7 +4330,7 @@
         "physical-projectile-damage-6"
       ],
       "recipes": {},
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -4366,7 +4366,7 @@
         "physical-projectile-damage-7"
       ],
       "recipes": {},
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -4404,7 +4404,7 @@
       ],
       "successors": {},
       "recipes": {},
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -4449,7 +4449,7 @@
       "recipes": [
         "plastic-bar"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -4485,7 +4485,7 @@
       "recipes": [
         "power-armor"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -4519,7 +4519,7 @@
       "recipes": [
         "power-armor-mk2"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -4566,7 +4566,7 @@
       "recipes": [
         "processing-unit"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -4615,7 +4615,7 @@
       "recipes": [
         "production-science-pack"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -4649,7 +4649,7 @@
       "recipes": [
         "productivity-module"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -4679,7 +4679,7 @@
       "recipes": [
         "productivity-module-2"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -4713,7 +4713,7 @@
       "recipes": [
         "productivity-module-3"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -4752,7 +4752,7 @@
       "recipes": [
         "radar"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -4784,7 +4784,7 @@
         "cargo-wagon",
         "iron-stick"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -4811,7 +4811,7 @@
         "refined-flammables-2"
       ],
       "recipes": {},
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -4842,7 +4842,7 @@
         "refined-flammables-3"
       ],
       "recipes": {},
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -4874,7 +4874,7 @@
         "refined-flammables-4"
       ],
       "recipes": {},
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -4910,7 +4910,7 @@
         "refined-flammables-5"
       ],
       "recipes": {},
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -4949,7 +4949,7 @@
         "refined-flammables-6"
       ],
       "recipes": {},
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -4988,7 +4988,7 @@
         "refined-flammables-7"
       ],
       "recipes": {},
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -5026,7 +5026,7 @@
       ],
       "successors": {},
       "recipes": {},
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -5069,7 +5069,7 @@
       "recipes": [
         "repair-pack"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -5092,7 +5092,7 @@
         "research-speed-2"
       ],
       "recipes": {},
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -5119,7 +5119,7 @@
         "research-speed-3"
       ],
       "recipes": {},
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -5147,7 +5147,7 @@
         "research-speed-4"
       ],
       "recipes": {},
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -5178,7 +5178,7 @@
         "research-speed-5"
       ],
       "recipes": {},
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -5210,7 +5210,7 @@
         "research-speed-6"
       ],
       "recipes": {},
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -5244,7 +5244,7 @@
       ],
       "successors": {},
       "recipes": {},
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -5290,7 +5290,7 @@
       "recipes": [
         "flying-robot-frame"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -5325,7 +5325,7 @@
       "recipes": [
         "rocket-fuel"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -5368,7 +5368,7 @@
         "cargo-landing-pad",
         "satellite"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -5414,7 +5414,7 @@
         "rocket-launcher",
         "rocket"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -5449,7 +5449,7 @@
       "recipes": [
         "solar-panel"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -5486,7 +5486,7 @@
       "recipes": [
         "solar-panel-equipment"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -5521,7 +5521,7 @@
         "worker-robots-speed-6"
       ],
       "recipes": {},
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": {},
       "research_unit_count": 1,
       "localised_name": "Space science pack"
@@ -5543,7 +5543,7 @@
       "recipes": [
         "speed-module"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -5574,7 +5574,7 @@
       "recipes": [
         "speed-module-2"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -5608,7 +5608,7 @@
       "recipes": [
         "speed-module-3"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -5648,7 +5648,7 @@
       "recipes": [
         "spidertron"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -5695,7 +5695,7 @@
         "boiler",
         "steam-engine"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": {},
       "research_unit_count": 1,
       "localised_name": "Steam power"
@@ -5711,7 +5711,7 @@
       ],
       "successors": {},
       "recipes": {},
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": {},
       "research_unit_count": 1,
       "localised_name": "Steel axe"
@@ -5739,7 +5739,7 @@
         "steel-plate",
         "steel-chest"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -5765,7 +5765,7 @@
       "recipes": [
         "stone-wall"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -5788,7 +5788,7 @@
         "stronger-explosives-2"
       ],
       "recipes": {},
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -5816,7 +5816,7 @@
         "stronger-explosives-3"
       ],
       "recipes": {},
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -5848,7 +5848,7 @@
         "stronger-explosives-4"
       ],
       "recipes": {},
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -5884,7 +5884,7 @@
         "stronger-explosives-5"
       ],
       "recipes": {},
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -5923,7 +5923,7 @@
         "stronger-explosives-6"
       ],
       "recipes": {},
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -5962,7 +5962,7 @@
         "stronger-explosives-7"
       ],
       "recipes": {},
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -6000,7 +6000,7 @@
       ],
       "successors": {},
       "recipes": {},
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -6048,7 +6048,7 @@
         "sulfuric-acid",
         "sulfur"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -6082,7 +6082,7 @@
         "cannon-shell",
         "explosive-cannon-shell"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -6115,7 +6115,7 @@
       ],
       "successors": {},
       "recipes": {},
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -6146,7 +6146,7 @@
         "uranium-cannon-shell",
         "explosive-uranium-cannon-shell"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -6186,9 +6186,8 @@
         "uranium-processing"
       ],
       "recipes": {},
-      "alt_modifiers": [
-        "mining-with-fluid"
-      ],
+      "qualities": {},
+      "unlocks-mining-with-fluid": true,
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -6224,7 +6223,7 @@
         "centrifuge",
         "uranium-processing"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": {},
       "research_unit_count": 1,
       "localised_name": "Uranium processing"
@@ -6262,7 +6261,7 @@
       "recipes": [
         "utility-science-pack"
       ],
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -6293,7 +6292,7 @@
         "weapon-shooting-speed-2"
       ],
       "recipes": {},
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -6317,7 +6316,7 @@
         "weapon-shooting-speed-3"
       ],
       "recipes": {},
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -6345,7 +6344,7 @@
         "weapon-shooting-speed-4"
       ],
       "recipes": {},
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -6376,7 +6375,7 @@
         "weapon-shooting-speed-5"
       ],
       "recipes": {},
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -6408,7 +6407,7 @@
         "weapon-shooting-speed-6"
       ],
       "recipes": {},
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -6442,7 +6441,7 @@
       ],
       "successors": {},
       "recipes": {},
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -6481,7 +6480,7 @@
         "worker-robots-speed-2"
       ],
       "recipes": {},
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -6512,7 +6511,7 @@
         "worker-robots-speed-3"
       ],
       "recipes": {},
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -6544,7 +6543,7 @@
         "worker-robots-speed-4"
       ],
       "recipes": {},
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -6579,7 +6578,7 @@
         "worker-robots-speed-5"
       ],
       "recipes": {},
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -6615,7 +6614,7 @@
         "worker-robots-speed-6"
       ],
       "recipes": {},
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -6653,7 +6652,7 @@
       ],
       "successors": {},
       "recipes": {},
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -6696,7 +6695,7 @@
         "worker-robots-storage-2"
       ],
       "recipes": {},
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -6728,7 +6727,7 @@
         "worker-robots-storage-3"
       ],
       "recipes": {},
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -6762,7 +6761,7 @@
       ],
       "successors": {},
       "recipes": {},
-      "alt_modifiers": {},
+      "qualities": {},
       "research_unit_ingredients": [
         {
           "name": "automation-science-pack",
@@ -19932,7 +19931,7 @@
         "pollution": 0,
         "quality": 0
       },
-      "use_module_effects": false,
+      "uses_module_effects": false,
       "uses_beacon_effects": false,
       "uses_surface_effects": false,
       "allowed_effects": {
@@ -20315,7 +20314,7 @@
       "resource_category": "basic-solid",
       "mining_time": 2,
       "required_fluid": "sulfuric-acid",
-      "fluid_amount": 10,
+      "fluid_amount": 1,
       "products": [
         {
           "name": "uranium-ore",

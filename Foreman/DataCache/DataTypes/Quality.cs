@@ -17,6 +17,8 @@ namespace Foreman
         double BeaconPowerMultiplier { get; }
         double MiningDrillResourceDrainMultiplier { get; }
 
+        IReadOnlyCollection<Technology> MyUnlockTechnologies { get; }
+        IReadOnlyList<IReadOnlyList<Item>> MyUnlockSciencePacks { get; }
     }
 
     public class QualityPrototype : DataObjectBasePrototype, Quality
@@ -31,6 +33,11 @@ namespace Foreman
         public double BeaconPowerMultiplier { get; set; }
         public double MiningDrillResourceDrainMultiplier { get; set; }
 
+        public IReadOnlyCollection<Technology> MyUnlockTechnologies { get { return myUnlockTechnologies; } }
+        public IReadOnlyList<IReadOnlyList<Item>> MyUnlockSciencePacks { get; set; }
+
+        internal HashSet<TechnologyPrototype> myUnlockTechnologies { get; private set; }
+
         public QualityPrototype(DataCache dCache, string name, string friendlyName, string order, bool isMissing = false) : base(dCache, name, friendlyName, order)
         {
             Enabled = true;
@@ -43,6 +50,9 @@ namespace Foreman
             Level = 0;
             BeaconPowerMultiplier = 1;
             MiningDrillResourceDrainMultiplier = 1;
+
+            myUnlockTechnologies = new HashSet<TechnologyPrototype>();
+            MyUnlockSciencePacks = new List<List<Item>>();
         }
 
         public override string ToString() { return string.Format("Quality T{0}: {1}", Level, Name); }
